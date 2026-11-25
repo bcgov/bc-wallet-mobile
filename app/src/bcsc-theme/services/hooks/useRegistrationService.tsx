@@ -90,7 +90,7 @@ export const useRegistrationService = () => {
    * @param options - Set `suppressTransientAlerts` for automatic (non user-initiated) callers:
    *   transient keychain-unavailable failures are logged but not surfaced as a modal, since
    *   the operation retries on the next app launch
-   * @return Promise resolving to updated registration response data
+   * @returns Promise resolving to updated registration response data
    */
   const updateRegistration = useCallback(
     async (selectedNickname: string | undefined, options?: { suppressTransientAlerts?: boolean }) => {

@@ -9,8 +9,8 @@ import {
 /**
  * Get the card process for a given card type.
  *
- * @param {BCSCCardType | null} cardType - The type of BCSC card, or null if no card.
- * @returns {*} {BCSCCardProcess | null} The corresponding card process.
+ * @param cardType - The type of BCSC card, or null if no card.
+ * @returns The corresponding card process.
  */
 export function getCardProcessForCardType(cardType: BCSCCardType | null): BCSCCardProcess | null {
   if (cardType === null) {

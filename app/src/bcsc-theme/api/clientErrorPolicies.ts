@@ -30,7 +30,7 @@ import { BCSCEndpoints } from './client'
  * NOTE: Use `skipOnErrorHandler` API client option to disable injected error
  * handling for a specific call.
  *
- * @link useEvidenceService.tsx -> cancelVerificationRequest
+ * @see `cancelVerificationRequest` in `useEvidenceService.tsx`
  */
 
 const UNSUPPORTED_OS_TECHNICAL_MESSAGE = 'unsupported os version'

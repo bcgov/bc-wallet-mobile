@@ -111,8 +111,8 @@ export const useFactoryReset = () => {
   /**
    * Performs a factory reset of the BCSC account and state.
    *
-   * @param {Partial<BCSCState>} [state] - Optional partial state to preserve during the reset
-   * @returns {Promise<FactoryResetResult>} A promise that resolves to the result of the factory reset operation.
+   * @param state - Optional partial state to preserve during the reset
+   * @returns A promise that resolves to the result of the factory reset operation.
    */
   const factoryReset = useCallback(
     async (bcscState?: Partial<BCSCState>): Promise<FactoryResetResult> => {

@@ -28,7 +28,7 @@ export interface ServiceClientsFilter {
    *
    * Note: Explicitly setting this to null will return no services.
    *
-   * @see card-utils.ts->getCardProcessForCardType
+   * @see `getCardProcessForCardType` in `card-utils.ts`
    * @example BCSCCardProcess.NonPhoto would filter out services that do not support non-photo cards
    */
   cardProcessFilter?: BCSCCardProcess | null
@@ -41,7 +41,7 @@ export interface ServiceClientsFilter {
    * if provided, only service clients with these IDs will be included
    * ie: saved services (bookmarks)
    *
-   * @format uuid
+   * A UUID.
    */
   serviceClientIdsFilter?: string[]
   /**
@@ -50,7 +50,7 @@ export interface ServiceClientsFilter {
    * Services without a `service_listing_sort_order` are not meant to be listed, but they are
    * still shown when the user has saved them.
    *
-   * @format uuid
+   * A UUID.
    */
   savedServiceClientIds?: string[]
   /**

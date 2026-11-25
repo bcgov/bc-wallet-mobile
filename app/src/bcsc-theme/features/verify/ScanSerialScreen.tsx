@@ -63,7 +63,7 @@ type BarcodeGuideProps = {
   width: number
   height: number
   pattern: number[]
-  /** Direction the individual bars run. @default 'vertical' */
+  /** Direction the individual bars run. @defaultValue 'vertical' */
   bars?: 'vertical' | 'horizontal'
   color?: string
   opacity?: number

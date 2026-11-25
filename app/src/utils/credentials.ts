@@ -169,7 +169,7 @@ const formatForProofWithId = async (agent: BCAgent, proofId: string, filterByNon
  * @param proofId - The id of the proof request
  * @param filterByNonRevocationRequirements - Whether to filter by non-revocation requirements
  * @returns Credentials that match the given proof request
- * @throws {Error} Will throw an error if a problem looking up data occurs
+ * @throws {@link Error} Will throw an error if a problem looking up data occurs
  */
 export const credentialsMatchForProof = async (
   agent: BCAgent,

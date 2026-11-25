@@ -580,7 +580,8 @@ A function's doc comment is TSDoc: a summary, then `@param name - description` a
 Leave types out of the tags; the signature already has them. Leave out a tag that would only repeat the
 parameter name or its type (`@param props`, `@returns void`), and a doc block whose summary only restates the
 function's name. Every other comment explains why, an assumption, or an invariant, never what the next line
-does. No section banners and no commented-out code.
+does. No section banners and no commented-out code. `eslint-plugin-tsdoc` (`tsdoc/syntax`) checks the
+syntax: code samples go in fenced blocks under `@example`, and a literal `{`, `}` or `>` goes in backticks.
 
 **Why:** the tags describe what the types can't (units, accepted ranges, what `null` means), and one shape
 for every doc comment is easier to read and review than a mix of TSDoc and bare summaries.

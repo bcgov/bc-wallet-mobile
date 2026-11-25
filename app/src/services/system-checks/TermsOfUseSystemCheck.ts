@@ -15,9 +15,9 @@ import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './
  *    C. Accepted version matches the server version
  *
  *   Fail:
- *    A. Accepted version differs from the server version => user must re-accept
+ *    A. Accepted version differs from the server version → user must re-accept
  *
- * @see {TermsOfUseUpdated.tsx} for the blocking modal displayed on failure.
+ * @see `TermsOfUseUpdated.tsx` for the blocking modal displayed on failure.
  */
 export class TermsOfUseSystemCheck implements SystemCheckStrategy {
   private readonly getTermsOfUse: () => Promise<TermsOfUseResponseData>

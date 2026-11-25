@@ -33,7 +33,7 @@ export enum SystemCheckScope {
  * key per signed-in session however often that navigator mounts (the record lives in
  * SystemCheckSessionProvider). Either way a mount starts at most one batch.
  *
- * @param {SystemCheckScope} scope - The scope of the system checks to run
+ * @param scope - The scope of the system checks to run
  * @returns Whether the scope has settled, i.e. its checks have finished running (or will never run), and
  *   whether its batch decides the Home card. A caller that paints state the checks can change (see
  *   MainStack's loading gate) waits on the first when the second is true.

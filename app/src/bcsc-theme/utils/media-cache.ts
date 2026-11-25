@@ -10,8 +10,8 @@ export class MediaCache {
   /**
    * Retrieves the cached media buffer if available.
    *
-   * @param {BifoldLogger} logger - The logger instance for logging messages.
-   * @returns {*} {Promise<Buffer | null>} - The cached media buffer or null if not cached.
+   * @param logger - The logger instance for logging messages.
+   * @returns - The cached media buffer or null if not cached.
    */
   private async _getCache(logger: BifoldLogger): Promise<Buffer | null> {
     const pendingPromise = this.cachedMediaPromise

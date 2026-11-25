@@ -41,7 +41,7 @@ const useEvidenceUpload = () => {
   /**
    * Processes additional evidence documents (secondary ID for NonPhoto BCSC).
    * Sends metadata to the evidence API and reads image files from disk.
-   * Returns an array of { uploadUri, imageBytes } items ready for binary upload.
+   * Returns an array of `{ uploadUri, imageBytes }` items ready for binary upload.
    *
    * Used by both the live-call flow (uploads immediately) and the send-video
    * flow (batches with photo + video in a single Promise.all).

@@ -15,16 +15,6 @@ import {
 
 /**
  * Renders a settings header button that navigates to the appropriate settings screen based on the stack.
- *
- * @param {{
- *   onPress: () => void
- *   testID?: string
- *   accessibilityLabel?: string
- * }} {
- *   onPress,
- *   testID,
- *   accessibilityLabel,
- * }
  */
 const SettingsHeaderButton = ({
   onPress,

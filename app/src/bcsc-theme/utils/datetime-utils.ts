@@ -8,7 +8,7 @@ const YEAR_MS = 365 * DAY_MS
  * Formats date to time: 4:30 PM or 16:30 depending on locale
  *
  * @param date - The timestamp to format
- * @return formatted string output
+ * @returns formatted string output
  */
 function clockTime(date: Date): string {
   return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
@@ -20,7 +20,7 @@ function clockTime(date: Date): string {
  *
  * @param date - The timestamp to format
  * @param withYear - Whether to include the year
- * @return formatted string output
+ * @returns formatted string output
  */
 function calendarTime(date: Date, withYear: boolean): string {
   return date.toLocaleDateString([], {
@@ -58,7 +58,7 @@ export function formatCalendarDate(date: Date, locale: string): string {
  * over a year: month, day, year, clock time ("Sep 25, 2015, 1:30 PM")
  *
  * @param date - The timestamp to format
- * @return formatted string output
+ * @returns formatted string output
  */
 export function formatTimestamp(date: Date): string {
   const diffMs = Date.now() - date.getTime()
@@ -112,10 +112,10 @@ export function formatExpiryBadge(expiresTime: Date): string {
  * Return whichever comes first: the proof request's own expiry (`protocolExpiresTime`) or the
  * time the app drops it from the notification list (`createdAt` + the configured expiry time ).
  *
- * @param {Date} createdAt When the proof exchange record was created
- * @param {number} proofRequestExpirationMs App TTL in ms; 0 means no app-imposed expiry
- * @param {Date} [protocolExpiresTime] The proof request's own expiry, if it has one
- * @return {*}  {Date | undefined} The earlier of the two, or undefined if neither applies
+ * @param createdAt - When the proof exchange record was created
+ * @param proofRequestExpirationMs - App TTL in ms; 0 means no app-imposed expiry
+ * @param protocolExpiresTime - The proof request's own expiry, if it has one
+ * @returns The earlier of the two, or undefined if neither applies
  */
 export function getProofRequestExpiry(
   createdAt: Date,
@@ -133,8 +133,8 @@ export function getProofRequestExpiry(
  * Determines if the provided date is expired (expiration date is today or in the past).
  * A diff of 0 (expires today) is considered expired.
  *
- * @param {Date | string} dateToCheck - The expiration date. Strings must be formatted as 'MMMM D, YYYY' (e.g. 'January 1, 1970').
- * @returns {boolean} True if the expiration date is today or has passed, false otherwise.
+ * @param dateToCheck - The expiration date. Strings must be formatted as 'MMMM D, YYYY' (e.g. 'January 1, 1970').
+ * @returns True if the expiration date is today or has passed, false otherwise.
  *
  */
 export const isAccountExpired = (dateToCheck: Date | string): boolean => {

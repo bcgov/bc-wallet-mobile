@@ -427,7 +427,7 @@ export interface Spec extends TurboModule {
    * Gets global (non-account-scoped) flags from Android SharedPreferences.
    * On iOS this is a no-op stub (returns empty object); use getAccountFlags instead.
    * @returns Object containing global flags
-   * @platform Android only (no-op on iOS)
+   * Android only (no-op on iOS).
    */
   getAndroidGlobalFlags(): Promise<Object>;
 
@@ -436,7 +436,7 @@ export interface Spec extends TurboModule {
    * On iOS this is a no-op stub (returns true); use setAccountFlags instead.
    * @param flags - Object containing flags to set (merges with existing)
    * @returns true if saved successfully
-   * @platform Android only (no-op on iOS)
+   * Android only (no-op on iOS).
    */
   setAndroidGlobalFlags(flags: Object): Promise<boolean>;
 
@@ -486,9 +486,9 @@ export interface Spec extends TurboModule {
 
   /**
    * Saves a photo to permanent v3-compatible storage.
-   * Android: Writes JPEG to {filesDir}/documents/{filename}
+   * Android: Writes JPEG to `{filesDir}/documents/{filename}`
    * iOS: Writes JPEG to Application Support (v3-compatible evidence storage)
-   * @param base64Data Base64-encoded photo data
+   * @param base64Data - Base64-encoded photo data
    * @param filename - Target filename for the photo
    * @returns The absolute path to the saved file
    */

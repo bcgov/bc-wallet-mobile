@@ -61,7 +61,7 @@ export interface CodeScanningCameraProps {
 
   /**
    * Which camera to use
-   * @default 'back'
+   * @defaultValue 'back'
    */
   cameraType?: 'front' | 'back'
 
@@ -69,7 +69,7 @@ export interface CodeScanningCameraProps {
    * Enable scan zone tracking and saving (dev/debug feature).
    * When enabled and locked, shows Save Scan Zones + Continue Scanning buttons.
    * When disabled and locked, shows a Confirm button that calls onCodeScanned.
-   * @default false
+   * @defaultValue false
    */
   enableScanZones?: boolean
 
@@ -83,7 +83,7 @@ export interface CodeScanningCameraProps {
 
   /**
    * Initial zoom level
-   * @default 2
+   * @defaultValue 2
    */
   initialZoom?: number
 
@@ -91,19 +91,19 @@ export interface CodeScanningCameraProps {
    * Show the built-in visual scan-zone guide (the orange zone boxes / default
    * centered box). Alignment detection still uses `scanZones` regardless of this
    * flag — set to false when the parent renders its own framing overlay.
-   * @default true
+   * @defaultValue true
    */
   showScanZoneOverlay?: boolean
 
   /**
    * Show the live zoom-level indicator (dev/diagnostic readout).
-   * @default true
+   * @defaultValue true
    */
   showZoomIndicator?: boolean
 
   /**
    * Hide the built-in torch button so the parent can render its own.
-   * @default false
+   * @defaultValue false
    */
   hideTorchButton?: boolean
 
@@ -570,7 +570,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
    * Requires at least 2 codes to proceed (barcode + license or combo card detection)
    *
    * `outputResolution: 'full'` scans at the sensor's full resolution — dense PDF-417 codes need
-   * more than the preview-sized frames give (ML Kit recommends >=1156px width).
+   * more than the preview-sized frames give (ML Kit recommends at least 1156px width).
    */
   const scannerOutput = useBarcodeScannerOutput({
     barcodeFormats: codeTypes,

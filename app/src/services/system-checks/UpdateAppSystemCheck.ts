@@ -15,19 +15,19 @@ import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './
  *
  *   Mandatory update:
  *    A. App build is less than min build. The supported versions play no part.
- *      ie: app: [3.0.1-99], minBuild: [100] => **mandatory update**
+ *      ie: app: [3.0.1-99], minBuild: [100] → **mandatory update**
  *
  *   Optional update:
  *    A. App build is not below min build and a supported version is newer than the app version
- *      ie: app: [3.0.0-101], minBuild: [100], supported: [3.0.0, 3.1.0] => **optional update** (banner)
+ *      ie: app: [3.0.0-101], minBuild: [100], supported: [3.0.0, 3.1.0] → **optional update** (banner)
  *
  *   No update:
  *    A. App build is not below min build and no supported version is newer than the app version
- *      ie: app: [3.1.0-101], minBuild: [100], supported: [3.0.0, 3.1.0] => **no update**
+ *      ie: app: [3.1.0-101], minBuild: [100], supported: [3.0.0, 3.1.0] → **no update**
  *
  * To force an upgrade, raise the min build.
  *
- * @see {MandatoryUpdate.tsx} for the modal displayed during a mandatory update.
+ * @see `MandatoryUpdate.tsx` for the modal displayed during a mandatory update.
  */
 export class UpdateAppSystemCheck implements SystemCheckStrategy {
   private readonly serverStatus: ServerStatusResponseData
@@ -47,7 +47,7 @@ export class UpdateAppSystemCheck implements SystemCheckStrategy {
   /**
    * Runs the app build check against the server's minimum build.
    *
-   * @returns {*} {boolean} - False when the app build is below the minimum build (mandatory update).
+   * @returns - False when the app build is below the minimum build (mandatory update).
    */
   runCheck() {
     this.utils.logger.info('[UpdateAppSystemCheck] server status', {

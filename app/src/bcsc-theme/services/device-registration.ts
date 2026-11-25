@@ -38,7 +38,7 @@ const isNonEmptyString = (value: unknown): value is string => typeof value === '
 /**
  * Reads what the device holds of its registration.
  *
- * @param account The account, when the caller has already read it. Left out, it is read here.
+ * @param account - The account, when the caller has already read it. Left out, it is read here.
  * @throws The native rejection when the account or the token cannot be read
  */
 export const readStoredDeviceRegistration = async (
@@ -65,7 +65,7 @@ export const readStoredDeviceRegistration = async (
  * Reads the registration. Null when the device has none, or holds only part of one: a call that manages
  * the registration needs the client ID and its token together.
  *
- * @param account The account, when the caller has already read it. Left out, it is read here.
+ * @param account - The account, when the caller has already read it. Left out, it is read here.
  * @throws The native rejection when the account or the token cannot be read
  */
 export const readDeviceRegistration = async (account?: NativeAccount | null): Promise<DeviceRegistration | null> => {

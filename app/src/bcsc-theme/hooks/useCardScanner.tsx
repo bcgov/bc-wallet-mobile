@@ -41,10 +41,10 @@ const CARD_CODE_TYPES = [
  *
  * Paths:
  * 	1. Card has serial and license metadata (combo card both barcodes or 2025+ combo DL barcode)
- * 		 Outcome: validate serial -> save serial and birthdate (from license) ->? navigate to setup steps verification
+ * 		 Outcome: validate serial → save serial and birthdate (from license) →? navigate to setup steps verification
  *
  *  2. Card has serial but no license metadata (BCSC card with single barcode)
- *  	 Outcome: validate serial -> save serial ->? navigate to enter birthdate
+ *  	 Outcome: validate serial → save serial →? navigate to enter birthdate
  *
  *  3. Card has only license metadata (DL card barcode)
  *  	 Outcome: navigate to manual serial entry with prefilled license metadata

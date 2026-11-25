@@ -72,12 +72,12 @@ export const getPhotoMetadata = async (filePath: string, logger: BifoldLogger): 
  * Android's File.lastModified() can return 0 on failure, which would otherwise produce an
  * implausible 1970 capture date (#4338); when that happens, the current time is substituted.
  *
- * @param {Buffer} buffer - The video file buffer.
- * @param {number} duration - The duration of the video in seconds.
- * @param {VerificationPrompt[]} prompts - The list of verification prompts associated with the video.
- * @param {number} mtime - The modification time of the video file in milliseconds since epoch.
- * @param {BifoldLogger} logger - The logger instance used to record a substitution.
- * @returns {*} {Promise<VerificationVideoUploadPayload>} - The generated video metadata.
+ * @param buffer - The video file buffer.
+ * @param duration - The duration of the video in seconds.
+ * @param prompts - The list of verification prompts associated with the video.
+ * @param mtime - The modification time of the video file in milliseconds since epoch.
+ * @param logger - The logger instance used to record a substitution.
+ * @returns - The generated video metadata.
  */
 export const getVideoMetadata = async (
   buffer: Buffer,

@@ -408,7 +408,7 @@ interface BCSCDeprecatedFields {
 /**
  * Migrates a persisted BCSC state blob on load. Idempotent, read-side migrations:
  * - Legacy `reportUUID` (added bcsc-v4.0.2, #4060) → `installId`. Safe to remove once all installs
- *   have launched on >= v4.1.
+ *   have launched on v4.1 or later.
  * - Onboarded installs that predate `verificationSkipped`: a missing value is stamped "skipped" (`true`)
  *   so an upgrading install lands on Home rather than on the post-onboarding verify prompt. v3 upgrades
  *   have no persisted blob yet and are handled in useInitializeAccountStatus.

@@ -457,6 +457,7 @@ export const getIssuer = (): Promise<string | null> => {
  * Useful for diagnosing v3 vs v4 storage layouts.
  * Example code to place in App.tsx:
  *
+ * ```ts
  * useEffect(() => {
  *   getNativeFilesScan()
  *     .then((scan) => {
@@ -473,6 +474,7 @@ export const getIssuer = (): Promise<string | null> => {
  *       logger.error(`[Native File Scan] Error: ${errorMsg}`)
  *     })
  * }, [logger])
+ * ```
  */
 export const getNativeFilesScan = (): Promise<NativeFilesScan> => {
   return BcscCore.getNativeFilesScan();
@@ -1174,10 +1176,10 @@ export const deleteEvidence = async (): Promise<boolean> => {
 
 /**
  * Saves a photo to permanent storage.
- * Android: Writes JPEG to {filesDir}/documents/{filename}
- * iOS: Writes JPEG to Application Support/documents/{filename}
+ * Android: Writes JPEG to `{filesDir}/documents/{filename}`
+ * iOS: Writes JPEG to Application Support/documents/`{filename}`
  *
- * @param base64Data Base64-encoded photo data
+ * @param base64Data - Base64-encoded photo data
  * @param filename - Target filename
  * @returns The absolute path to the saved file
  */

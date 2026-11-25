@@ -24,7 +24,7 @@ type ToErrorModalReturn = {
   description: string
   /**
    * Indicates whether the error modal should include a report button for sending error details to support.
-   * @default true
+   * @defaultValue true
    */
   enableReport?: boolean
 }

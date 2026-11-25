@@ -59,7 +59,10 @@ export const isAppBuildEqual = (a: AppBuild | undefined, b: AppBuild): boolean =
 /**
  * Formats a build history into a string for display.
  *
- * @example formatBuildHistory([{ version: '4.1.0', build: '2000' }, { version: '4.0.0', build: '1000' }]) // returns "4.1.0+2000 < 4.0.0+1000"
+ * @example
+ * ```ts
+ * formatBuildHistory([{ version: '4.1.0', build: '2000' }, { version: '4.0.0', build: '1000' }]) // returns "4.1.0+2000 < 4.0.0+1000"
+ * ```
  * @param history - The build history to format.
  * @returns A string representation of the build history
  */

@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react'
 export type ReconnectEvent = Pick<NetInfoState, 'isConnected' | 'isInternetReachable'>
 
 /**
- * Invokes `retry` when internet connectivity is restored (offline -> online
+ * Invokes `retry` when internet connectivity is restored (offline → online
  * transition) and `shouldRetry` returns true.
  *
  * Used by data providers to reload state that failed to load while the device

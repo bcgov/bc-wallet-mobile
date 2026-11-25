@@ -45,7 +45,10 @@ export interface AutoCredentialRule {
    * An array of AnonCredsProofRequestRestriction objects that match the proof request
    * to trigger the workflow.  If any of the restrictions match, the rule is triggered.
    *
-   * @example [ { cred_def_id: 'abc' }, { schema_id: 'xyz' } ] // first tries matching cred def, then schema
+   * @example
+   * ```ts
+   * [{ cred_def_id: 'abc' }, { schema_id: 'xyz' }] // first tries matching cred def, then schema
+   * ```
    */
   triggerRestrictions: AnonCredsProofRequestRestriction[]
 

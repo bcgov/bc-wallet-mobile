@@ -78,8 +78,8 @@ const useUserApi = (apiClient: BCSCApiClient) => {
   /**
    * Fetches and converts a user's picture to a base64 URI.
    *
-   * @param {string} pictureUrl - The URL of the user's picture.
-   * @returns {*} {Promise<string>} A promise that resolves to the base64 URI of the picture.
+   * @param pictureUrl - The URL of the user's picture.
+   * @returns A promise that resolves to the base64 URI of the picture.
    */
   const getPicture = useCallback(
     async (pictureUrl: string): Promise<string> => {

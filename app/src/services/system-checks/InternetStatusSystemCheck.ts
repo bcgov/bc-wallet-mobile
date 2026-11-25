@@ -7,8 +7,8 @@ import { SystemCheckNavigation, SystemCheckStrategy } from './system-checks'
  * The navigators on the focused path, outermost first. `getState()` is the root navigator's state,
  * and the modal is registered in the phase stack nested under it.
  *
- * @param {NavigationState | undefined} state The root navigation state.
- * @returns {*} {NavigationState[]} The focused navigator states, root first.
+ * @param state - The root navigation state.
+ * @returns The focused navigator states, root first.
  */
 const getFocusedPath = (state: NavigationState | undefined): NavigationState[] => {
   const path: NavigationState[] = []
@@ -27,7 +27,7 @@ const getFocusedPath = (state: NavigationState | undefined): NavigationState[] =
  * If the device is not connected to the internet, navigates to the InternetDisconnected modal.
  * If the device regains connectivity, navigates back to the previous screen.
  *
- * @see {InternetDisonnected.tsx} for the modal displayed when disconnected.
+ * @see `InternetDisconnected.tsx` for the modal displayed when disconnected.
  */
 export class InternetStatusSystemCheck implements SystemCheckStrategy {
   private readonly isConnected: boolean | null

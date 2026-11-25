@@ -47,9 +47,8 @@ interface SectionData {
  * navigating back to this screen releases the ID(s) chosen from it so they become
  * selectable again.
  *
- * @param props - Navigation and route props.
- * @param props.navigation - Stack navigator used to push the ID photo instructions screen or swap photo filters.
- * @param props.route - Route params: `cardProcess` (the selected card process) and optional `photoFilter` ('photo' | 'nonPhoto').
+ * @param props - `navigation` pushes the ID photo instructions screen or swaps photo filters. `route` carries
+ * `cardProcess` (the selected card process) and an optional `photoFilter` ('photo' | 'nonPhoto').
  * @returns The evidence type selection screen.
  */
 const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenProps) => {

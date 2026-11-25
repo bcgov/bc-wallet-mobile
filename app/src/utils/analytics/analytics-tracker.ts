@@ -25,6 +25,7 @@ const AnalyticsClient = {
  * @see self hosted snowplow micro: https://docs.snowplow.io/docs/testing/snowplow-micro/basic-usage/
  *
  * @example
+ * ```ts
  * const analyticsTracker = new AnalyticsTracker('myNamespace', 'https://endpoint.com')
  *
  * await analyticsTracker.initializeTracker()
@@ -33,6 +34,7 @@ const AnalyticsClient = {
  * analyticsTracker.trackScreenEvent('HomeScreen', 'LoginScreen')
  * analyticsTracker.trackAlertDisplayEvent(AlertEvent.SAMPLE_EVENT)
  * analyticsTracker.trackAlertActionEvent(AlertEvent.SAMPLE_EVENT, 'OK')
+ * ```
  */
 export class AnalyticsTracker {
   private readonly namespace: string
@@ -136,7 +138,7 @@ export class AnalyticsTracker {
    *
    * Note: This uses the `idim` snowplow `action` schema.
    *
-   * @param {AppEventCode} appEvent - The app event (alert) to track.
+   * @param appEvent - The app event (alert) to track.
    */
   trackAlertDisplayEvent(appEvent: AppEventCode): void {
     if (!this.tracker) {
@@ -157,8 +159,8 @@ export class AnalyticsTracker {
    *
    * Note: This uses the `idim` snowplow `action` schema.
    *
-   * @param {AppEventCode} appEvent - The app event (alert) to track.
-   * @param {string} actionLabel - The action label taken on the alert (e.g., 'ok' button pressed).
+   * @param appEvent - The app event (alert) to track.
+   * @param actionLabel - The action label taken on the alert (e.g., 'ok' button pressed).
    */
   trackAlertActionEvent(appEvent: AppEventCode, actionLabel: string): void {
     if (!this.tracker) {

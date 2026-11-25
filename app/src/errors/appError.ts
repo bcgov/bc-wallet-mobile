@@ -71,7 +71,7 @@ const MAX_SERVER_REASON_LENGTH = 500
 /**
  * Lift a human-readable reason from an HTTP error response body.
  * Handles plain-string bodies (e.g. "email_address is invalid", 5xx HTML pages)
- * and JSON bodies with a string `message` (e.g. {"message":"unexpected images count"}).
+ * and JSON bodies with a string `message` (e.g. `{"message":"unexpected images count"}`).
  * Truncated to {@link MAX_SERVER_REASON_LENGTH} chars so oversized bodies never bloat logs.
  */
 const extractServerReason = (responseData: unknown): string | undefined => {
@@ -90,7 +90,6 @@ const extractServerReason = (responseData: unknown): string | undefined => {
 /**
  * Custom application error class with structured information.
  *
- * @extends {Error}
  */
 export class AppError extends Error {
   private tracked: boolean // Whether this error has been tracked in analytics
@@ -163,8 +162,10 @@ export class AppError extends Error {
    * problem" payload sent to Loki, never shown to the user. See ErrorModal.handleReport.
    *
    * @example
-   * `No internet connection
-   * Debug: [network.err_no_internet.2100] Failed to fetch resource`
+   * ```
+   * No internet connection
+   * Debug: [network.err_no_internet.2100] Failed to fetch resource
+   * ```
    *
    * @returns The full error message string.
    */
@@ -264,7 +265,7 @@ export class AppError extends Error {
   /**
    * Serialize the AppError to a JSON object. Useful for logging.
    *
-   * @return An object containing the serialized error details.
+   * @returns An object containing the serialized error details.
    */
   toJSON() {
     return {

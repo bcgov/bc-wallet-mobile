@@ -45,9 +45,12 @@ export const enum NotificationPermissionStatus {
  * Fixed in: https://github.com/reactwg/react-native-releases/issues/1151 V0.81.x
  * Commit: https://github.com/facebook/react-native/commit/447a7a3527e3e38e4c3ceb330d12d77afe7bc0b4
  *
- * @example previously:
+ * @example
+ * Previously:
+ * ```ts
  * const { status } = await requestNotifications()
  * return status
+ * ```
  */
 const requestNotificationPermission = async (): Promise<PermissionStatus> => {
   return new Promise((resolve) => {

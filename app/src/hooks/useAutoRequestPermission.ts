@@ -11,17 +11,21 @@ import { useEffect, useRef, useState } from 'react'
  * @returns Object with `isLoading` - true while the initial permission request is pending
  *
  * @example
- * // Single permission
+ * Single permission:
+ * ```tsx
  * const { hasPermission, requestPermission } = useCameraPermission()
  * const { isLoading } = useAutoRequestPermission(hasPermission, requestPermission)
+ * ```
  *
  * @example
- * // Multiple permissions (sequenced to avoid dialog conflicts)
+ * Multiple permissions (sequenced to avoid dialog conflicts):
+ * ```tsx
  * const { isLoading: isCameraLoading } = useAutoRequestPermission(hasCameraPermission, requestCameraPermission)
  * const { isLoading: isMicLoading } = useAutoRequestPermission(hasMicPermission, requestMicPermission, !isCameraLoading)
  *
  * if (isCameraLoading || isMicLoading) return null
  * if (!hasCameraPermission || !hasMicPermission) return <PermissionDisabled />
+ * ```
  */
 export const useAutoRequestPermission = (
   hasPermission: boolean,

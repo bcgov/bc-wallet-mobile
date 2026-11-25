@@ -17,9 +17,11 @@ export const getNicknameValidationErrorKey = (_state: BCState, nickname: string)
  * Formats an account name and supports mononyms
  *
  * @example
- *  const account = { firstName: 'Steve', middleNames: 'John', lastName: 'Brule' }
- *  const formattedName = formatAccountName(account)
- *  console.log(formattedName) // Output: "Brule, Steve John"
+ * ```ts
+ * const account = { firstName: 'Steve', middleNames: 'John', lastName: 'Brule' }
+ * const formattedName = formatAccountName(account)
+ * console.log(formattedName) // Output: "Brule, Steve John"
+ * ```
  *
  * @param account - The account object containing firstName, middleNames, and lastName
  * @returns The formatted account name as a string
@@ -65,8 +67,10 @@ export interface TokenNameParts {
  * is present.
  *
  * @example
- *  getShortDisplayName({ given_name: 'Combo', family_name: 'RC0000080' }) // 'Combo'
- *  getShortDisplayName({ family_name: 'RC0000080' }) // 'RC0000080' (mononym)
+ * ```ts
+ * getShortDisplayName({ given_name: 'Combo', family_name: 'RC0000080' }) // 'Combo'
+ * getShortDisplayName({ family_name: 'RC0000080' }) // 'RC0000080' (mononym)
+ * ```
  */
 export const getShortDisplayName = (name: TokenNameParts): string =>
   name.given_name?.trim() || name.family_name?.trim() || ''
@@ -77,8 +81,10 @@ export const getShortDisplayName = (name: TokenNameParts): string =>
  * would produce when given_name is absent (mononym accounts).
  *
  * @example
- *  getFullDisplayName({ given_name: 'Jamie', family_name: 'Doe' }) // 'Jamie Doe'
- *  getFullDisplayName({ family_name: 'Doe' }) // 'Doe' (mononym)
+ * ```ts
+ * getFullDisplayName({ given_name: 'Jamie', family_name: 'Doe' }) // 'Jamie Doe'
+ * getFullDisplayName({ family_name: 'Doe' }) // 'Doe' (mononym)
+ * ```
  */
 export const getFullDisplayName = (name: TokenNameParts): string =>
   [name.given_name?.trim(), name.family_name?.trim()].filter(Boolean).join(' ')

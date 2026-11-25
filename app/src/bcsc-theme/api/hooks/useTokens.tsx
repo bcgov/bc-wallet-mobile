@@ -88,8 +88,7 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
    * Get cached ID token metadata.
    * If refreshCache is true, it will fetch new tokens using the refresh token before extracting metadata.
    *
-   * @param config - Configuration object.
-   * @param config.refreshCache - Whether to refresh the token cache.
+   * @param config - `refreshCache` refreshes the token cache first.
    * @returns The ID token metadata.
    */
   const getCachedIdTokenMetadata = useCallback(

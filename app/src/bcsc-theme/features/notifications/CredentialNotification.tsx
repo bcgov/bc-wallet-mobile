@@ -74,8 +74,8 @@ interface NotificationProofMetadata extends ProofCustomMetadata {
  * Resolve the card status for time-sensitive notifications: items at or near expiry need
  * attention regardless of read state, otherwise blue when unread and white when read.
  *
- * @param {boolean} read Whether the user has opened the notification
- * @param {Date} [expiresTime] When the notification expires, if it does
+ * @param read - Whether the user has opened the notification
+ * @param expiresTime - When the notification expires, if it does
  */
 function getTimeSensitiveStatus(read: boolean, expiresTime?: Date): NotificationCardStatus {
   if (expiresTime && expiresTime.getTime() - Date.now() <= NOTIFICATION_EXPIRY_WARNING_WINDOW_MS) {

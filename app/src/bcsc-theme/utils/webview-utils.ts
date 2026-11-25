@@ -28,8 +28,8 @@ export const stripOuterDocumentTags = (html: string): string => {
 /**
  * Creates a CSS font-size value based on the device font scale.
  * iOS uses the fontScale, Android uses a fixed value of 1.
- * @param {number} fontScale - The device font scale (e.g. from useWindowDimensions().fontScale)
- * @returns {number} The CSS font-size value in pixels
+ * @param fontScale - The device font scale (e.g. from useWindowDimensions().fontScale)
+ * @returns The CSS font-size value in pixels
  */
 const createFontScalingCss = (fontScale: number): number => {
   const scale = Platform.OS === 'ios' ? fontScale : 1
@@ -54,9 +54,9 @@ export interface TermsOfUseHtmlOptions {
  * - Bold header text (from i18n)
  * - Subtitle with version and formatted date (from i18n)
  *
- * @param {TermsOfUseHtmlOptions} options - The terms data, color palette, and i18n strings
- * @param {number} fontScale - The device font scale (e.g. from useWindowDimensions().fontScale)
- * @returns {string} A complete HTML document string
+ * @param options - The terms data, color palette, and i18n strings
+ * @param fontScale - The device font scale (e.g. from useWindowDimensions().fontScale)
+ * @returns A complete HTML document string
  */
 export const createTermsOfUseHtml = (options: TermsOfUseHtmlOptions, fontScale: number): string => {
   const { termsOfUse, colorPalette, textColor, headerText, subtitlePrefix, versionLabel } = options

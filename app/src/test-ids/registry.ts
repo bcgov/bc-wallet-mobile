@@ -943,7 +943,7 @@ export const TestIds = {
       done: 'Done',
       backToHome: 'BackToHome',
     },
-    /** A wallet-list credential card (`Card11Pure`). NOT unique per credential — with >1 stored
+    /** A wallet-list credential card (`Card11Pure`). NOT unique per credential — with more than one stored
      *  credential, disambiguate by `name` text. `revoked` renders only on a revoked card. */
     card: {
       card: 'CredentialCard',

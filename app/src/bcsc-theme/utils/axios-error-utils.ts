@@ -504,7 +504,10 @@ export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
  * Converts an HTTP path into a normalized route template.
  * @param url - The HTTP path to normalize
  * @returns The normalized HTTP path with UUIDs and numeric segments replaced by `{id}`
- * @example normalizeHttpPath('/api/users/1234/profile') // returns '/api/users/{id}/profile'
+ * @example
+ * ```ts
+ * normalizeHttpPath('/api/users/1234/profile') // returns '/api/users/{id}/profile'
+ * ```
  */
 const _toRouteTemplate = (url: string): string => {
   const pathIdentifierSegment = z.union([
@@ -524,10 +527,12 @@ const _toRouteTemplate = (url: string): string => {
  * Checks if a string is a Base64 URL-encoded representation of a numeric verification request ID.
  * This is used to identify segments in a URL that represent verification request IDs.
  *
- * @description // This function decodes this server side Java code:
+ * Decodes what this server-side Java code encodes:
+ * ```java
  * public String encodeVerificationRequestId(final BigDecimal verificationRequestId) {
  *   return Base64.getUrlEncoder().withoutPadding().encodeToString(verificationRequestId.toPlainString().getBytes());
  * }
+ * ```
  *
  * @param value - The string to check
  * @returns True if the string is a Base64 URL-encoded numeric verification request ID, false otherwise

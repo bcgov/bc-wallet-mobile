@@ -72,9 +72,9 @@ async function handleCheckOutcome(
 /**
  * Runs a series of startup checks and handles failures and successes accordingly.
  *
- * @param {SystemCheckStrategy[]} checks - An array of startup checks to run.
- * @param {BifoldLogger} [logger] - Optional logger used to report isolated check failures.
- * @returns {*} {Promise<boolean[]>} - An array of boolean results indicating the success of each check.
+ * @param checks - An array of startup checks to run.
+ * @param logger - Optional logger used to report isolated check failures.
+ * @returns - An array of boolean results indicating the success of each check.
  */
 export async function runSystemChecks(checks: SystemCheckStrategy[], logger?: BifoldLogger) {
   // Run every check concurrently but isolate failures: a single check that throws
