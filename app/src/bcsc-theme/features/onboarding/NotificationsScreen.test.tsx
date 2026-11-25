@@ -110,6 +110,30 @@ describe('Notifications', () => {
       expect(screen.queryByTestId(tid(ids.skip))).toBeNull()
     })
 
+    it.each([
+      ['the follow-up read is still pending', () => new Promise<string>(() => undefined)],
+      ['the follow-up read fails', () => Promise.reject(new Error('read failed'))],
+    ])(
+      'never flashes the disabled variant after Allow on a fresh Android 13+ install when %s',
+      async (_label, followUpRead) => {
+        // Fresh Android 13+ reports denied before the first prompt
+        mockStatus.mockResolvedValueOnce(NPStatus.DENIED)
+        mockHasPrompted.mockResolvedValue(false)
+        mockSetup.mockResolvedValue(NPStatus.GRANTED)
+
+        renderScreen(false)
+        const enable = await screen.findByTestId(tid(ids.enable))
+        mockStatus.mockImplementation(followUpRead)
+
+        fireEvent.press(enable)
+
+        await waitFor(() => expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.OnboardingSecureApp))
+        expect(preference()).toBe('true')
+        expect(screen.queryByTestId(tid(ids.openSettings))).toBeNull()
+        expect(screen.queryByTestId(tid(ids.continueWithout))).toBeNull()
+      }
+    )
+
     it('Continue keeps notifications on without asking again, and goes to Secure App', async () => {
       mockStatus.mockResolvedValue(NPStatus.GRANTED)
       mockHasPrompted.mockResolvedValue(true)

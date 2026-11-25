@@ -78,8 +78,11 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
     try {
       const result = await PushNotifications.setup()
       logger.info(`[NotificationsScreen] Push notification permission status: ${result}`)
-      // A refusal does not change the OS status value on Android, so this is what swaps in PermissionDisabled
-      setHasPrompted(true)
+      // A refusal does not change the OS status value on Android, so this is what swaps in PermissionDisabled.
+      // Not set on a grant: Android still reads DENIED until the refresh lands, which would flash PermissionDisabled.
+      if (result !== PushNotifications.NotificationPermissionStatus.GRANTED) {
+        setHasPrompted(true)
+      }
       dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [result === 'granted'] })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
