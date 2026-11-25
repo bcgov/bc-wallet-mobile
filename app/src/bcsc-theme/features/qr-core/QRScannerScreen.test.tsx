@@ -1,3 +1,4 @@
+import { useCardStatus } from '@/bcsc-theme/hooks/useCardStatus'
 import { BCSCQRCoreScreens, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useFocusEffect } from '@react-navigation/native'
 import { act, render } from '@testing-library/react-native'
@@ -29,6 +30,10 @@ jest.mock('@react-navigation/native', () => ({
     getParent: () => ({ navigate: mockParentNavigate }),
   }),
 }))
+// The real hook pulls in the navigation stack; a verified, unexpired card is the default for every test
+jest.mock('@/bcsc-theme/hooks/useCardStatus', () => ({
+  useCardStatus: jest.fn(() => ({ isVerified: true, isExpired: false })),
+}))
 jest.mock('./QRScanner', () => jest.fn(() => null))
 jest.mock('./qr-code-strategies/usePairingCodeQRCodeStrategy', () => ({ usePairingCodeQRCodeStrategy: jest.fn() }))
 jest.mock('./qr-code-strategies/useAccountTransferQRCodeStrategy', () => ({
@@ -37,6 +42,7 @@ jest.mock('./qr-code-strategies/useAccountTransferQRCodeStrategy', () => ({
 jest.mock('./qr-code-strategies/useDidCommOobQRCodeStrategy', () => ({ useDidCommOobQRCodeStrategy: jest.fn() }))
 
 const mockQRScanner = QRScanner as unknown as jest.Mock
+const mockUseCardStatus = useCardStatus as jest.Mock
 const mockUseFocusEffect = useFocusEffect as jest.Mock
 
 const latestProps = () => mockQRScanner.mock.calls.at(-1)![0]
@@ -73,6 +79,26 @@ describe('QRScannerScreen', () => {
     render(<QRScannerScreen />)
     onPairingCodeFound('ABC123')
     expect(mockNavigate).toHaveBeenCalledWith(BCSCQRCoreScreens.PairingCode, { pairingCode: 'ABC123' })
+  })
+
+  it('sends an expired card to reverify instead of the pairing code tab', () => {
+    mockUseCardStatus.mockReturnValueOnce({ isVerified: true, isExpired: true })
+
+    render(<QRScannerScreen />)
+    onPairingCodeFound('ABC123')
+
+    expect(mockParentNavigate).toHaveBeenCalledWith(BCSCScreens.ReverifyAccount, { isExpired: true })
+    expect(mockNavigate).not.toHaveBeenCalled()
+  })
+
+  it('sends an unverified user to the verify prompt instead of the pairing code tab', () => {
+    mockUseCardStatus.mockReturnValueOnce({ isVerified: false, isExpired: false })
+
+    render(<QRScannerScreen />)
+    onPairingCodeFound('ABC123')
+
+    expect(mockParentNavigate).toHaveBeenCalledWith(BCSCScreens.MainVerifyPrompt)
+    expect(mockNavigate).not.toHaveBeenCalled()
   })
 
   it('navigates the parent stack on account transfer success and already verified', () => {

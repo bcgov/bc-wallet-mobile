@@ -1,7 +1,7 @@
 import QRScanner from '@/bcsc-theme/features/qr-core/QRScanner'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { useAlerts } from '@/hooks/useAlerts'
-import { CommonActions } from '@react-navigation/core'
+import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { default as React, useCallback, useMemo } from 'react'
 import { useAccountTransferQRCodeStrategy } from '../../qr-core/qr-code-strategies/useAccountTransferQRCodeStrategy'
