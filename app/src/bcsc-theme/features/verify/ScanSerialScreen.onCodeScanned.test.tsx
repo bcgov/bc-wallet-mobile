@@ -418,14 +418,12 @@ describe('ScanSerialScreen onCodeScanned', () => {
       mockIsDriversLicenceSerial.mockImplementation((dcn) => dcn === LICENCE_DCN)
     })
 
-    it('routes to the scanned licence screen with the DCN from the PDF-417', async () => {
+    it('routes to the scanned licence screen when the PDF-417 DCN is a licence', async () => {
       await renderScreen()
 
       expect(await scan([licence])).toBe(true)
       expect(mockIsDriversLicenceSerial).toHaveBeenCalledWith(LICENCE_DCN)
-      expect(navigationMock().navigate).toHaveBeenCalledWith(BCSCScreens.ScannedDriversLicence, {
-        serial: LICENCE_DCN,
-      })
+      expect(navigationMock().navigate).toHaveBeenCalledWith(BCSCScreens.ScannedDriversLicence)
       expect(mockHandleScanComboCard).not.toHaveBeenCalled()
     })
 
@@ -433,9 +431,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
       await renderScreen()
 
       expect(await scan([serial, licence])).toBe(true)
-      expect(navigationMock().navigate).toHaveBeenCalledWith(BCSCScreens.ScannedDriversLicence, {
-        serial: LICENCE_DCN,
-      })
+      expect(navigationMock().navigate).toHaveBeenCalledWith(BCSCScreens.ScannedDriversLicence)
       expect(mockHandleScanComboCard).not.toHaveBeenCalled()
     })
 

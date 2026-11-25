@@ -305,7 +305,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     if (card?.dcn && isDriversLicenceSerial(card.dcn)) {
       isProcessingScan.current = true
       setScanState('locked')
-      navigation.navigate(BCSCScreens.ScannedDriversLicence, { serial: card.dcn })
+      navigation.navigate(BCSCScreens.ScannedDriversLicence)
       return true
     }
 

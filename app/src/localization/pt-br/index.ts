@@ -1165,10 +1165,8 @@ const translation = {
       "UseAnotherID": "Use another ID (PT-BR)",
     },
     "ScannedDriversLicence": {
-      "Heading": "You scanned a driver's licence (PT-BR)",
-      "SerialNumber": "Serial number: {{serial}} (PT-BR)",
-      "Description1": "Did you mean to scan a BC Services Card? Using a BC Services Card is a faster way to verify your account. (PT-BR)",
-      "Description2": "Or you can continue with a driver's licence (PT-BR)",
+      "Heading": "Continue with a driver's licence? (PT-BR)",
+      "Description": "Did you mean to use a BC Services Card? Using a BC Services Card is a faster way to verify your account. (PT-BR)",
       "ContinueWithLicence": "Continue with a driver's licence (PT-BR)",
       "ScanBCSC": "Scan your BC Services Card (PT-BR)",
     },
