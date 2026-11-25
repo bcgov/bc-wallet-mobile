@@ -58,6 +58,7 @@ import {
   useCameraPermission,
   useMicrophonePermission,
 } from 'react-native-vision-camera'
+import { CameraIssue } from '../components/CameraIssue'
 
 type TakeVideoScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.TakeVideo>
@@ -201,6 +202,12 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
       safeAreaInsets.bottom,
     ]
   )
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerShown: !device,
+    })
+  }, [device, navigation])
 
   const getCameraError = useCallback(
     (error: unknown) => {
@@ -608,10 +615,11 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
 
   if (!device) {
     return (
-      <SafeAreaView style={styles.pageContainer}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ThemedText style={{ color: 'white' }}>{t('BCSC.SendVideo.TakeVideo.NoFrontCameraAvailable')}</ThemedText>
-        </View>
+      <SafeAreaView style={[styles.pageContainer]}>
+        <CameraIssue
+          title={t('BCSC.CameraDisclosure.NoCameraAvailable', { device: 'front' })}
+          description={t('BCSC.CameraDisclosure.NoCameraAvailableDescription', { device: 'front' })}
+        />
       </SafeAreaView>
     )
   }

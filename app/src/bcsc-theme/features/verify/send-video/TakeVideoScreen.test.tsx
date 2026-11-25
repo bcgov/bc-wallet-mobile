@@ -194,7 +194,8 @@ describe('TakeVideoScreen', () => {
       </BasicAppContext>
     )
 
-    expect(getByText('BCSC.SendVideo.TakeVideo.NoFrontCameraAvailable')).toBeTruthy()
+    expect(getByText('BCSC.CameraDisclosure.NoCameraAvailable')).toBeTruthy()
+    expect(getByText('BCSC.CameraDisclosure.NoCameraAvailableDescription')).toBeTruthy()
   })
 
   test('renders permission required message when permissions are denied', async () => {

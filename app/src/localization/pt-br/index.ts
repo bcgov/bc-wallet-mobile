@@ -928,6 +928,7 @@ const translation = {
       "CameraPermissionRequiredMessage": "Please enable camera permission to take a photo. (PT-BR)",
       "CameraPermissionRequiredMessage2": "Please enable camera permission to scan a QR code. (PT-BR)",
       "NoCameraAvailable": "No {{device}} camera available (PT-BR)",
+      "NoCameraAvailableDescription": "Make sure your device has a working {{device}} camera and try again (PT-BR)",
       "Error": "Camera Error (PT-BR)",
       "ErrorMessage": "An error occurred while using the camera. Please try again. (PT-BR)",
       "ErrorTakingPhoto": "Failed to take photo. Please try again. (PT-BR)",

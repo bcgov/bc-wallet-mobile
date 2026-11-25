@@ -19,6 +19,7 @@ import { useBCSCActivity } from '../contexts/BCSCActivityContext'
 //   throwIfSimulatingNotReadyCapture,
 //   useSimulatedMediaServicesResets,
 // } from '../hooks/useCameraEventSimulation'
+import { CameraIssue } from '../features/verify/components/CameraIssue'
 import { useCameraInterruption, useCameraNotReadyTimeout, useRecoverableCameraError } from '../hooks/useCameraRecovery'
 import { isCameraControlCanceledError, useVisionCamera } from '../hooks/useVisionCamera'
 import { isBackgroundedAppState } from '../utils/app-state'
@@ -250,10 +251,11 @@ const MaskedCamera = ({
 
   if (!device) {
     return (
-      <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ThemedText>{t('BCSC.CameraDisclosure.NoCameraAvailable', { device: cameraFace })}</ThemedText>
-        </View>
+      <SafeAreaView style={[styles.container, { marginTop: -safeAreaInsets.top }]} edges={['bottom', 'left', 'right']}>
+        <CameraIssue
+          title={t('BCSC.CameraDisclosure.NoCameraAvailable', { device: cameraFace })}
+          description={t('BCSC.CameraDisclosure.NoCameraAvailableDescription', { device: cameraFace })}
+        />
       </SafeAreaView>
     )
   }
