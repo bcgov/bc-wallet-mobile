@@ -111,6 +111,7 @@ describe('useFactoryReset', () => {
     expect(clearSecureState).toHaveBeenCalledWith()
     expect(dispatch.mock.calls[0]).toStrictEqual([{ type: BCDispatchAction.CLEAR_BCSC, payload: undefined }])
     expect(dispatch.mock.calls[1]).toStrictEqual([{ type: DispatchAction.DID_AUTHENTICATE, payload: [false] }])
+    expect(purgeWalletStore).not.toHaveBeenCalled()
   })
 
   it('forgets the wrong PIN attempts once the account is removed, before the state is cleared', async () => {
@@ -184,8 +185,8 @@ describe('useFactoryReset', () => {
     // distinguish "awaited" from "dropped await". Holding teardownAgent open until we
     // explicitly resolve it, and asserting nothing past it has run in the meantime,
     // proves the call site actually blocks on it regardless of scheduling.
-    let resolveTeardown: () => void = () => undefined
-    const teardownPromise = new Promise<void>((resolve) => {
+    let resolveTeardown: (deleted: boolean) => void = () => undefined
+    const teardownPromise = new Promise<boolean>((resolve) => {
       resolveTeardown = resolve
     })
     const teardownAgentMock = jest.fn().mockReturnValue(teardownPromise)
@@ -223,7 +224,7 @@ describe('useFactoryReset', () => {
     expect(bcscCore.getAccount).not.toHaveBeenCalled()
     expect(clearSecureState).not.toHaveBeenCalled()
 
-    resolveTeardown()
+    resolveTeardown(true)
 
     const result = await act(async () => resultPromise)
 
@@ -231,6 +232,83 @@ describe('useFactoryReset', () => {
     expect(teardownAgentMock).toHaveBeenCalledTimes(1)
     expect(bcscCore.getAccount).toHaveBeenCalled()
     expect(clearSecureState).toHaveBeenCalled()
+  })
+
+  it('purges the store only after teardown of a starting agent finishes, and before the account is touched', async () => {
+    // A starting agent is not shared yet (`agent` is null): the purge must wait for its
+    // teardown, and nothing that clears the wallet key may run before the purge.
+    let resolveTeardown: (deleted: boolean) => void = () => undefined
+    const teardownAgent = jest.fn().mockReturnValue(
+      new Promise<boolean>((resolve) => {
+        resolveTeardown = resolve
+      })
+    )
+    let releasePurge: () => void = () => undefined
+    jest.mocked(purgeWalletStore).mockReturnValue(
+      new Promise<void>((resolve) => {
+        releasePurge = resolve
+      })
+    )
+    jest.mocked(useBCSCAgentSafe).mockReturnValue({
+      agent: null,
+      loading: true,
+      error: null,
+      retry: jest.fn(),
+      resetWallet: jest.fn(),
+      teardownAgent,
+      waitForAgent: jest.fn().mockResolvedValue(null),
+    })
+
+    const { bcscCore } = setupFactoryReset({ store: walletPurgeStore })
+    const hook = renderHook(() => useFactoryReset())
+
+    let resultPromise!: ReturnType<typeof hook.result.current>
+    act(() => {
+      resultPromise = hook.result.current()
+    })
+    const flush = () =>
+      act(async () => {
+        for (let i = 0; i < 5; i++) {
+          await Promise.resolve()
+        }
+      })
+
+    await flush()
+    expect(teardownAgent).toHaveBeenCalledTimes(1)
+    expect(purgeWalletStore).not.toHaveBeenCalled()
+    expect(bcscCore.getAccount).not.toHaveBeenCalled()
+
+    resolveTeardown(false)
+    await flush()
+    expect(purgeWalletStore).toHaveBeenCalledTimes(1)
+    expect(bcscCore.getAccount).not.toHaveBeenCalled()
+
+    releasePurge()
+    const result = await act(async () => resultPromise)
+    expect(result.success).toBe(true)
+    expect(bcscCore.getAccount).toHaveBeenCalled()
+  })
+
+  it('does not purge when teardown already deleted the store', async () => {
+    jest.mocked(useBCSCAgentSafe).mockReturnValue({
+      agent: { id: 'agent' } as any,
+      loading: false,
+      error: null,
+      retry: jest.fn(),
+      resetWallet: jest.fn(),
+      teardownAgent: jest.fn().mockResolvedValue(true),
+      waitForAgent: jest.fn(),
+    })
+
+    setupFactoryReset({ store: walletPurgeStore })
+    const hook = renderHook(() => useFactoryReset())
+
+    await act(async () => {
+      const result = await hook.result.current()
+      expect(result.success).toBe(true)
+    })
+
+    expect(purgeWalletStore).not.toHaveBeenCalled()
   })
 
   it('dispatches CLEAR_BCSC, then clearSecureState, then DID_AUTHENTICATE(false)', async () => {

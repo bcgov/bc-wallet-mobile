@@ -11,7 +11,7 @@ export interface BCSCAgentContextValue {
   error: AppError | null
   retry: () => void
   resetWallet: () => Promise<void>
-  teardownAgent: () => Promise<void>
+  teardownAgent: () => Promise<boolean>
   waitForAgent: () => Promise<Agent | null>
 }
 

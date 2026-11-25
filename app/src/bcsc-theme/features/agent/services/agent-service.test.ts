@@ -421,9 +421,45 @@ describe('warmCache', () => {
   })
 })
 
+/**
+ * A fake agent whose askar store opens/closes like Credo's: `shutdown` closes the store
+ * unless it is told to throw first.
+ */
+const makeAgent = ({
+  isInitialized,
+  storeOpen = isInitialized,
+  shutdown,
+}: {
+  isInitialized: boolean
+  storeOpen?: boolean
+  shutdown?: () => Promise<void>
+}) => {
+  let open = storeOpen
+  const agent = {
+    isInitialized,
+    shutdown: jest.fn(async () => {
+      if (shutdown) {
+        await shutdown()
+      }
+      open = false
+    }),
+    modules: {
+      askar: {
+        get isStoreOpen() {
+          return open
+        },
+        closeStore: jest.fn(async () => {
+          open = false
+        }),
+      },
+    },
+  }
+  return agent
+}
+
 describe('shutdownAgent', () => {
   it('calls agent.shutdown() when the agent is initialized', async () => {
-    const agent = { isInitialized: true, shutdown: jest.fn().mockResolvedValue(undefined) }
+    const agent = makeAgent({ isInitialized: true })
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await shutdownAgent(agent as any, logger)
@@ -431,28 +467,74 @@ describe('shutdownAgent', () => {
     expect(agent.shutdown).toHaveBeenCalled()
   })
 
-  it('skips shutdown when the agent is not initialized (idempotent)', async () => {
+  it('closes an agent whose start-up failed after the store opened', async () => {
+    // Credo marks the agent initialized last, so a failure after the store opens leaves
+    // it open with isInitialized still false.
+    const agent = makeAgent({ isInitialized: false, storeOpen: true })
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await shutdownAgent(agent as any, logger)
+
+    expect(agent.shutdown).toHaveBeenCalled()
+    expect(logger.error).not.toHaveBeenCalled()
+  })
+
+  it('skips shutdown when there is nothing to close (idempotent)', async () => {
     // A reset path already shut the agent down; the provider unmount then calls
     // shutdownAgent again. A second shutdown() would throw in askar onCloseContext.
-    const agent = { isInitialized: false, shutdown: jest.fn().mockResolvedValue(undefined) }
+    const agent = makeAgent({ isInitialized: false, storeOpen: false })
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await shutdownAgent(agent as any, logger)
 
     expect(agent.shutdown).not.toHaveBeenCalled()
+    expect(agent.modules.askar.closeStore).not.toHaveBeenCalled()
     expect(logger.error).not.toHaveBeenCalled()
   })
 
+  it('does not close the store a second time after a clean shutdown', async () => {
+    const agent = makeAgent({ isInitialized: true })
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await shutdownAgent(agent as any, logger)
+
+    expect(agent.modules.askar.closeStore).not.toHaveBeenCalled()
+  })
+
   it('catches and logs errors without rethrowing', async () => {
-    const agent = { isInitialized: true, shutdown: jest.fn().mockRejectedValue(new Error('shutdown boom')) }
+    const agent = makeAgent({ isInitialized: true })
+    agent.shutdown.mockRejectedValue(new Error('shutdown boom'))
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await expect(shutdownAgent(agent as any, logger)).resolves.toBeUndefined()
     expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('shutdown boom'))
   })
 
+  it('still closes the store when shutdown throws before reaching it', async () => {
+    const agent = makeAgent({ isInitialized: true })
+    agent.shutdown.mockRejectedValue(new Error('shutdown boom'))
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await expect(shutdownAgent(agent as any, logger)).resolves.toBeUndefined()
+
+    expect(agent.modules.askar.closeStore).toHaveBeenCalledTimes(1)
+    expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('shutdown boom'))
+  })
+
+  it('logs both errors when shutdown and the fallback store close both fail', async () => {
+    const agent = makeAgent({ isInitialized: true })
+    agent.shutdown.mockRejectedValue(new Error('shutdown boom'))
+    agent.modules.askar.closeStore.mockRejectedValue(new Error('close boom'))
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await expect(shutdownAgent(agent as any, logger)).resolves.toBeUndefined()
+
+    expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('shutdown boom'))
+    expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('close boom'))
+  })
+
   it('still closes the wallet when the pre-close step fails', async () => {
-    const agent = { isInitialized: true, shutdown: jest.fn().mockResolvedValue(undefined) }
+    const agent = makeAgent({ isInitialized: true })
     const beforeClose = jest.fn().mockRejectedValue(new Error('drain boom'))
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -532,10 +614,10 @@ describe('wallet lifecycle serialization', () => {
       resolveShutdown = resolve
     })
 
-    const oldAgent = {
+    const oldAgent = makeAgent({
       isInitialized: true,
-      shutdown: jest.fn(() => shutdownGate.then(() => void order.push('shutdown'))),
-    }
+      shutdown: () => shutdownGate.then(() => void order.push('shutdown')),
+    })
     const newAgent = {
       initialize: jest.fn(async () => void order.push('initialize')),
     }
@@ -569,10 +651,10 @@ describe('wallet lifecycle serialization', () => {
       finishDrain = resolve
     })
 
-    const oldAgent = {
+    const oldAgent = makeAgent({
       isInitialized: true,
-      shutdown: jest.fn(async () => void order.push('shutdown')),
-    }
+      shutdown: async () => void order.push('shutdown'),
+    })
     const newAgent = {
       initialize: jest.fn(async () => void order.push('initialize')),
     }
@@ -596,7 +678,10 @@ describe('wallet lifecycle serialization', () => {
   })
 
   it('does not let a failed shutdown wedge the queue for the next open', async () => {
-    const failing = { isInitialized: true, shutdown: jest.fn().mockRejectedValue(new Error('close boom')) }
+    const failing = makeAgent({
+      isInitialized: true,
+      shutdown: () => Promise.reject(new Error('close boom')),
+    })
     const next = { initialize: jest.fn().mockResolvedValue(undefined) }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -616,10 +701,10 @@ describe('wallet lifecycle serialization', () => {
       resolveShutdown = resolve
     })
 
-    const oldAgent = {
+    const oldAgent = makeAgent({
       isInitialized: true,
-      shutdown: jest.fn(() => shutdownGate.then(() => void order.push('shutdown'))),
-    }
+      shutdown: () => shutdownGate.then(() => void order.push('shutdown')),
+    })
     const agent = {
       modules: { askar: { deleteStore: jest.fn(async () => void order.push('delete')) } },
     }
