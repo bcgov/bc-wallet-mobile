@@ -80,4 +80,17 @@ describe('NotificationSettingsScreen', () => {
     await waitFor(() => expect(mockSetup).toHaveBeenCalled())
     await waitFor(() => expect(mockActivate).toHaveBeenCalled())
   })
+
+  it('keeps the enable flow available when the permission request fails', async () => {
+    mockSetup.mockRejectedValue(new Error('request failed'))
+
+    renderScreen()
+
+    fireEvent.press(await screen.findByTestId(tid('EnableNotifications')))
+
+    await waitFor(() => expect(mockStatus).toHaveBeenCalledTimes(2))
+    expect(screen.getByTestId(tid('EnableNotifications'))).toBeTruthy()
+    expect(screen.queryByTestId(tid('OpenNotificationSettings'))).toBeNull()
+    expect(mockActivate).not.toHaveBeenCalled()
+  })
 })
