@@ -223,7 +223,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.EnterBirthdate]: undefined
   [BCSCScreens.VerificationCardError]: { errorType: DeviceAuthorizationError }
   [BCSCScreens.CardScanningError]: undefined
-  [BCSCScreens.ScannedDriversLicence]: undefined
+  [BCSCScreens.ScannedDriversLicence]: { serial: string }
   [BCSCScreens.DeviceAuthorizationError]: { errorType: DeviceAuthorizationError }
   [BCSCScreens.BirthdateLockout]: undefined
   [BCSCScreens.EnterEmail]: { cardProcess: BCSCCardProcess }

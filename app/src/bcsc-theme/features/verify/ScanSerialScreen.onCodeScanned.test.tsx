@@ -7,6 +7,7 @@ import {
   BC_DL_BARCODE_S,
 } from '@/bcsc-theme/utils/__fixtures__/barcodes'
 import { ScanableCode } from '@/bcsc-theme/utils/card-barcode-decoder'
+import { isDriversLicenceSerial } from '@/bcsc-theme/utils/card-serial'
 import { TestIds } from '@/test-ids/registry'
 import { bifoldLoggerInstance, testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
@@ -36,6 +37,13 @@ jest.mock('../../components/CodeScanningCamera', () => ({
     return null
   },
 }))
+
+// Mocked so these tests don't depend on which DCN prefixes count as a licence; each test picks.
+jest.mock('@/bcsc-theme/utils/card-serial', () => ({
+  ...jest.requireActual('@/bcsc-theme/utils/card-serial'),
+  isDriversLicenceSerial: jest.fn(),
+}))
+const mockIsDriversLicenceSerial = isDriversLicenceSerial as jest.Mock
 
 jest.mock('react-native-vision-camera', () => ({
   useCameraPermission: jest.fn(() => ({ hasPermission: true, requestPermission: jest.fn() })),
@@ -121,6 +129,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
   beforeEach(() => {
     navigation = useNavigation()
     jest.clearAllMocks()
+    mockIsDriversLicenceSerial.mockReturnValue(false)
     mockNow = 1_000_000
   })
 
@@ -399,6 +408,68 @@ describe('ScanSerialScreen onCodeScanned', () => {
       advance(FRAME_MS)
       expect(await scan([unknown, damaged])).toBe(true)
       expect(navigationMock().navigate).toHaveBeenCalledWith(BCSCScreens.CardScanningError)
+    })
+  })
+
+  describe("scanning a driver's licence", () => {
+    const LICENCE_DCN = 'S00023254'
+
+    beforeEach(() => {
+      mockIsDriversLicenceSerial.mockImplementation((dcn) => dcn === LICENCE_DCN)
+    })
+
+    it('routes to the scanned licence screen with the DCN from the PDF-417', async () => {
+      await renderScreen()
+
+      expect(await scan([licence])).toBe(true)
+      expect(mockIsDriversLicenceSerial).toHaveBeenCalledWith(LICENCE_DCN)
+      expect(navigationMock().navigate).toHaveBeenCalledWith(BCSCScreens.ScannedDriversLicence, {
+        serial: LICENCE_DCN,
+      })
+      expect(mockHandleScanComboCard).not.toHaveBeenCalled()
+    })
+
+    it('routes to the licence screen rather than completing, even with a 1D serial in the batch', async () => {
+      await renderScreen()
+
+      expect(await scan([serial, licence])).toBe(true)
+      expect(navigationMock().navigate).toHaveBeenCalledWith(BCSCScreens.ScannedDriversLicence, {
+        serial: LICENCE_DCN,
+      })
+      expect(mockHandleScanComboCard).not.toHaveBeenCalled()
+    })
+
+    it('routes as soon as the licence arrives after a 1D serial', async () => {
+      await renderScreen()
+
+      expect(await scan([serial])).toBe(false)
+      expect(await scan([licence])).toBe(true)
+      expect(navigationMock().navigate).toHaveBeenCalledTimes(1)
+      expect(mockHandleScanComboCard).not.toHaveBeenCalled()
+    })
+
+    it('ignores every later batch after routing to the licence screen', async () => {
+      await renderScreen()
+
+      expect(await scan([licence])).toBe(true)
+      expect(await scan([serial, licence])).toBe(true)
+      expect(navigationMock().navigate).toHaveBeenCalledTimes(1)
+      expect(mockHandleScanComboCard).not.toHaveBeenCalled()
+    })
+
+    it('keeps scanning for a card whose PDF-417 is not a licence', async () => {
+      await renderScreen()
+
+      expect(await scan([pdf417(BC_COMBO_BARCODE_K)])).toBe(false)
+      expect(navigationMock().navigate).not.toHaveBeenCalled()
+    })
+
+    it('does not check a licence with no DCN in its security field, and completes with the 1D serial', async () => {
+      await renderScreen()
+
+      expect(await scan([otherLicence, serial])).toBe(true)
+      expect(mockIsDriversLicenceSerial).not.toHaveBeenCalled()
+      expect(mockHandleScanComboCard).toHaveBeenCalledWith('K12345678', { birthDate: OTHER_BIRTH_DATE })
     })
   })
 

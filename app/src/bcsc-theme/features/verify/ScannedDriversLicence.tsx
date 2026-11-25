@@ -1,5 +1,7 @@
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { RouteProp, useRoute } from '@react-navigation/native'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
@@ -8,6 +10,7 @@ import { ControlContainer } from '../../components/ControlContainer'
 const ScannedDriversLicense = () => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()
+  const { params } = useRoute<RouteProp<BCSCVerifyStackParams, BCSCScreens.ScannedDriversLicence>>()
 
   const styles = StyleSheet.create({
     pageHeaderContainer: {
@@ -51,7 +54,7 @@ const ScannedDriversLicense = () => {
     <ScreenWrapper scrollViewContainerStyle={styles.pageHeaderContainer} controls={controls}>
       <ThemedText variant="headingThree">{t('BCSC.ScannedDriversLicence.Heading')}</ThemedText>
       <ThemedText style={styles.serialNumber}>
-        {t('BCSC.ScannedDriversLicence.SerialNumber', { serial: '12345678' })}
+        {t('BCSC.ScannedDriversLicence.SerialNumber', { serial: params.serial })}
       </ThemedText>
       <ThemedText>{t('BCSC.ScannedDriversLicence.Description1')}</ThemedText>
       <ThemedText style={styles.continueDescription}>{t('BCSC.ScannedDriversLicence.Description2')}</ThemedText>

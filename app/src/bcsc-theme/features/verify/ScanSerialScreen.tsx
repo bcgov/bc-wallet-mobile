@@ -4,6 +4,7 @@ import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { decodeCardBarcode, ScanableCode, toDriversLicenseMetadata } from '@/bcsc-theme/utils/card-barcode-decoder'
 import { CardScan, combineCardBarcodes, EMPTY_CARD_SCAN } from '@/bcsc-theme/utils/card-scan'
+import { isDriversLicenceSerial } from '@/bcsc-theme/utils/card-serial'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { TestIds } from '@/test-ids/registry'
 import {
@@ -298,6 +299,16 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     }
 
     const { serial, card } = cardScanRef.current
+
+    // A driver's licence alone can't verify the user, so route it away before the combo card path.
+    // Its DCN comes from the PDF-417; a card with no DCN in its security field falls through.
+    if (card?.dcn && isDriversLicenceSerial(card.dcn)) {
+      isProcessingScan.current = true
+      setScanState('locked')
+      navigation.navigate(BCSCScreens.ScannedDriversLicence, { serial: card.dcn })
+      return true
+    }
+
     if (serial && card) {
       // We have both the serial and the birthdate — lock the camera and handle the card.
       isProcessingScan.current = true

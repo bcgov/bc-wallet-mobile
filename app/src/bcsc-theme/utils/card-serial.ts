@@ -40,3 +40,21 @@ export const isSameCardSerial = (a?: string | null, b?: string | null): boolean 
 
   return left !== '' && left === right
 }
+
+/**
+ * The DCN prefix letters ICBC issues on driver's licences. Provided from the G+D Mobile Security document
+ */
+export const DRIVERS_LICENCE_DCN_PREFIXES: ReadonlySet<string> = new Set<string>(['S', 'R', 'U'])
+
+/**
+ * Whether a serial belongs to a driver's licence, judged by its DCN's prefix letter. Accepts the
+ * serial in any shape {@link isSameCardSerial} does: the 1D barcode, the 2D barcode's zero-padded
+ * security field, or typed by hand.
+ *
+ * @returns false when the serial is missing or is not a DCN.
+ */
+export const isDriversLicenceSerial = (raw?: string | null): boolean => {
+  const dcn = parseDcn(raw?.trim().toUpperCase() ?? '')
+
+  return dcn !== null && DRIVERS_LICENCE_DCN_PREFIXES.has(dcn[0])
+}

@@ -1,4 +1,10 @@
-import { isSameCardSerial, parseDcn, parseLooseSerial } from '@/bcsc-theme/utils/card-serial'
+import {
+  DRIVERS_LICENCE_DCN_PREFIXES,
+  isDriversLicenceSerial,
+  isSameCardSerial,
+  parseDcn,
+  parseLooseSerial,
+} from '@/bcsc-theme/utils/card-serial'
 
 describe('parseDcn', () => {
   it('reads a bare DCN from the 1D barcode', () => {
@@ -90,5 +96,37 @@ describe('isSameCardSerial', () => {
     ['two blank serials', ' ', ''],
   ])('does not match %s', (_, a, b) => {
     expect(isSameCardSerial(a, b)).toBe(false)
+  })
+})
+
+describe('isDriversLicenceSerial', () => {
+  const licencePrefixes = [...DRIVERS_LICENCE_DCN_PREFIXES]
+  const otherPrefixes = [...'ACEFGHJKLMNPRSTUWXYZ'].filter((letter) => !DRIVERS_LICENCE_DCN_PREFIXES.has(letter))
+
+  it('has licence prefixes, each one a valid DCN prefix', () => {
+    expect(licencePrefixes.length).toBeGreaterThan(0)
+    for (const letter of licencePrefixes) {
+      expect(parseDcn(`${letter}00023254`)).not.toBeNull()
+    }
+  })
+
+  it.each(licencePrefixes)('is true for a %s-prefixed DCN in any shape', (letter) => {
+    expect(isDriversLicenceSerial(`${letter}00023254`)).toBe(true)
+    expect(isDriversLicenceSerial(`00${letter}00023254`)).toBe(true)
+    expect(isDriversLicenceSerial(` ${letter.toLowerCase()}00023254 `)).toBe(true)
+  })
+
+  it.each(otherPrefixes)('is false for a %s-prefixed DCN', (letter) => {
+    expect(isDriversLicenceSerial(`${letter}00023254`)).toBe(false)
+  })
+
+  it.each([
+    ['undefined', undefined],
+    ['null', null],
+    ['empty', ''],
+    ['a loose 1D serial that is not a DCN', 'AB1234567'],
+    ['too few digits', 'S1234567'],
+  ])('is false for %s', (_, raw) => {
+    expect(isDriversLicenceSerial(raw)).toBe(false)
   })
 })
