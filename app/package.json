@@ -56,7 +56,7 @@
     "@credo-ts/drpc": "0.7.0",
     "@credo-ts/indy-vdr": "0.7.0",
     "@credo-ts/openid4vc": "0.7.0",
-    "@credo-ts/question-answer": "0.7.0",
+    "@credo-ts/question-answer": "0.7.5",
     "@credo-ts/react-native": "0.7.0",
     "@credo-ts/webvh": "0.7.0",
     "@formatjs/intl-datetimeformat": "~6.18.2",
