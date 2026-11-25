@@ -1,8 +1,9 @@
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { useFocusEffect } from '@react-navigation/native'
-import { act, render, waitFor } from '@testing-library/react-native'
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { useCameraDevice, useCameraPermission } from 'react-native-vision-camera'
 import ScanSerialScreen from './ScanSerialScreen'
@@ -145,6 +146,38 @@ describe('ScanSerial', () => {
 
     expect(getByTestId(testIdWithKey('EnterManually'))).toBeTruthy()
     expect(getByTestId(testIdWithKey('RetryCamera'))).toBeTruthy()
+  })
+
+  describe('no camera device (regression: #5030)', () => {
+    afterEach(() => {
+      mockUseCameraDevice.mockImplementation(() => ({
+        id: 'back',
+        supportsFocus: true,
+        minZoom: 1,
+        maxZoom: 8,
+        neutralZoom: 1,
+        hasTorch: true,
+      }))
+    })
+
+    it('shows the camera message, not the permission screen, and keeps manual entry', () => {
+      mockUseCameraDevice.mockReturnValue(undefined)
+
+      const { getByTestId, getByText, queryByTestId } = render(
+        <BasicAppContext>
+          <ScanSerialScreen navigation={mockNavigation as never} />
+        </BasicAppContext>
+      )
+
+      expect(getByText('BCSC.Scan.CameraMissingTitle')).toBeTruthy()
+      expect(getByText('BCSC.Scan.CameraMissingDescription')).toBeTruthy()
+      expect(queryByTestId(testIdWithKey('OpenSettings'))).toBeNull()
+      expect(queryByTestId(VISION_CAMERA_TEST_ID)).toBeNull()
+
+      fireEvent.press(getByTestId(testIdWithKey('EnterManually')))
+
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.ManualSerial)
+    })
   })
 
   describe('torch button (regression: iPad device/flash-unavailable in 4.1.0)', () => {
