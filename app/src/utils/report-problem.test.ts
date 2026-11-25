@@ -44,6 +44,7 @@ const baseProblem: ReportProblem = {
   code: 2800,
   installId: 'f3e2c1d4-5b6a-7c8d-9e0f-1a2b3c4d5e6f',
   sessionId: 1234567890,
+  buildHistory: '4.3.0+2802 < 4.3.0+2801',
 }
 
 describe('report-problem', () => {
@@ -165,6 +166,7 @@ describe('report-problem', () => {
         report_id: '7K2P-9XQF',
         install_id: 'f3e2c1d4-5b6a-7c8d-9e0f-1a2b3c4d5e6f',
         session_id: 1234567890,
+        build_history: '4.3.0+2802 < 4.3.0+2801',
         message: 'Something went wrong',
         description: 'The app crashed when I tried to do X',
         code: 2800,
