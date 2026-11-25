@@ -287,16 +287,12 @@ exports[`ScanSerial renders correctly 1`] = `
       </View>
       <View
         style={
-          [
-            {
-              "backgroundColor": "rgba(0, 0, 0, 0.5)",
-              "gap": 16,
-              "padding": 24,
-            },
-            {
-              "paddingBottom": 24,
-            },
-          ]
+          {
+            "backgroundColor": "rgba(0, 0, 0, 0.5)",
+            "gap": 16,
+            "padding": 24,
+            "paddingBottom": 24,
+          }
         }
       >
         <View

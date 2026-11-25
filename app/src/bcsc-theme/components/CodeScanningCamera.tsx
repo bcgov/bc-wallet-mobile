@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { Alert, Animated, Platform, Pressable, StyleSheet, View, ViewStyle, useWindowDimensions } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Reanimated, { Extrapolation, interpolate, runOnJS, useSharedValue } from 'react-native-reanimated'
-import { Camera, CameraOutput, CameraRef, useCameraDevice, useCameraPermission } from 'react-native-vision-camera'
+import { Camera, CameraDevice, CameraOutput, CameraRef, useCameraPermission } from 'react-native-vision-camera'
 import { BarcodeFormat, TargetBarcodeFormat, useBarcodeScannerOutput } from 'react-native-vision-camera-barcode-scanner'
 
 import { ensureAppError } from '@/errors/errorHandler'
@@ -44,6 +44,7 @@ export type { EnhancedCode, ScanZone }
 const PINCH_SCALE_FULL_ZOOM = 3
 
 export interface CodeScanningCameraProps {
+  device: CameraDevice
   /**
    * Callback function called when a code is successfully scanned.
    *
@@ -61,12 +62,6 @@ export interface CodeScanningCameraProps {
    * Custom style for the camera container
    */
   style?: ViewStyle
-
-  /**
-   * Which camera to use
-   * @default 'back'
-   */
-  cameraType?: 'front' | 'back'
 
   /**
    * Enable scan zone tracking and saving (dev/debug feature).
@@ -148,9 +143,9 @@ export interface CodeScanningCameraProps {
 const ENABLE_MANUAL_CONFIRM = false
 
 const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
+  device,
   onCodeScanned,
   style,
-  cameraType = 'back',
   enableScanZones = false,
   scanZones,
   initialZoom = 2,
@@ -252,9 +247,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     width: number
     height: number
   } | null>(null)
-
-  // as of rnvc v5, default camera selection is now more effective than requesting specific formats
-  const device = useCameraDevice(cameraType)
 
   // Never ask the native camera for a torch the device doesn't have. VisionCamera throws
   // `device/flash-unavailable` (surfaced through onError) instead of ignoring it, and iPads
@@ -1091,7 +1083,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
 
   // handleFocusTap removed — tap-to-focus is now handled by tapGesture (see composedGesture)
 
-  if (!device || !hasPermission) {
+  if (!hasPermission) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ThemedText style={{ color: 'white' }}>{t('BCSC.CameraDisclosure.CameraPermissionRequired')}</ThemedText>
