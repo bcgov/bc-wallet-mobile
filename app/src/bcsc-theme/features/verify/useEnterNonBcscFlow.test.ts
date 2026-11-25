@@ -1,6 +1,7 @@
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { popToThenPush } from '@/bcsc-theme/utils/pop-to-then-navigate'
 import * as Bifold from '@bifold/core'
+import { useFocusEffect } from '@react-navigation/native'
 import { act, renderHook } from '@testing-library/react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { useEnterNonBcscFlow } from './useEnterNonBcscFlow'
@@ -97,6 +98,22 @@ describe('useEnterNonBcscFlow', () => {
 
     expect(mockUpdateCardProcess).toHaveBeenCalledTimes(1)
     expect(popToThenPush).toHaveBeenCalledTimes(1)
+  })
+
+  it('works again once the screen regains focus, when the screen was left mounted under the flow', async () => {
+    const result = renderEnter()
+
+    await enter(result)
+    // Still mounted (IdentitySelection was not in the stack); the guard holds until focus returns.
+    await enter(result)
+    expect(popToThenPush).toHaveBeenCalledTimes(1)
+
+    act(() => {
+      jest.mocked(useFocusEffect).mock.calls.at(-1)?.[0]()
+    })
+    await enter(result)
+
+    expect(popToThenPush).toHaveBeenCalledTimes(2)
   })
 
   it.each([

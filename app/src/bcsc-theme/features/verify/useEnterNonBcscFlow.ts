@@ -4,7 +4,7 @@ import { popToThenPush, RouteToPush } from '@/bcsc-theme/utils/pop-to-then-navig
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
-import { NavigationProp } from '@react-navigation/native'
+import { NavigationProp, useFocusEffect } from '@react-navigation/native'
 import { useCallback, useRef } from 'react'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 
@@ -14,7 +14,8 @@ import { BCSCCardProcess } from 'react-native-bcsc-core'
  * down through them to it.
  *
  * Repeat calls while one is in flight are ignored. A failed storage write alerts the user, keeps
- * them on the current screen and allows a retry.
+ * them on the current screen and allows a retry. The guard clears when the screen regains focus, so
+ * a screen left mounted under the non-BCSC flow works again when the user comes back to it.
  *
  * @param navigation - The verify stack navigation of the calling screen.
  * @param logTag - Prefix for log lines, such as `[CardScanningError]`.
@@ -28,6 +29,13 @@ export const useEnterNonBcscFlow = (
   const { updateCardProcess, deleteScannedCardData } = useSecureActions()
   const { failedToWriteToLocalStorageAlert } = useAlerts()
   const isEnteringRef = useRef(false)
+
+  // Cleared on focus, not after navigating, so a quick second tap during the transition stays ignored.
+  useFocusEffect(
+    useCallback(() => {
+      isEnteringRef.current = false
+    }, [])
+  )
 
   const hasScannedCardData = Boolean(store.bcscSecure.birthdate || store.bcscSecure.serial)
 
