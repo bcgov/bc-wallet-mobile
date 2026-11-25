@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { TestUsers, Timeouts } from '../../../src/constants.js'
+import { Timeouts } from '../../../src/constants.js'
 import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
   chooseAddAccount,
@@ -12,6 +12,7 @@ import {
 import { HomeScreen, SettingsScreen, TransferAgeRestrictionScreen } from '../../../src/screens/main.js'
 import { VerificationMethodSelectionScreen } from '../../../src/screens/verify.js'
 import { getTestUser, setTestUser } from '../../../src/support/context.js'
+import { arrangeTestUser } from '../../../src/support/identity.js'
 
 /**
  * Verified journey: under-12 account. Same photo-card path as `verified-photo` (serial + dob, no camera),
@@ -28,8 +29,8 @@ import { getTestUser, setTestUser } from '../../../src/support/context.js'
  * (the `IDCHECK_*` credentials on an allowlisted runner) → verified Home → Settings → Add device.
  */
 describe('Verified journey: under-12 account', () => {
-  before(() => {
-    setTestUser(TestUsers.u12)
+  before(async () => {
+    setTestUser(await arrangeTestUser('u12'))
   })
 
   it('onboards to the verify prompt', async () => {

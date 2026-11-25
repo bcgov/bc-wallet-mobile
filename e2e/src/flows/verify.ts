@@ -294,8 +294,8 @@ export async function reachVerificationMethod(): Promise<void> {
     }
     if (await EnterEmailScreen.isVisible('skip')) {
       await EnterEmailScreen.tap('secondary') // SkipEmail (BCSC flow) → confirmation alert
-      // Confirm-gated: the tap only raises the alert, which blocks the screen until answered. Unexercised
-      // today, as every SIT BCSC card carries a verified email.
+      // Confirm-gated: the tap only raises the alert, which blocks the screen until answered. A SIT card
+      // carries a verified email and never comes here; a card minted on DEV does.
       await tapAlertButton(EMAIL_SKIP_CONFIRM)
       await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
       return

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { TEST_PIN, TestUsers, Timeouts } from '../../../src/constants.js'
+import { TEST_PIN, Timeouts } from '../../../src/constants.js'
 import { selectAccountLandingIfPresent } from '../../../src/flows/auth.js'
 import { openScanner } from '../../../src/flows/main.js'
 import { completeOnboarding } from '../../../src/flows/onboarding.js'
@@ -53,6 +53,7 @@ import {
 } from '../../../src/screens/main.js'
 import { VerificationMethodSelectionScreen } from '../../../src/screens/verify.js'
 import { getTestUser, setTestUser } from '../../../src/support/context.js'
+import { arrangeTestUser } from '../../../src/support/identity.js'
 
 /** Engine handle for text-based asserts on screens/elements that expose no testID (the ProfileCard name;
  *  the WhatAreContacts heading). */
@@ -164,8 +165,8 @@ describe('Verified journey: combined card', () => {
    *  for the other one. */
   let coveredLoginBranch: ServiceLoginBranch | undefined
 
-  before(() => {
-    setTestUser(TestUsers.combined)
+  before(async () => {
+    setTestUser(await arrangeTestUser('combined'))
   })
 
   it('onboards to the verify prompt', async () => {
