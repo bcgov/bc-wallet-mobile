@@ -50,12 +50,17 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
   })
 
   useEffect(() => {
-    PushNotifications.hasPromptedForNotifications()
-      // Sticky: a late read must not clear a prompt recorded during this mount
-      .then((prompted) => setHasPrompted((previous) => previous || prompted))
-      .catch(() => {
+    const readPromptMarker = async () => {
+      try {
+        const prompted = await PushNotifications.hasPromptedForNotifications()
+        // Sticky: a late read must not clear a prompt recorded during this mount
+        setHasPrompted((previous) => previous || prompted)
+      } catch {
         // Keep the "never prompted" default, as NotificationSettingsScreen does
-      })
+      }
+    }
+
+    void readPromptMarker()
     // Re-read when the OS status changes: a grant is not recorded locally, but setup() has persisted the marker
   }, [status])
 
