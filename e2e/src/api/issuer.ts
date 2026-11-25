@@ -1,8 +1,8 @@
 /**
  * Typed client for the e2e issuer/verifier — a tenant on BC Gov's DEV Traction (multi-tenant ACA-Py
  * behind a tenant proxy). Both its admin and DIDComm planes are public HTTPS, so local runs and
- * Sauce devices talk to the same issuer. See ../../issuer/README.md for the setup, and
- * ../../docs/SUPPORT-API.md for how this layer fits the wider suite.
+ * Sauce devices talk to the same issuer. See ../../issuer/README.md for the setup, and "Runner-side
+ * API clients" in ../../README.md for how this layer fits the wider suite.
  *
  * Auth is a tenant JWT minted from ISSUER_TENANT_ID + ISSUER_API_KEY (cached; one re-auth on 401
  * covers any token TTL). The proxy blocks /status/config, so the instance's auto_* flags are
