@@ -80,6 +80,7 @@ export class VerificationResponseService {
 
   /**
    * Emit navigation event to success screen.
+   * @param eventType - The type of verification event triggering navigation
    */
   public emitNavigation(eventType: VerificationResponseEventType) {
     const event: VerificationResponseNavigationEvent = {

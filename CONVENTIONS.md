@@ -573,3 +573,14 @@ its first frame sizes itself from `useSafeAreaInsets()`, which the root provider
 render (`initialWindowMetrics`); `SafeAreaView` remains fine for content that slides in from off-screen.
 Bifold's `ScreenWrapper` wraps every screen in the same native view, so a stack's first screen shows the
 jump on a root slide too; that change belongs in Bifold and is tracked there.
+
+## Comments: TSDoc on functions, "why not what" everywhere else
+
+A function's doc comment is TSDoc: a summary, then `@param name - description` and `@returns description`.
+Leave types out of the tags; the signature already has them. Leave out a tag that would only repeat the
+parameter name or its type (`@param props`, `@returns void`), and a doc block whose summary only restates the
+function's name. Every other comment explains why, an assumption, or an invariant, never what the next line
+does. No section banners and no commented-out code.
+
+**Why:** the tags describe what the types can't (units, accepted ranges, what `null` means), and one shape
+for every doc comment is easier to read and review than a mix of TSDoc and bare summaries.

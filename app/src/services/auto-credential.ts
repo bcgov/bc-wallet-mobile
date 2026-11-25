@@ -210,6 +210,8 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
    * AttestationMonitor owns the rest: its offer subscription accepts the attestation
    * credential and presents this proof, which is why it has to be running again
    * before we delegate.
+   *
+   * @returns true if the attestation exchange was handed off successfully.
    */
   private async tryAttestation(proof: DidCommProofExchangeRecord): Promise<boolean> {
     if (!this.agent || !this.attestationMonitor?.attemptAttestationForProof) {

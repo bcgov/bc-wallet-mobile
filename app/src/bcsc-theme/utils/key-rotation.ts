@@ -131,6 +131,8 @@ async function rollback(
  * Rotates the device's signing key: generate, PUT to IAS, confirm via the echoed jwks, and
  * prune the superseded key on confirmed success, so the previous key survives one full
  * rotation cycle (#4601). See issue #3876 for the full design rationale.
+ *
+ * @param registration - The device's registration: the client ID to re-register and the token that manages it
  */
 export async function rotateSigningKey(
   apiClient: BCSCApiClient,

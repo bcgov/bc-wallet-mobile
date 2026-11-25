@@ -11,6 +11,8 @@ type TransferQRScannerScreenProps = {
 
 /**
  * When a QR code is successfully scanned, it navigates to the VerificationSuccess screen.
+ * @param props - The props for the TransferQRScannerScreen component.
+ * @returns A React element that renders the QR scanner for account transfer.
  */
 const TransferQRScannerScreen = ({ navigation }: TransferQRScannerScreenProps) => {
   const verificationSuccess = useCallback(() => {

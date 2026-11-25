@@ -66,6 +66,10 @@ const buildFailureContext = ({ flow, step, startedAt }: FailureLocation, failed:
  * Creates an AppError that records where and when a step has failed.
  *
  * Step names must never contain personal data or tokens.
+ *
+ * @param definition - The ErrorDefinition to create the AppError from
+ * @param options - The flow, step, start time and cause of the failure
+ * @returns An AppError carrying the failure context
  */
 export const createFailureError = (
   definition: ErrorDefinition,

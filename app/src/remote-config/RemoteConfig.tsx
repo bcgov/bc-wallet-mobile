@@ -15,13 +15,14 @@ interface RemoteConfigContextType {
   /**
    * Set the local value of a remote config key.
    * Note: This will only update the value in memory and persistent storage - **not** the server.
-   * @param key The key of the remote config to set.
-   * @param value The value to set for the remote config key.
+   * @param key - The key of the remote config to set.
+   * @param value - The value to set for the remote config key.
    * @returns void
    * */
   setValue: <T extends keyof RemoteConfig>(key: T, value: RemoteConfig[T]) => void
   /**
    * Refresh the remote config from the server and update the local cache.
+   * @returns A promise that resolves when the refresh is complete.
    */
   refresh: () => Promise<void>
   loading: boolean
@@ -40,6 +41,8 @@ const RemoteConfigContext = createContext<RemoteConfigContextType | null>(null)
 
 /**
  * RemoteConfigProvider is a React context provider that initializes and provides access to the remote configuration throughout the app.
+ * @param props - The props for the RemoteConfigProvider, including children and a logger.
+ * @returns A React context provider that wraps its children and provides access to the remote configuration.
  */
 export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
   const [loading, setLoading] = useState(!props.initialConfig)
@@ -48,6 +51,7 @@ export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
 
   /**
    * Sets the remote config in memory and persistent storage.
+   * @param newConfig - The new remote config to set.
    */
   const setRemoteConfig = useCallback(
     (newConfig: RemoteConfig) => {
@@ -68,6 +72,8 @@ export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
   /**
    * Set the local value of a remote config key.
    * Note: This will only update the value in memory and persistent storage - **not** the server.
+   * @param key - The key of the remote config to set.
+   * @param value - The value to set for the remote config key.
    */
   const setValue = useCallback(
     <T extends keyof RemoteConfig>(key: T, value: RemoteConfig[T]) => {
@@ -81,6 +87,7 @@ export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
 
   /**
    * Refresh the remote config from the server and update the local cache.
+   * @returns A promise that resolves when the refresh is complete.
    */
   const refresh = useCallback(async () => {
     try {
@@ -138,6 +145,7 @@ export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
 
 /**
  * Hook to access the remote config context. Must be used within a RemoteConfigProvider.
+ * @returns The remote config context value, including the current remote config, a setter function, and a loading state.
  */
 export const useRemoteConfig = () => {
   const context = useContext(RemoteConfigContext)
@@ -151,6 +159,7 @@ export const useRemoteConfig = () => {
 
 /**
  * Get the current remote config from memory cache.
+ * @returns The current remote config object.
  */
 export function getRemoteConfig(): RemoteConfig {
   if (!REMOTE_CONFIG_CACHE) {

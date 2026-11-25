@@ -486,6 +486,7 @@ class BCSCApiClient {
    * token still lives in secure storage, so we lazily rebuild the cache instead
    * of forcing the user to reinstall the app.
    *
+   * @returns the populated tokens
    * @throws AppError TOKEN_NULL when the cache is empty and no refresh token
    *   exists in secure storage — the only genuinely unrecoverable case.
    * @throws Error 'Refresh token expired' when the stored refresh token's `exp` has passed (#4654) —

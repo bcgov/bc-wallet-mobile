@@ -48,9 +48,9 @@ export enum NotificationType {
 
 /**
  * Evaluate if given attribute value satisfies the predicate.
- * @param attribute Credential attribute value
- * @param pValue Predicate value
- * @param pType Predicate type ({@link AnonCredsPredicateType})
+ * @param attribute - Credential attribute value
+ * @param pValue - Predicate value
+ * @param pType - Predicate type ({@link AnonCredsPredicateType})
  * @returns `true`if predicate is satisfied, otherwise `false`
  */
 const evaluateOperation = (attribute: number, pValue: number, pType: AnonCredsPredicateType): boolean => {
@@ -74,7 +74,7 @@ const evaluateOperation = (attribute: number, pValue: number, pType: AnonCredsPr
 
 /**
  * Retrieve current credentials info filtered by `credentialDefinitionId` if given.
- * @param credDefId Credential Definition Id
+ * @param credDefId - Credential Definition Id
  * @returns Array of `AnonCredsCredentialInfo`
  */
 export const getCredentialInfo = (credId: string, fields: Fields): AnonCredsCredentialInfo[] => {
@@ -90,6 +90,7 @@ export const getCredentialInfo = (credId: string, fields: Fields): AnonCredsCred
 /**
  * Given proof credential items, evaluate and return its predicates,
  * setting `satisfied` property.
+ * @returns Array of evaluated predicates
  */
 export const evaluatePredicates =
   (fields: Fields, credId?: string) =>
@@ -125,6 +126,7 @@ export const evaluatePredicates =
  *
  * Setting `filterByNonRevocationRequirements` to `false` returns all credentials
  * even if they are revokable and revoked.
+ * @returns The Anoncreds or Indy proof format object
  */
 const formatForProofWithId = async (agent: BCAgent, proofId: string, filterByNonRevocationRequirements = false) => {
   const format = await agent.didcomm.proofs.getFormatData(proofId)
@@ -163,6 +165,10 @@ const formatForProofWithId = async (agent: BCAgent, proofId: string, filterByNon
  * Detailed check if we have the necessary credentials to fulfill the
  * proof request in the required format.
  *
+ * @param agent - The AFJ agent
+ * @param proofId - The id of the proof request
+ * @param filterByNonRevocationRequirements - Whether to filter by non-revocation requirements
+ * @returns Credentials that match the given proof request
  * @throws {Error} Will throw an error if a problem looking up data occurs
  */
 export const credentialsMatchForProof = async (
@@ -185,6 +191,9 @@ export const credentialsMatchForProof = async (
 
 /**
  * Get the notification type for a given notification item.
+ *
+ * @param notification - The notification item to get the type for.
+ * @returns The notification type for the given notification item.
  */
 export const getCredentialNotificationType = (notification: CredentialNotificationRecord): NotificationType => {
   if (notification.type === 'BasicMessageRecord') {

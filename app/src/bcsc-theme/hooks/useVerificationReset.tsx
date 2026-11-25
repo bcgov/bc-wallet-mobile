@@ -28,6 +28,9 @@ import { useSecureActions } from './useSecureActions'
  * the next verification step registers it again.
  *
  * A factory reset alert is shown if any error occurs so the user isn't stuck with a broken app
+ *
+ * @returns Callback that performs the
+ * verification reset and resolves with whether the reset completed successfully
  */
 export type VerificationResetOptions = {
   /**
@@ -48,6 +51,9 @@ export const useVerificationReset = () => {
 
   /**
    * Deletes the device's registration from the IAS server. A failed delete is logged, not thrown.
+   *
+   * @param registration - The registration to delete: its client ID and the token that manages it.
+   * @returns A promise that resolves when the deletion attempt is complete.
    */
   const deleteRegistration = useCallback(
     async (registration: DeviceRegistration) => {

@@ -40,6 +40,8 @@ export class TermsOfUseSystemCheck implements SystemCheckStrategy {
 
   /**
    * Runs the terms of use check to verify the user has accepted the latest server version.
+   *
+   * @returns - A promise that resolves to true if no re-acceptance is needed, false otherwise.
    */
   async runCheck() {
     try {

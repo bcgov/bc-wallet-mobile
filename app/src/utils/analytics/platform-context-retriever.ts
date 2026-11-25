@@ -46,6 +46,9 @@ export const getPlatformContextRetriever = (enable: boolean): PlatformContextRet
 
 /**
  * Returns a list of optional properties of the platform context to be tracked
+ *
+ * @param enable - Flag to enable or disable the PlatformContextProperties
+ * @returns The list of PlatformContextProperty to be tracked
  */
 export const getPlatformContextProperties = (enable: boolean): PlatformContextProperty[] | undefined => {
   if (!enable) {

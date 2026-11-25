@@ -69,6 +69,7 @@ export type DataLoader<ResponseType> = {
  * A custom hook that provides a data loader for fetching data
  *
  * @template ResponseType typed structure of the data
+ * @param fetchData - return a promise that resolves to the data to be loaded, usually an API call
  */
 export default function useDataLoader<ResponseType>(
   fetchData: () => Promise<ResponseType>,

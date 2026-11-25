@@ -52,6 +52,8 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
    * See this sequence diagram for more details: https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301576047/Self+Setup+Interaction+Design#Sequence-Diagram
    *
    * @see `https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574688/5.1+System+Interfaces#Device-Authorization-Request`
+   * @param serial - BCSC serial number
+   * @param birthdate - Users birth date. This paramter is required if serial is provided
    */
   const authorizeDevice = useCallback(
     async (serial?: string, birthdate?: Date): Promise<DeviceAuthorizationResponse> => {
@@ -86,6 +88,7 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
    * Authorize a device with an unknown BCSC card.
    *
    * @see `https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574688/5.1+System+Interfaces#Device-Authorization`
+   * @param config - Config including user information and address
    */
   const authorizeDeviceWithUnknownBCSC = useCallback(
     async (config: AuthorizeDeviceUnknownBCSCConfig): Promise<DeviceAuthorizationResponse> => {
@@ -142,6 +145,8 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
    *
    * The backend returns an error (handled by the caller as "not a BCSC,
    * continue") when the barcodes don't match an active card.
+   *
+   * @param barcodes - Decoded barcodes from the scanned card.
    */
   const authorizeDeviceWithBarcodes = useCallback(
     async (barcodes: BarcodePayload[]): Promise<DeviceAuthorizationResponse> => {

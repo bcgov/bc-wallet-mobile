@@ -23,7 +23,7 @@ import useSecureActions from './useSecureActions'
  * - unlockApp: Handles unlocking the app using the configured authentication method (device auth or PIN)
  * - performDeviceAuth: Prompts for device authentication (biometric or passcode) and completes the unlock
  *
- * @param navigation The navigation prop for navigating between auth screens
+ * @param navigation - The navigation prop for navigating between auth screens
  * @returns An object containing `unlockApp` and `performDeviceAuth`
  */
 export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackParams>) => {
@@ -125,6 +125,8 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
 
   /**
    * Performs device authentication (biometric or passcode). Ignored if an unlock is already in progress.
+   *
+   * @returns Promise that resolves when the device auth process is complete
    */
   const performDeviceAuth = useCallback(
     () => withAuthGuard('performDeviceAuth', runDeviceAuth),
@@ -191,6 +193,8 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
    * - Device auth: DeviceAuthInfo (unless dismissed), DeviceAuthAppReset if unavailable, else the OS prompt.
    *
    * Ignored if an unlock is already in progress.
+   *
+   * @returns Promise that resolves when the unlock process is complete
    */
   const unlockApp = useCallback(() => withAuthGuard('UnlockApp', runUnlockApp), [withAuthGuard, runUnlockApp])
 

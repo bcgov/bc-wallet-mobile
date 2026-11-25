@@ -60,6 +60,9 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
    *
    * False while the root navigator shows its startup Loading route, which registers no modals:
    * navigating then would log "NAVIGATE ... was not handled by any navigator".
+   *
+   * @param state - The root navigation state to inspect.
+   * @returns True if a navigator on the focused path registers the modal route.
    */
   private canShowModal(state: NavigationState | undefined) {
     return getFocusedPath(state).some((navigator) => navigator.routeNames?.includes(BCSCModals.InternetDisconnected))

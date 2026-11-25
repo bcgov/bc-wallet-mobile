@@ -68,6 +68,8 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
 
   /**
    * Handles leaving the call by navigating to the appropriate screen based on the verification status.
+   *
+   * @returns A promise that resolves when the navigation action is dispatched.
    */
   const leaveCall = useCallback(async () => {
     try {

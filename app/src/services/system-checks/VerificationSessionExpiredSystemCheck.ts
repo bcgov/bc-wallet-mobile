@@ -25,10 +25,10 @@ export class VerificationSessionExpiredSystemCheck implements SystemCheckStrateg
   private readonly now: Date
 
   /**
-   * @param getDeviceCodeExpiry Resolves the pending device_code's expiry, or null when there is no pending code.
-   * @param navigation Navigation used to route to the expired-session modal on failure.
-   * @param utils Shared system-check utilities (logger, dispatch, translation).
-   * @param now Current time (injectable for testing).
+   * @param getDeviceCodeExpiry - Resolves the pending device_code's expiry, or null when there is no pending code.
+   * @param navigation - Navigation used to route to the expired-session modal on failure.
+   * @param utils - Shared system-check utilities (logger, dispatch, translation).
+   * @param now - Current time (injectable for testing).
    */
   constructor(
     getDeviceCodeExpiry: () => Promise<Date | null>,

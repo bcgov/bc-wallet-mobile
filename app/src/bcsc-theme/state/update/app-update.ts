@@ -21,6 +21,9 @@ interface AppUpdateFacts {
  *   2. `Mandatory` when the app build is below the minimum build (handled by the MandatoryUpdate modal).
  *   3. `Optional` when a supported version is newer than the app version.
  *   4. `None` otherwise.
+ *
+ * @param facts - The app version and build, and the minimum build and supported versions from the server.
+ * @returns - The kind of update that applies.
  */
 export const getAppUpdate = (facts: AppUpdateFacts): AppUpdate => {
   if (facts.minBuild === undefined) {

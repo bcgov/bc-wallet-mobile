@@ -30,6 +30,9 @@ export const useTokenService = () => {
 
   /**
    * Gets cached ID token metadata and handles errors related to decryption and verification failures by showing an alert.
+   *
+   * @param config - Configuration for fetching ID token metadata
+   * @returns Promise resolving to ID token metadata response data
    */
   const getCachedIdTokenMetadata = useCallback(
     async (config: IdTokenMetadataConfig) => {

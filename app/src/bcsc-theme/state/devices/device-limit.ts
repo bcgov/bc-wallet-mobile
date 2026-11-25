@@ -26,6 +26,9 @@ interface DeviceLimitFacts {
 
 /**
  * Determines the device limit status based on the current device count and the allowed device limit.
+ *
+ * @param facts - The current device count and the allowed device limit.
+ * @returns - The device limit status, including whether the device count is over, at, or under the limit, along with the device count and limit.
  */
 export const getDeviceLimit = (facts: DeviceLimitFacts): DeviceLimitResult => {
   if (facts.deviceLimit === null || facts.deviceCount === null) {

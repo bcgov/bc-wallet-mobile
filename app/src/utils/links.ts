@@ -25,6 +25,8 @@ export const openLink = async (url: string) => {
 
 /**
  * Get the BCSC App Store URL based on the platform.
+ *
+ * @returns The BCSC app store URL.
  */
 export const getBCSCAppStoreUrl = (): string => {
   if (Platform.OS === 'ios') {

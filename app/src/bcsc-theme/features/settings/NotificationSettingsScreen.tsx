@@ -44,6 +44,8 @@ const INSTRUCTION_STEPS = [
  *   the app preference is still off) keeps the in-app enable flow: request the OS permission if
  *   needed and register the device with the mediator, so setup can be completed end-to-end. Device
  *   settings alone can't produce the first OS prompt, so this path can't collapse into the others.
+ *
+ * @returns The NotificationSettingsScreen component.
  */
 export const NotificationSettingsScreen = (): React.ReactElement => {
   const { t } = useTranslation()

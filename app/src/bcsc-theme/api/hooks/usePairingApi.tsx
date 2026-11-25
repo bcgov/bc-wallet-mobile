@@ -28,6 +28,10 @@ const usePairingApi = (apiClient: BCSCApiClient) => {
 
   /**
    * Logs in a user using a pairing code and returns the client metadata.
+   *
+   * @param code - The pairing code to use for login.
+   * @param challengeSource - How the login was initiated; reported to IAS in the assertion.
+   * @returns A promise that resolves to the client metadata.
    */
   const loginByPairingCode = useCallback(
     async (code: string, challengeSource: ChallengeSource) => {

@@ -183,6 +183,8 @@ export const formatNavigationTrail = (screens: VisitedScreen[], droppedCount: nu
 /**
  * Formats the session's recorded `NAVIGATION_TRAIL` into a breadcrumb trail for error reports.
  * Recorded as navigation happens because React Navigation prunes popped routes from a live state snapshot.
+ *
+ * @returns A string representing the navigation breadcrumbs.
  */
 export const getNavigationBreadcrumbs = (): string =>
   formatNavigationTrail(NAVIGATION_TRAIL.screens, NAVIGATION_TRAIL.droppedCount)

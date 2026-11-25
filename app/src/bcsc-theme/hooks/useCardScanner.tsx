@@ -186,6 +186,10 @@ export const useCardScanner = () => {
    * was photographed under always goes: it holds the card itself, not another ID. A non-photo card
    * keeps the IDs completed before it, since one with a photo is the photo ID that card still needs.
    * A photo card is verified without additional IDs, so none are kept.
+   *
+   * @param process - The card process the device now follows.
+   * @param photographedAs - The ID type the card was photographed under.
+   * @returns The IDs kept.
    */
   const settleEvidenceForCardProcess = useCallback(
     async (process: BCSCCardProcess, photographedAs: EvidenceType): Promise<EvidenceMetadata[]> => {
@@ -247,6 +251,9 @@ export const useCardScanner = () => {
 
   /**
    * Default handler for BCSC card scanning (BCSC serial only).
+   *
+   * @param bcscSerial - The BCSC card serial number.
+   * @returns A promise that resolves when the scanning process is complete.
    */
   const handleScanBCServicesCard = useCallback(
     async (bcscSerial: string) => {
@@ -258,6 +265,9 @@ export const useCardScanner = () => {
 
   /**
    * Default handler for driver's license scanning (license metadata only).
+   *
+   * @param license - The driver's license metadata.
+   * @returns A promise that resolves when the scanning process is complete.
    */
   const handleScanDriversLicense = useCallback(
     async (license: DriversLicenseMetadata) => {
@@ -317,6 +327,10 @@ export const useCardScanner = () => {
    * Note: On iOS it make take multiple attempts to scan both barcodes on a combo card.
    * The scanning process will stop after the first successful scan to prevent duplicate processing.
    * We could improve this by setting a default minimum scan attempts or a timeout if needed.
+   *
+   * @param barcodes - An array of scanned barcodes.
+   * @param handleScannedCardData - A callback function to handle the scanned card data.
+   * @returns A promise that resolves when the scanning process is complete.
    */
   const handleCardScan = useCallback(
     async (

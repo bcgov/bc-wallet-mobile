@@ -147,6 +147,8 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
    * Decides, before a photo is accepted, what to do when the barcodes read while framing it belong
    * to a BC Services Card. Returns true when the capture must stop here: the user was rerouted into
    * that card's own setup, or the card was rejected and they were sent back to the ID list.
+   *
+   * @returns Whether the capture was stopped.
    */
   const resolveScannedBcscCard = async (): Promise<boolean> => {
     /**

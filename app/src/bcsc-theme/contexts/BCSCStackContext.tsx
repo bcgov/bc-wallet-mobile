@@ -10,6 +10,9 @@ export const BCSCStackContext = createContext<BCSCStackContextType | null>(null)
 
 /**
  * BCSCStackProvider component that provides the current BCSC stack and a function to update it via context.
+ *
+ * @param children - The child components that will have access to the BCSC stack context.
+ * @returns The BCSCStackProvider component that wraps its children with the BCSCStackContext provider.
  */
 export const BCSCStackProvider = ({ children }: PropsWithChildren) => {
   const [stack, updateStack] = useState<BCSCStacks>(BCSCStacks.Auth)
@@ -27,6 +30,9 @@ export const BCSCStackProvider = ({ children }: PropsWithChildren) => {
 
 /**
  * Custom hook to access the BCSCStackContext and optionally claim the current stack.
+ *
+ * @param initialStack - The stack the calling navigator is; it claims the context when it mounts.
+ * @returns The current stack and the function to update it from the context.
  */
 export const useBCSCStack = (initialStack?: BCSCStacks) => {
   const context = useContext(BCSCStackContext)

@@ -48,11 +48,11 @@ interface GetBCAgentModulesOptions {
 
 /**
  * Constructs the modules to be used in the agent setup
- * @param mediatorInvitationUrl determine which mediator to use
- * @param txnCache optional in-memory ledger transaction cache config for indyvdr
- * @param enableProxy boolean from the store to determine if proxy should be used
- * @param proxyBaseUrl URL of indy vdr proxy
- * @param proxyCacheSettings settings for above mentioned proxy client caching
+ * @param mediatorInvitationUrl - determine which mediator to use
+ * @param txnCache - optional in-memory ledger transaction cache config for indyvdr
+ * @param enableProxy - boolean from the store to determine if proxy should be used
+ * @param proxyBaseUrl - URL of indy vdr proxy
+ * @param proxyCacheSettings - settings for above mentioned proxy client caching
  * @returns modules to be used in agent setup
  */
 export function getBCAgentModules({

@@ -22,6 +22,8 @@ export class AnalyticsSystemCheck implements SystemCheckStrategy {
 
   /**
    * Runs the analytics system check to verify if the analytics tracker is initialized.
+   *
+   * @returns - True if the analytics tracker is initialized, false otherwise.
    */
   runCheck(): boolean {
     if (!this.analyticsEnabled) {

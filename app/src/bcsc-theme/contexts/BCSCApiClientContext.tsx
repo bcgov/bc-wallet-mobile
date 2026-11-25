@@ -29,6 +29,9 @@ export const BCSCApiClientContext = createContext<BCSCApiClientContextType | nul
  *
  * Children can access the client, its readiness, and errors via BCSCApiClientContext, or
  * just the client using useBCSCApiClient/useBCSCApiClientState hooks.
+ *
+ * @param children - The child components that will have access to the BCSCApiClient instance.
+ * @returns The BCSCApiClientProvider component wrapping its children.
  */
 export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { t } = useTranslation()
@@ -46,6 +49,8 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
 
   /**
    * Sets both the local state and the singleton instance of the BCSCApiClient.
+   *
+   * @param client - The BCSCApiClient instance to set.
    */
   const setClientAndSingleton = (client: BCSCApiClient | null) => {
     BCSC_API_CLIENT_SINGLETON = client
@@ -54,6 +59,9 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
 
   /**
    * Handles client errors based on predefined error handling policies.
+   *
+   * @param error - The error object to handle.
+   * @param context - The context providing additional information for error handling.
    */
   const handleApiClientError = useCallback(
     (error: AxiosAppError, context: ErrorMatcherContext) => {

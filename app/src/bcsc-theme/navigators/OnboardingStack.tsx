@@ -30,6 +30,8 @@ import { getDefaultModalOptions } from './stack-utils'
  * Renders the onboarding stack. These screens are shown to the user only **once**, when they first
  * install the app. (The one-time welcome/intro is also shown to already-onboarded users on launch
  * via AuthStack — see its AuthIntro screen.)
+ *
+ * @returns The OnboardingStack component.
  */
 const OnboardingStack = (): React.ReactElement => {
   const { t } = useTranslation()

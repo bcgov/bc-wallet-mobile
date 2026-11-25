@@ -35,6 +35,12 @@ interface FloatingHelpMenuProps extends PropsWithChildren {
 
 /**
  * A floating help menu component that slides open and closed with an animation.
+ *
+ * @param props - The props for the FloatingHelpMenu component, including:
+ *  - open: A boolean indicating whether the menu is open or closed.
+ *  - onClose: A callback function to be called when the menu is closed.
+ *  - children: The content to be displayed inside the menu.
+ * @returns A React element representing the FloatingHelpMenu component.
  */
 const FloatingHelpMenu = (props: FloatingHelpMenuProps) => {
   const { t } = useTranslation()

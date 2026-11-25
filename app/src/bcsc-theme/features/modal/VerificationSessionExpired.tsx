@@ -18,6 +18,8 @@ type VerificationSessionExpiredProps = StackScreenProps<BCSCVerifyStackParams, B
  * state; clearing state re-routes RootStack to the OnboardingStack — which does not register this
  * route, so the modal dismisses. If the reset fails, surface the factory-reset alert so the user
  * isn't stranded on a dead screen.
+ *
+ * @returns The VerificationSessionExpired component.
  */
 export const VerificationSessionExpired = ({ navigation }: VerificationSessionExpiredProps): React.ReactElement => {
   const { t } = useTranslation()

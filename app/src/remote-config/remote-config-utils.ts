@@ -42,6 +42,7 @@ export interface CachedRemoteConfig {
 /**
  * Retrieves the bundled remote config from the local JSON file.
  * @throws An error if the bundled remote config is invalid
+ * @returns The bundled remote config.
  */
 export function getBundledRemoteConfig(): RemoteConfig {
   const result = StrictRemoteConfigSchema.safeParse(remoteConfigJSON)
@@ -55,7 +56,7 @@ export function getBundledRemoteConfig(): RemoteConfig {
 
 /**
  * Retrieves the cached remote config from persistent storage, if available and not expired.
- * @param logger The logger to use for logging errors and information.
+ * @param logger - The logger to use for logging errors and information.
  * @returns The cached remote config if available and valid, otherwise null.
  */
 export async function getCachedRemoteConfig(logger: RemoteLogger): Promise<RemoteConfig | null> {
@@ -90,7 +91,7 @@ export async function getCachedRemoteConfig(logger: RemoteLogger): Promise<Remot
 
 /**
  * Retrieves the remote config from the object storage
- * @param logger The logger to use for logging errors and information.
+ * @param logger - The logger to use for logging errors and information.
  * @returns The remote config if successfully fetched, otherwise null.
  */
 export async function fetchRemoteConfig(logger: RemoteLogger): Promise<RemoteConfig | null> {
@@ -115,6 +116,9 @@ export async function fetchRemoteConfig(logger: RemoteLogger): Promise<RemoteCon
 
 /**
  * Caches the remote config in persistent storage.
+ * @param remoteConfig - The remote config to cache.
+ * @param logger - The logger to use for logging errors.
+ * @returns A promise that resolves when the caching is complete.
  */
 export async function cacheRemoteConfig(remoteConfig: RemoteConfig, logger: RemoteLogger): Promise<void> {
   try {

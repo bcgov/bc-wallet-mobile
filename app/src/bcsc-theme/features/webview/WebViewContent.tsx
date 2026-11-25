@@ -54,6 +54,9 @@ const isWebSchemeUrl = (url: string): boolean => /^(https?|about):/i.test(url)
 
 /**
  * Automatically applies accessibility font scaling based on device settings.
+ *
+ * @param props - The component props.
+ * @returns The rendered WebView component.
  */
 const WebViewContent: React.FC<WebViewContentProps> = ({ url, html, onLoaded }) => {
   const { t } = useTranslation()

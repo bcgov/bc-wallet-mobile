@@ -106,7 +106,10 @@ export const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefin
  * module set. The returned agent is registered for outbound HTTP and WebSocket
  * transports but is not yet initialized — the caller must `await agent.initialize()`.
  *
+ * @param opts - Agent build options including ledgers, wallet secret, mediator URL,
+ *   wallet label, proxy settings, and a logger.
  * @throws {AppError} `AGENT_INITIALIZATION_ERROR` (2901) when `mediatorUrl` is empty.
+ * @returns The configured (but uninitialized) `Agent` instance.
  */
 export const buildAgent = (opts: BuildAgentOptions): Agent => {
   if (!opts.mediatorUrl) {
@@ -154,7 +157,9 @@ export const buildAgent = (opts: BuildAgentOptions): Agent => {
  * is logged and `undefined` is returned so the caller can fall through to
  * building a fresh agent rather than crashing the init flow.
  *
+ * @param agent - The existing agent whose wallet should be reopened.
  * @param walletSecret - Wallet `id` and `key` used to unlock the wallet.
+ * @param logger - Logger used to record failures.
  * @returns The same `agent` once re-initialized, or `undefined` if reopen failed.
  */
 export const restartAgent = async (agent: Agent, logger: BifoldLogger): Promise<Agent | undefined> => {
@@ -174,6 +179,8 @@ export const restartAgent = async (agent: Agent, logger: BifoldLogger): Promise<
  * {@link enqueueWalletOp}) so a sign-in rebuild never races the previous agent's
  * teardown on the shared wallet file. Unlike {@link restartAgent} this rethrows
  * on failure so the caller can surface an init error.
+ *
+ * @param agent - The built (uninitialized) agent to initialize.
  */
 export const initializeAgent = async (agent: Agent): Promise<void> => {
   await enqueueWalletOp(() => agent.initialize())
@@ -193,6 +200,7 @@ export const initializeAgent = async (agent: Agent): Promise<void> => {
  * @param credDefs - Credential definitions to pre-fetch (`{ did, id }` per entry).
  * @param schemas - Schemas to pre-fetch (`{ did, id }` per entry).
  * @param cachedLedgers - Previously cached ledger configs, or `undefined` to refresh.
+ * @param logger - Logger used to record per-item failures.
  */
 export const warmCache = async (
   agent: Agent,
@@ -312,6 +320,8 @@ const refreshLedgerCache = async (poolService: IndyVdrPoolService, logger: Bifol
  * or app teardown, and the wallet is closed in the underlying Askar handle even
  * if Credo's cleanup throws.
  *
+ * @param agent - The agent to shut down.
+ * @param logger - Logger used to record shutdown errors.
  * @param beforeClose - Optional step to finish before the wallet closes, e.g. draining
  *   background work that still reads it. It runs inside the queued close, so the close
  *   takes its place in line straight away and a later open on the same wallet waits for
@@ -358,6 +368,8 @@ export const shutdownAgent = async (
  * Unlike {@link shutdownAgent} this does not swallow errors — callers decide whether a
  * failed delete is fatal (e.g. `resetWallet` clears state in a `finally`; recovery and
  * factory-reset paths log and continue).
+ *
+ * @param agent - The agent whose wallet store should be deleted.
  */
 export const deleteWalletStore = async (agent: Agent): Promise<void> => {
   await enqueueWalletOp(() => agent.modules.askar.deleteStore())

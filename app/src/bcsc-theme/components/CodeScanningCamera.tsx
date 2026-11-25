@@ -52,6 +52,8 @@ export interface CodeScanningCameraProps {
    * camera will automatically reset to the scanning state so the user can
    * try again.  Any other return value (including `void`) is treated as
    * accepted.
+   *
+   * @param codes - Array of scanned codes with position and orientation metadata
    */
   onCodeScanned: (codes: EnhancedCode[]) => Promise<void | boolean>
 
@@ -627,9 +629,9 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
    * Uses a box-in-zone check for alignment, with proportional expansion by
    * `marginFactor` on each side for a small tolerance.
    *
-   * @param codePosition The detected code's position in container coordinates
-   * @param codeType Optional barcode type for type-aware matching with custom zones
-   * @param marginFactor Proportional expansion of zone bounds (default 0.3 = 30%)
+   * @param codePosition - The detected code's position in container coordinates
+   * @param codeType - Optional barcode type for type-aware matching with custom zones
+   * @param marginFactor - Proportional expansion of zone bounds (default 0.3 = 30%)
    * @returns true if the code box is within any matching scan zone (± margin)
    */
   const isCodeAlignedWithScanZone = useCallback(

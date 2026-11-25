@@ -62,6 +62,9 @@ export interface ServiceClientsFilter {
 /**
  * A custom hook to filter service clients based on various criteria such as name,
  * card process, and BC address requirement. Sorted by numeric listing order and name.
+ *
+ * @param filter - The filter criteria to apply to the service clients.
+ * @returns The filtered list of service clients and loading state.
  */
 export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterServiceClientsResult => {
   const { metadata } = useApi()
@@ -159,6 +162,10 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterSer
 
 /**
  * Filters the given list of service clients by their name using a case-insensitive partial match.
+ *
+ * @param serviceClients - The list of service clients to filter.
+ * @param query - The partial name to filter by.
+ * @returns The filtered list of service clients whose names match the query.
  */
 function _queryServiceClientsByName(serviceClients: ClientMetadata[], query?: string): ClientMetadata[] {
   const caseInsensitiveQuery = query?.toLowerCase().trim()
@@ -175,6 +182,9 @@ function _queryServiceClientsByName(serviceClients: ClientMetadata[], query?: st
  * and then alphabetically by their name (A-Z) for services with the same sort order.
  *
  * Services without a defined sort order are placed at the end of the list.
+ *
+ * @param serviceClients - The list of service clients to sort.
+ * @returns The sorted list of service clients.
  */
 function _sortServiceClients(serviceClients: ClientMetadata[]): ClientMetadata[] {
   return serviceClients.sort((a, b) => {

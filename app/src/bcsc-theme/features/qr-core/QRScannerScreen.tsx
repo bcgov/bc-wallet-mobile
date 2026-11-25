@@ -15,6 +15,8 @@ import { useQRScanner } from './useQRScanner'
  *  - Account transfer QR codes (e.g., for transferring an account)
  *  - DIDComm OOB QR codes (e.g., for establishing a VC connection)
  *  - Mediator invitation QR codes (developer mode only; opens the mediator picker)
+ *
+ * @returns A React element that renders the QR scanner for various QR code strategies.
  */
 const QRScannerScreen: React.FC = () => {
   const navigation = useNavigation<BottomTabNavigationProp<BCSCQRCoreTabParams>>()

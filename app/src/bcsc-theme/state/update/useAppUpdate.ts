@@ -5,6 +5,8 @@ import { selectAppUpdate } from './selectors'
 
 /**
  * Returns the current app update status based on the server status and app version.
+ *
+ * @returns - The current app update status.
  */
 export const useAppUpdate = (): AppUpdate => {
   const { serverStatus } = useServerStatus()

@@ -81,6 +81,8 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
    * Prompts the user to enable push notifications and updates the global state based on their response.
    *
    * Note: This will only display the prompt once.
+   *
+   * @returns A promise that resolves when the operation is complete.
    */
   const activatePushNotifications = async () => {
     logger.debug(`[NotificationsScreen] Requesting push notification permission`)

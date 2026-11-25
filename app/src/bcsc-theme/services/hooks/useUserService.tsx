@@ -45,6 +45,8 @@ export const useUserService = () => {
 
   /**
    * Gets user information and handles errors related to JSON deserialization failures by showing an alert.
+   *
+   * @returns Promise resolving to user information response data
    */
   const getUserInfo = useCallback(async () => {
     try {
@@ -56,6 +58,8 @@ export const useUserService = () => {
 
   /**
    * Gets user metadata, including fetching the user's picture if it exists, and handles errors related to JSON deserialization failures by showing an alert.
+   *
+   * @returns Promise resolving to user metadata response data
    */
   const getUserMetadata = useCallback(async () => {
     let pictureUri: string | undefined

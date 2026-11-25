@@ -17,6 +17,8 @@ interface NotificationPermissionStatusResult {
  * settings sub-screen) and when the app returns to the foreground (e.g. returning
  * from the OS Settings app), so callers reflect changes the user makes outside the app.
  * Also exposes a manual `refresh` for callers that change the permission in-app.
+ *
+ * @returns The current status and a manual refresh callback.
  */
 export const useNotificationPermissionStatus = (): NotificationPermissionStatusResult => {
   const [status, setStatus] = useState<PushNotifications.NotificationPermissionStatus>(

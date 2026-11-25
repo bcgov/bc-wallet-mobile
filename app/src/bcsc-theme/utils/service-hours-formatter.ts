@@ -265,6 +265,9 @@ export const isCurrentTimeWithinServiceHours = (serviceHours: ServiceHours): boo
  * This function compares current time against the provided service hours
  * If any unavailable periods are present
  * it will calculate and return true if the current time falls OUTSIDE of those unavailable periods
+ *
+ * @param serviceHours - Service hours to check against
+ * @returns boolean returns True
  */
 export const isCurrentTimeOutsideUnavailablePeriod = (serviceHours: ServiceHours): boolean => {
   if (!serviceHours?.service_unavailable_periods?.length) {

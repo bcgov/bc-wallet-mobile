@@ -27,6 +27,9 @@ interface InformationCardProps {
 
 /**
  * A reusable information card component that displays a title, optional subtext, and an optional icon.
+ *
+ * @param props - The InformationCard component props
+ * @returns The InformationCard component
  */
 export const InformationCard = (props: InformationCardProps) => {
   const { Spacing, ColorPalette } = useTheme()

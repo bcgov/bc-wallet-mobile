@@ -304,14 +304,17 @@ export interface Spec extends TurboModule {
 
   /**
    * Saves a token to secure native storage.
-   * @param tokenType 0=Access, 1=Refresh, 2=Registration
-   * @param expiry Unix timestamp in seconds when token expires (or -1 for no expiry)
+   * @param tokenType - 0=Access, 1=Refresh, 2=Registration
+   * @param token - The token string to store
+   * @param expiry - Unix timestamp in seconds when token expires (or -1 for no expiry)
+   * @returns true if saved successfully
    */
   setToken(tokenType: number, token: string, expiry: number): Promise<boolean>;
 
   /**
    * Deletes a token from secure native storage.
-   * @param tokenType 0=Access, 1=Refresh, 2=Registration
+   * @param tokenType - 0=Access, 1=Refresh, 2=Registration
+   * @returns true if deleted successfully
    */
   deleteToken(tokenType: number): Promise<boolean>;
   setIssuer(issuer: string): Promise<boolean>;
@@ -324,7 +327,7 @@ export interface Spec extends TurboModule {
 
   /**
    * Saves the device registration in one call; see the {@link setRegistration} wrapper.
-   * @param registrationAccessToken null leaves the stored token as it is
+   * @param registrationAccessToken - null leaves the stored token as it is
    */
   setRegistration(clientID: string, issuer: string, registrationAccessToken: string | null): Promise<void>;
 
@@ -409,6 +412,8 @@ export interface Spec extends TurboModule {
    * Saves authorization request data to storage.
    * Writes to the authorization_request file in Application Support (iOS)
    * or encrypted storage (Android), compatible with v3 native app storage.
+   * @param data - The authorization request data to save
+   * @returns true if saved successfully
    */
   setAuthorizationRequest(data: NativeAuthorizationRequest): Promise<boolean>;
 
@@ -429,7 +434,8 @@ export interface Spec extends TurboModule {
   /**
    * Sets global (non-account-scoped) flags in Android SharedPreferences.
    * On iOS this is a no-op stub (returns true); use setAccountFlags instead.
-   * @param flags Object containing flags to set (merges with existing)
+   * @param flags - Object containing flags to set (merges with existing)
+   * @returns true if saved successfully
    * @platform Android only (no-op on iOS)
    */
   setAndroidGlobalFlags(flags: Object): Promise<boolean>;
@@ -448,7 +454,8 @@ export interface Spec extends TurboModule {
    * iOS: Writes to account_flag file in Application Support
    * Android: Writes to account-specific SharedPreferences
    * Compatible with v3 native app storage for rollback support.
-   * @param flags Object containing flags to set (merges with existing)
+   * @param flags - Object containing flags to set (merges with existing)
+   * @returns true if saved successfully
    */
   setAccountFlags(flags: Object): Promise<boolean>;
 
@@ -466,11 +473,14 @@ export interface Spec extends TurboModule {
 
   /**
    * Writes evidence metadata to native storage.
+   * @param evidence - Array of evidence metadata objects to save
+   * @returns true if saved successfully
    */
   setEvidence(evidence: Object[]): Promise<boolean>;
 
   /**
    * Deletes all evidence data from native storage, including photo files.
+   * @returns true if deleted successfully
    */
   deleteEvidence(): Promise<boolean>;
 
@@ -479,6 +489,7 @@ export interface Spec extends TurboModule {
    * Android: Writes JPEG to {filesDir}/documents/{filename}
    * iOS: Writes JPEG to Application Support (v3-compatible evidence storage)
    * @param base64Data Base64-encoded photo data
+   * @param filename - Target filename for the photo
    * @returns The absolute path to the saved file
    */
   saveEvidencePhoto(base64Data: string, filename: string): Promise<string>;
@@ -497,6 +508,8 @@ export interface Spec extends TurboModule {
    * iOS: Stores within ClientRegistration in secure keychain
    * Android: Stores within Provider → ClientRegistration in secure storage
    * Compatible with v3 native app storage for verification state detection.
+   * @param credential - The credential object to save
+   * @returns true if saved successfully
    */
   setCredential(credential: Object): Promise<boolean>;
 
@@ -510,6 +523,7 @@ export interface Spec extends TurboModule {
   /**
    * Checks if a credential exists without retrieving it.
    * Useful for quick verification status checks
+   * @returns true if credential exists, false otherwise
    */
   hasCredential(): Promise<boolean>;
 
@@ -527,6 +541,8 @@ export interface Spec extends TurboModule {
    * iOS: Writes to client_metadata file in Application Support (NSKeyedArchiver)
    * Android: Writes to encrypted clientmetadata file
    * Compatible with v3 native app storage for rollback support.
+   * @param services - Array of saved service objects to write
+   * @returns true if saved successfully
    */
   setSavedServices(services: NativeSavedService[]): Promise<boolean>;
 

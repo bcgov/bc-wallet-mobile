@@ -59,6 +59,8 @@ const findByTechnicalMessage = <T,>(
 /**
  * Business logic related to device authorization errors and error-screen navigation should be
  * implemented here.
+ *
+ * @returns Authorization service
  */
 export const useAuthorizationService = () => {
   const { authorization: authorizationApi } = useApi()
@@ -67,6 +69,8 @@ export const useAuthorizationService = () => {
 
   /**
    * Emits a global alert for the error's appEvent, if one is registered.
+   *
+   * @param error - The error object to evaluate for alert emission.
    */
   const emitAuthorizationAlert = useCallback(
     (error: unknown) => {
@@ -87,6 +91,8 @@ export const useAuthorizationService = () => {
   /**
    * Matches a device authorization error and navigates to appropriate error screen
    * Anything not matched will emit a global alert
+   *
+   * @param error - The error thrown by a device authorization api call.
    */
   const handleAuthorizationError = useCallback(
     (error: unknown) => {

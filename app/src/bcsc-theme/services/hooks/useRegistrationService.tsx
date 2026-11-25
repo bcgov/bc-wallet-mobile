@@ -70,6 +70,8 @@ export const useRegistrationService = () => {
 
   /**
    * Registers a new BCSC client and alerts on failures during the registration process.
+   *
+   * @returns Promise resolving to registration response data or void if account exists
    */
   const register = useCallback(async () => {
     try {

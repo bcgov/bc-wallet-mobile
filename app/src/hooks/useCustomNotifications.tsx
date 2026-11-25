@@ -32,6 +32,8 @@ const toElements = (notice: HomeNotice): JSX.Element[] => {
 
 /**
  * Hook to manage custom notifications in the app.
+ *
+ * @returns An object containing an array of custom notifications to be displayed on the Home screen.
  */
 export const useCustomNotifications = () => {
   const notice = useHomeNotice()

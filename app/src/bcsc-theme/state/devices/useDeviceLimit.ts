@@ -5,6 +5,8 @@ import { selectDeviceLimit } from './selectors'
 
 /**
  * Returns the device limit information from the id token.
+ *
+ * @returns The device limit information.
  */
 export const useDeviceLimit = (): DeviceLimitResult => {
   const { idToken } = useOptionalIdToken()

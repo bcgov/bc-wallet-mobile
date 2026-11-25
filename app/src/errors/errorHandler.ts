@@ -74,6 +74,9 @@ export function isDeviceStorageFullError(error: unknown): boolean {
 
 /**
  * Get error definition by key (useful for custom error handling)
+ *
+ * @param errorKey - The key of the error definition to retrieve from the ErrorRegistry.
+ * @returns The ErrorDefinition associated with the provided errorKey.
  */
 export function getErrorDefinition(errorKey: ErrorRegistryKey): ErrorDefinition {
   return ErrorRegistry[errorKey]
@@ -118,6 +121,11 @@ export const ensureAppError = (error: unknown, fallbackEvent = AppEventCode.UNKN
 
 /**
  * Converts an Error or AppError into a BifoldError, preserving as much information as possible for display in the UI.
+ *
+ * @param title - The title to display for the error
+ * @param description - A user-friendly description of the error
+ * @param error - The original error object to convert
+ * @returns A BifoldError containing the provided title, description, and details from the original error
  */
 export const toBifoldError = (title: string, description: string, error: Error | AppError): BifoldError => {
   let bifoldError: BifoldError

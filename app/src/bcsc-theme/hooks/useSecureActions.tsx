@@ -110,8 +110,8 @@ export const useSecureActions = () => {
    * Persists tokens to native secure storage. The registration access token is not one of them: it is
    * saved with its client ID (see saveRegistration).
    *
-   * @param refreshToken OAuth refresh token
-   * @param accessToken OAuth access token (not used much from storage in v3, for
+   * @param refreshToken - OAuth refresh token
+   * @param accessToken - OAuth access token (not used much from storage in v3, for
    * most use cases access token doesn't live long enough to need persistence)
    */
   const persistTokens = useCallback(
@@ -784,6 +784,9 @@ export const useSecureActions = () => {
 
   /**
    * Remove a specific evidence type from secure state and persist to native storage
+   *
+   * @param evidenceType - The evidence type to remove
+   * @returns The evidence metadata left
    */
   const removeEvidenceByType = useCallback(
     async (evidenceType: EvidenceType) => {
@@ -805,6 +808,9 @@ export const useSecureActions = () => {
 
   /**
    * Remove incomplete evidence entries and persist to native storage
+   *
+   * @param evidence - Array of evidence metadata to filter and persist
+   * @returns An updated list of evidence metadata with incomplete entries removed
    */
   const removeIncompleteEvidence = useCallback(
     async (evidence: EvidenceMetadata[]) => {
@@ -835,6 +841,10 @@ export const useSecureActions = () => {
    * Keep only the first `count` evidence entries (dropping the rest) and persist. Used when the user
    * navigates back to an evidence-type list to release the ID(s) selected from that list onward so
    * they can be picked again, while keeping the ones collected before it.
+   *
+   * @param evidence - Current evidence metadata array
+   * @param count - Number of leading entries to keep
+   * @returns The kept evidence metadata array
    */
   const truncateEvidence = useCallback(
     async (evidence: EvidenceMetadata[], count: number) => {
@@ -864,7 +874,7 @@ export const useSecureActions = () => {
    * locking the app mid-collection doesn't discard the captured photos; the user resumes
    * on EvidenceIDCollection instead of being bounced to the start of the ID flow.
    *
-   * @param evidence Array of evidence metadata to filter and persist
+   * @param evidence - Array of evidence metadata to filter and persist
    * @returns An updated list with abandoned (never-captured) entries removed
    */
   const removeAbandonedEvidence = useCallback(
@@ -912,9 +922,9 @@ export const useSecureActions = () => {
    * Updates the in-memory store immediately, then writes through to native storage
    * to maintain v3 compatibility.
    *
-   * @param clientRefId The service client_ref_id
-   * @param bookmarked Whether to bookmark (true) or unbookmark (false)
-   * @param metadata Optional additional metadata about the service (clientName, etc.)
+   * @param clientRefId - The service client_ref_id
+   * @param bookmarked - Whether to bookmark (true) or unbookmark (false)
+   * @param metadata - Optional additional metadata about the service (clientName, etc.)
    */
   const updateSavedService = useCallback(
     async (clientRefId: string, bookmarked: boolean, metadata?: Partial<NativeSavedService>) => {
@@ -1473,7 +1483,7 @@ export const useSecureActions = () => {
    * route, and the overlay provider keeps a shown overlay up through the commit its release lands in, so the
    * change is rendered beneath it, as a cut rather than a slide, and the stack it mounts extends the overlay
    * for its own wait.
-   * @param walletKey wallet key (PBKDF2 hash of PIN) for Askar wallet encryption
+   * @param walletKey - wallet key (PBKDF2 hash of PIN) for Askar wallet encryption
    */
   const handleSuccessfulAuth = useCallback(
     async (walletKey?: string) => {
@@ -1523,8 +1533,8 @@ export const useSecureActions = () => {
 
 /**
  * Hydrate the card process based on evidence data and the authorization request.
- * @param authRequest Authorization request to check for existing card process
- * @param evidenceData Array of evidence metadata to analyze
+ * @param authRequest - Authorization request to check for existing card process
+ * @param evidenceData - Array of evidence metadata to analyze
  * @returns The hydrated card process, or undefined if it cannot be determined
  */
 function hydrateCardProcess(

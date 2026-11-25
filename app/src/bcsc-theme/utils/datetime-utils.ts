@@ -6,6 +6,9 @@ const YEAR_MS = 365 * DAY_MS
 
 /**
  * Formats date to time: 4:30 PM or 16:30 depending on locale
+ *
+ * @param date - The timestamp to format
+ * @return formatted string output
  */
 function clockTime(date: Date): string {
   return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
@@ -14,6 +17,10 @@ function clockTime(date: Date): string {
 /**
  * Formats date into string output: "Sep 25, 1:30 PM".
  * If `withYear` is set, string output: "Sep 25, 2015, 1:30 PM".
+ *
+ * @param date - The timestamp to format
+ * @param withYear - Whether to include the year
+ * @return formatted string output
  */
 function calendarTime(date: Date, withYear: boolean): string {
   return date.toLocaleDateString([], {
@@ -49,6 +56,9 @@ export function formatCalendarDate(date: Date, locale: string): string {
  * 1–24 hours: clock time ("4:23 PM")
  * 1 Day up to a year: month, day, clock time ("Sep 25, 1:30 PM")
  * over a year: month, day, year, clock time ("Sep 25, 2015, 1:30 PM")
+ *
+ * @param date - The timestamp to format
+ * @return formatted string output
  */
 export function formatTimestamp(date: Date): string {
   const diffMs = Date.now() - date.getTime()
@@ -76,6 +86,8 @@ export function formatTimestamp(date: Date): string {
  * 1–24 hours: clock time ("Expires at 4:23 PM")
  * 1 Day up to a year: month, day, clock time ("Expires Sep 25, 1:30 PM")
  * over a year: month, day, year, clock time ("Expires Sep 25, 2027, 1:30 PM")
+ *
+ * @param expiresTime - When the item expires
  */
 export function formatExpiryBadge(expiresTime: Date): string {
   const diffMs = expiresTime.getTime() - Date.now()

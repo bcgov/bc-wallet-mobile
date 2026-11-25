@@ -208,6 +208,9 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
    *
    * Note: If the user navigates quickly through the flow, the UploadingScreen will just wait
    * for the video disk read to complete before proceeding.
+   *
+   * @param data - The data object containing video load information.
+   * @returns A promise that resolves when the video metadata is processed and cached.
    */
   const onVideoLoad = async (data: OnLoadData) => {
     setVideoLoaded(false)

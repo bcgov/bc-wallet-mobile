@@ -23,6 +23,8 @@ interface OnboardingIntroScreenProps {
  * It appears in two navigators: as the first screen of OnboardingStack for new users, and once to
  * every already-onboarded user on launch via AuthStack's AuthIntro route (announcing the app
  * refresh). Continue records `SEEN_ONBOARDING_INTRO` so it is not shown again on later launches.
+ *
+ * @returns The OnboardingIntroScreen component.
  */
 export const OnboardingIntroScreen = ({ onContinue }: OnboardingIntroScreenProps) => {
   const { t } = useTranslation()

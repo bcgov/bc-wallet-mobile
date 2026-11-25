@@ -31,6 +31,9 @@ export interface SystemModalProps {
 
 /**
  * A reusable modal component for system-related messages (device invalidated, internet disconnected, mandatory update, etc.)
+ *
+ * @param props - The component props
+ * @returns The SystemModal component
  */
 export const SystemModal = ({
   iconName,

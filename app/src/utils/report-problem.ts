@@ -111,6 +111,8 @@ export const createReportProblemLokiPayload = (reportId: string, problem: Report
 
 /**
  * Flattens the context of an AppError into a top-level object for easier logging.
+ * @param error - The AppError to flatten.
+ * @returns A flattened object containing the error's context.
  */
 const _flattenAppError = (error?: AppError) => {
   if (!error) {

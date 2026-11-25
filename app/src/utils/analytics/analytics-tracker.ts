@@ -57,6 +57,8 @@ export class AnalyticsTracker {
 
   /**
    * Sets the application ID for the tracker if the tracker is initialized.
+   *
+   * @param appId - The application ID to set for the tracker.
    */
   setAppId(appId: string): void {
     if (!this.tracker) {
@@ -112,6 +114,8 @@ export class AnalyticsTracker {
    * Tracks an error event.
    *
    * Note: This uses the `idim` snowplow `mobile_error` schema.
+   *
+   * @param error - The error to track.
    */
   trackErrorEvent(error: AnalyticsError): void {
     if (!this.tracker) {

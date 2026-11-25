@@ -80,6 +80,8 @@ type ResidentialAddress = {
 
 /**
  * Attempt to get the province code for a given string, returns null if not possible.
+ *
+ * @param province - The name of the province, either fully typed or code ie: British Columbia or BC
  */
 export function getProvinceCode(province: string): ProvinceCode | null {
   const squishedProvince = province.toUpperCase().replace(/\s+/g, '').trim() as keyof typeof ProvinceCodeMap
@@ -89,6 +91,9 @@ export function getProvinceCode(province: string): ProvinceCode | null {
 
 /**
  * Formats a ResidentialAddress object into a single string suitable for display.
+ *
+ * @param address - The address object to format.
+ * @returns - The formatted address string in uppercase.
  */
 export function formatAddressForDisplay(address: ResidentialAddress): string {
   const streetLine = address.streetAddress2

@@ -70,6 +70,8 @@ export const useQRScanner = (strategies: QRCodeStrategy[]) => {
 
   /**
    * Handle a scanned QR code value by finding a matching strategy and executing its handler.
+   * @param value - The scanned QR code value.
+   * @returns A promise that resolves when the scan handling is complete.
    */
   const handleScan = useCallback(
     async (value: string) => {
@@ -126,6 +128,8 @@ export const useQRScanner = (strategies: QRCodeStrategy[]) => {
 /**
  * Describes a QR code value by extracting its scheme, length, and presence of query or fragment components.
  * NOTE: Doesn't expose the actual value to avoid logging sensitive information.
+ * @param value - The QR code value to describe.
+ * @returns An object containing the scheme, length, and flags for query and fragment presence.
  */
 function describeQRCode(value: string) {
   const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(value)?.[1]?.toLowerCase() ?? 'none'

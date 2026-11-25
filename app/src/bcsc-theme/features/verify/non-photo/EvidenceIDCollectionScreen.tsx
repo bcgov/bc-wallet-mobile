@@ -49,6 +49,9 @@ type EvidenceIDCollectionScreenProps = {
 
 /**
  * Note: Depending on which card type is selected, additional formState fields may be required. ie: First name, last name, birth date, etc.
+ *
+ * @param props - The props for the screen, including navigation and route parameters.
+ * @returns The rendered EvidenceIDCollectionScreen component.
  */
 const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionScreenProps) => {
   const [store] = useStore<BCState>()

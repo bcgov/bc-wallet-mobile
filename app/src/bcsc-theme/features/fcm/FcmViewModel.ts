@@ -40,6 +40,10 @@ export class FcmViewModel {
   private isCardExpired = false
 
   /**
+   * @param fcmService - Firebase Cloud Messaging service
+   * @param logger - Logger instance
+   * @param pairingService - Service for handling pairing requests
+   * @param verificationResponseService - Service for handling verification response notifications
    * @param mode - App mode (BCSC or BCWallet). Local notifications are only shown in BCSC mode.
    */
   constructor(

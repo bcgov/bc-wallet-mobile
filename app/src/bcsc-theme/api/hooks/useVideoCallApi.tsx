@@ -245,6 +245,8 @@ const useVideoCallApi = (apiClient: BCSCApiClient) => {
 
 /**
  * Checks if the provided error is a video session ended error.
+ * @param error - The error to check.
+ * @returns True if the error indicates that the video session has ended, false otherwise.
  */
 function isVideoSessionEndedError(error: unknown): boolean {
   return (

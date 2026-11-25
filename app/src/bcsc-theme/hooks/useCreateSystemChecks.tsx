@@ -162,6 +162,8 @@ const getMainStackSessionKey = (isVerified: boolean, requestCheck: VerificationR
  * Hook to create system checks to be used by useSystemChecks hook.
  *
  * @see useSystemChecks.tsx
+ *
+ * @returns Object containing system check getters and readiness for each scope
  */
 export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const { t } = useTranslation()
@@ -239,6 +241,8 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
 
   /**
    * Get system checks to run again each time the app returns to the foreground
+   *
+   * @returns Array of system check strategies
    */
   const getForegroundSystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
     // The user may have changed the clock while away. Joins the status fetch ServerStatusProvider
@@ -387,6 +391,8 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
    * VerifyStack is only mounted for an unverified, authenticated user once secure state is hydrated,
    * so the expired-session check runs in the right place (never on the auth/main stacks) and needs no
    * verified-status gating. See issue #4050.
+   *
+   * @returns Array of system check strategies
    */
   const getVerifySystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
     return [new VerificationSessionExpiredSystemCheck(getPendingDeviceCodeExpiry, navigation, utils)]

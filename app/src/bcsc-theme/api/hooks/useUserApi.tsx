@@ -34,6 +34,8 @@ export interface UserInfoResponseData {
 const useUserApi = (apiClient: BCSCApiClient) => {
   /**
    * Get user information in a JWE string and decode.
+   *
+   * @returns A promise that resolves to the user information.
    */
   const getUserInfo = useCallback(async (): Promise<UserInfoResponseData> => {
     return withAccount(async () => {

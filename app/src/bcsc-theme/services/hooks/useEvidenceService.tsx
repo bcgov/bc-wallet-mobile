@@ -45,6 +45,8 @@ export const useEvidenceService = () => {
   /**
    * Handles errors from evidence API calls and emits the appropriate actions.
    * An `AppError` is marked `handled` once surfaced, so a caller that checks the flag shows nothing more.
+   *
+   * @param error - The error object
    */
   const handleEvidenceApiError = useCallback(
     (error: unknown): void => {
@@ -112,6 +114,8 @@ export const useEvidenceService = () => {
 
   /**
    * Fetches the status of a verification request by its ID and handles errors appropriately.
+   * @param verificationRequestId - The ID of the verification request to check.
+   * @returns Promise resolving to the verification status response data.
    */
   const getVerificationRequestStatus = useCallback(
     async (verificationRequestId: string): Promise<VerificationStatusResponseData> => {

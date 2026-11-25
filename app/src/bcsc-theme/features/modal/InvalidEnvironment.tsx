@@ -12,6 +12,8 @@ import { SystemModal } from './components/SystemModal'
 /**
  * Full screen modal displayed when a production app is set to a non-production environment.
  * The only way forward is to reset the app back to the production environment.
+ *
+ * @returns The InvalidEnvironment component.
  */
 export const InvalidEnvironment = (): React.ReactElement => {
   const { t } = useTranslation()

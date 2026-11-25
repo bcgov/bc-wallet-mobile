@@ -161,6 +161,7 @@ const setHasPromptedForNotifications = async (): Promise<void> => {
 
 /**
  * Uses the discover didcomm protocol to check with the mediator if it supports the firebase push notification protocol
+ * @param agent - The active aries agent
  */
 const isMediatorCapable = async (agent: Agent): Promise<boolean | undefined> => {
   if (Config.MEDIATOR_USE_PUSH_NOTIFICATIONS !== 'true') {

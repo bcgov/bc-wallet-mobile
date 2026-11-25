@@ -11,6 +11,9 @@ export enum MinimumFreeStorageMb {
 
 /**
  * Checks if the device has enough free storage space and shows an alert if it is low.
+ *
+ * @param minFreeMb - The minimum free storage in MB required to continue.
+ * @returns A function that resolves to true if there is enough free storage, or false if an alert was shown due to low storage.
  */
 export const useEnsureFreeStorage = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -21,6 +24,9 @@ export const useEnsureFreeStorage = () => {
     /**
      * Ensures that the device has enough free storage space.
      * If the available storage is below the specified minimum, an alert is shown to the user.
+     * @param minFreeMb - The minimum free storage in MB required to continue.
+     * @returns A promise that resolves to true if there is enough free storage,
+     *          or false if an alert was shown due to low storage.
      */
     async (minFreeMb: MinimumFreeStorageMb) => {
       const storage = await checkFileSystemFreeStorage(minFreeMb, logger)
