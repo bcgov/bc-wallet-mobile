@@ -31,11 +31,8 @@ export type VerificationState =
       isVerificationInProgress: boolean
       needsVerification: boolean
       isCardInactive: boolean
-      /**
-       * A registration cancelled or expired before setup finished: whatever progress it holds (a submitted
-       * video, a request, evidence) belongs to a registration IAS no longer honours, so Start begins again
-       * from nothing instead of resuming it
-       */
+      /** Cancelled or expired before setup finished: its progress (video, request, evidence) is stale, so Start
+       *  begins again instead of resuming it */
       needsFreshStart: boolean
     }
 
