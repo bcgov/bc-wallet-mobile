@@ -95,8 +95,7 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
     dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [false] })
   }
 
-  // The OS permission cannot be revoked from the app, so once granted the only honest choice is to carry on.
-  // The stored preference is re-asserted because it can lag the OS (allowed from Settings, or a late Android answer).
+  // Re-assert the preference: it lags an OS grant made outside this screen, e.g. from OS Settings
   const continueWithNotifications = () => {
     dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [true] })
     navigation.navigate(BCSCScreens.OnboardingSecureApp)

@@ -196,10 +196,7 @@ export const TestIds = {
       skip: 'SkipNotifications',
       // Distinct from the generic 'Continue' (Intro/PrivacyPolicy stay mounted lower in the stack with it).
       continue: 'ContinueWithNotifications',
-      // The same route renders three variants: enable/skip; `continue` alone once the OS permission is
-      // granted (it cannot be revoked from the app); and `PermissionDisabled` INSTEAD of enable/skip once
-      // the user has been prompted and the live OS status is denied/blocked. The status refreshes on
-      // focus and foreground, so coming back re-runs the check.
+      // One route, three variants: enable/skip, `continue` once granted, `PermissionDisabled` once prompted and denied.
       openSettings: 'OpenSettings',
       continueWithout: 'ContinueWithoutNotifications',
     },

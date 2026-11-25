@@ -85,9 +85,8 @@ export const OnboardingNotificationsScreen = defineScreen({
 })
 
 /**
- * The granted variant of the SAME `OnboardingNotifications` route — a lone Continue replaces the
- * enable/skip pair once the OS permission is granted (the app cannot revoke it). Reached by navigating
- * BACK to the screen after allowing the dialog. `primary` (Continue) → SecureApp.
+ * Granted variant of the SAME `OnboardingNotifications` route: a lone Continue replaces enable/skip once
+ * the OS permission is granted. Reached by navigating BACK after allowing. `primary` (Continue) → SecureApp.
  */
 export const OnboardingNotificationsGrantedScreen = defineScreen({
   self: bcsc(ob.notifications.continue),
@@ -99,7 +98,7 @@ export const OnboardingNotificationsGrantedScreen = defineScreen({
 /**
  * The `PermissionDisabled` variant of the SAME `OnboardingNotifications` route — it replaces the
  * enable/skip body once the user has been prompted and the live OS status is denied/blocked. The
- * check runs on mount, so it is reached by navigating BACK to the screen after refusing the dialog.
+ * check re-runs on focus, so it is reached by navigating BACK to the screen after refusing the dialog.
  *
  * `primary` (OpenSettings) leaves the app for the OS settings — assert it, never tap it in CI;
  * `secondary` (ContinueWithoutNotifications) → SecureApp.
