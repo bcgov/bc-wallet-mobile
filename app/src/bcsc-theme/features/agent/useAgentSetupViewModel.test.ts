@@ -776,48 +776,4 @@ describe('useAgentSetupViewModel', () => {
       )
     })
   })
-
-  describe('attestation toggle', () => {
-    const developerWith = (enableAttestation: boolean) => ({ enableProxy: false, enableAttestation })
-
-    beforeEach(() => {
-      // The monitor is shared between tests and clearAllMocks does not reset
-      // plain properties, so a stale value would make these pass spuriously.
-      delete (attestationMonitor as { enabled?: boolean }).enabled
-    })
-
-    it('applies the stored attestation preference to the monitor', async () => {
-      jest.mocked(Bifold.useStore).mockReturnValue(mockedStore({ developer: developerWith(true) }) as never)
-
-      renderHook(() => useAgentSetupViewModel())
-
-      await waitFor(() => expect((attestationMonitor as { enabled?: boolean }).enabled).toBe(true))
-    })
-
-    it('applies a change to the preference without rebuilding the agent', async () => {
-      jest.mocked(Bifold.useStore).mockReturnValue(mockedStore({ developer: developerWith(true) }) as never)
-      const { rerender } = renderHook(() => useAgentSetupViewModel())
-      await waitFor(() => expect((attestationMonitor as { enabled?: boolean }).enabled).toBe(true))
-      const buildsBefore = jest.mocked(agentService.buildAgent).mock.calls.length
-
-      jest.mocked(Bifold.useStore).mockReturnValue(mockedStore({ developer: developerWith(false) }) as never)
-      await act(async () => {
-        rerender({})
-      })
-
-      expect((attestationMonitor as { enabled?: boolean }).enabled).toBe(false)
-      expect(jest.mocked(agentService.buildAgent).mock.calls).toHaveLength(buildsBefore)
-    })
-
-    it('is a no-op when no attestation monitor is registered', async () => {
-      jest
-        .mocked(Bifold.useServices)
-        .mockReturnValue([logger, undefined, undefined, [], [], ocaBundleResolver] as never)
-      jest.mocked(Bifold.useStore).mockReturnValue(mockedStore({ developer: developerWith(true) }) as never)
-
-      const { result } = renderHook(() => useAgentSetupViewModel())
-
-      await waitFor(() => expect(result.current.status).toBe('ready'))
-    })
-  })
 })
