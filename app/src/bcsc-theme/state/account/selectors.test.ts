@@ -8,9 +8,15 @@ import { selectAccountPhase } from './selectors'
 const NOW = new Date('2026-10-19T12:00:00.000Z')
 const FUTURE = new Date('2027-10-19T00:00:00.000Z')
 
-const buildState = (opts: { verified?: boolean; bcscReason?: BCSCReason; refreshToken?: string } = {}) =>
+const buildState = (
+  opts: { verified?: boolean; bcscReason?: BCSCReason; refreshToken?: string; credentialDeactivated?: boolean } = {}
+) =>
   ({
-    bcscSecure: { verified: opts.verified ?? true, refreshToken: opts.refreshToken },
+    bcscSecure: {
+      verified: opts.verified ?? true,
+      refreshToken: opts.refreshToken,
+      credentialDeactivated: opts.credentialDeactivated ?? false,
+    },
     bcsc: { credentialMetadata: { bcscReason: opts.bcscReason ?? BCSCReason.ApprovedByAgent } },
   }) as unknown as BCState
 
@@ -30,6 +36,18 @@ describe('selectAccountPhase', () => {
     const state = buildState({ bcscReason: BCSCReason.ExpiredBySystem })
 
     expect(selectAccountPhase(state, buildAccount(FUTURE), NOW).phase).toBe(AccountPhaseType.Expired)
+  })
+
+  it('reads the credential record flag alone as expired when verified', () => {
+    const state = buildState({ credentialDeactivated: true })
+
+    expect(selectAccountPhase(state, buildAccount(FUTURE), NOW).phase).toBe(AccountPhaseType.Expired)
+  })
+
+  it('has no card to judge for an unfinished device, even with an inactive card', () => {
+    const state = buildState({ verified: false, bcscReason: BCSCReason.ExpiredBySystem })
+
+    expect(selectAccountPhase(state, buildAccount(FUTURE), NOW).phase).toBe(AccountPhaseType.None)
   })
 
   it('derives the credential expiry from the stored refresh token', () => {

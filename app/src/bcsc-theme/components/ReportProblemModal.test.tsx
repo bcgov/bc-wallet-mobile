@@ -1,3 +1,4 @@
+import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { BCState, initialState } from '@/store'
 import { reportProblem } from '@/utils/logger'
 import { testIdWithKey } from '@bifold/core'
@@ -116,6 +117,22 @@ describe('ReportProblemModal', () => {
     fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
 
     expect(mockReportProblem).toHaveBeenCalledWith(expect.anything())
+  })
+
+  it('records whether the card is inactive, including an expiry saved after unlock', () => {
+    const { getByTestId } = renderModal(jest.fn(), {
+      bcsc: {
+        ...initialState.bcsc,
+        credentialMetadata: { bcscReason: BCSCReason.ExpiredBySystem } as never,
+      },
+      bcscSecure: { ...initialState.bcscSecure, verified: true },
+    })
+
+    enterDescription(getByTestId)
+    fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
+
+    const { error } = mockReportProblem.mock.calls[0][0] as { error: { context?: Record<string, unknown> } }
+    expect(error.context).toMatchObject({ state_credential_deactivated: false, state_card_inactive: true })
   })
 
   it('includes the formatted build history in the report, newest first', () => {

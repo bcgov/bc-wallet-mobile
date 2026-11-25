@@ -280,7 +280,11 @@ describe('useRootStackViewModel', () => {
   })
 
   describe('verification resume routing', () => {
-    type VerificationFlags = { verificationSkipped?: boolean; verificationStarted?: boolean }
+    type VerificationFlags = {
+      verificationSkipped?: boolean
+      verificationStarted?: boolean
+      credentialMetadata?: { bcscReason: string }
+    }
     // The prompt hasn't been answered yet (just onboarded)
     const UNANSWERED: VerificationFlags = {}
     const SKIPPED: VerificationFlags = { verificationSkipped: true, verificationStarted: false }
@@ -290,7 +294,7 @@ describe('useRootStackViewModel', () => {
 
     const authedUnverified = (
       flags: VerificationFlags,
-      facts: { inVerifyFlow?: boolean; credentialDeactivated?: boolean } = {}
+      facts: { inVerifyFlow?: boolean; credentialDeactivated?: boolean; refreshToken?: string } = {}
     ) =>
       mockStore({
         bcsc: { hasAccount: true, ...flags },
@@ -358,6 +362,28 @@ describe('useRootStackViewModel', () => {
       // An expired or cancelled card is renewed from Home, not resumed
       expect(result.current.phase).toBe(RootPhase.Main)
       expect(dispatch).not.toHaveBeenCalled()
+    })
+
+    it('leaves a token-only device the saved details say expired on Home even when verification was started', () => {
+      const dispatch = jest.fn()
+      const expired = { ...CHOSE_TO_VERIFY, credentialMetadata: { bcscReason: 'Expired by System' } }
+      useStoreWith(authedUnverified(expired, { refreshToken: 'token' }), dispatch)
+
+      const { result } = renderViewModel()
+
+      expect(result.current.phase).toBe(RootPhase.Main)
+      expect(dispatch).not.toHaveBeenCalled()
+    })
+
+    // Details saved before a reset (older versions never cleared them) describe a registration that is gone
+    it('resumes a started verification with no record and no token, whatever the saved details say', () => {
+      const dispatch = jest.fn()
+      const leftover = { ...CHOSE_TO_VERIFY, credentialMetadata: { bcscReason: 'Expired by System' } }
+      useStoreWith(authedUnverified(leftover), dispatch)
+
+      renderViewModel()
+
+      expect(dispatch).toHaveBeenCalledWith(resumeDispatch)
     })
 
     it('only re-enters verification once per session (a later re-render does not re-dispatch)', () => {

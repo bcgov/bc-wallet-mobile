@@ -187,6 +187,22 @@ describe('EventReasonAlertsSystemCheck', () => {
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCModals.DeviceInvalidated, {
         invalidationReason: BCSCReason.Cancel,
       })
+      expect(emitAlert).not.toHaveBeenCalled()
+    })
+
+    it('should pass without a dispatch or an alert when the saved details match the token', async () => {
+      const mockIdToken = createMockIdToken({
+        bcsc_event: BCSCEvent.Expire,
+        bcsc_reason: BCSCReason.ExpiredBySystem,
+      })
+      const metadata = tokenToCredentialMetadata(mockIdToken)
+      const getIdToken = jest.fn().mockResolvedValue(mockIdToken)
+      const check = new EventReasonAlertsSystemCheck(getIdToken, emitAlert, metadata, mockUtils, mockNavigation)
+
+      await expect(check.runCheck()).resolves.toBe(true)
+
+      expect(mockUtils.dispatch).not.toHaveBeenCalled()
+      expect(emitAlert).not.toHaveBeenCalled()
     })
 
     it('should do nothing when onFail runs before runCheck', () => {
@@ -199,6 +215,7 @@ describe('EventReasonAlertsSystemCheck', () => {
       expect(emitAlert).not.toHaveBeenCalled()
       expect(mockNavigation.navigate).not.toHaveBeenCalled()
     })
+    // With no saved details the first check on a device alerts on a Renewal; this pins that on purpose
     it('should render an alert with CARD_STATUS_UPDATED event when reason Renew', async () => {
       const mockIdToken = createMockIdToken({
         bcsc_event: BCSCEvent.Renewal,
@@ -223,7 +240,7 @@ describe('EventReasonAlertsSystemCheck', () => {
         })
       )
     })
-    it('should mark the credential deactivated without alerting when the event is Expire', async () => {
+    it('should save the expiry with the account details, without alerting, when the event is Expire', async () => {
       const mockIdToken = createMockIdToken({
         bcsc_event: BCSCEvent.Expire,
         bcsc_reason: BCSCReason.ExpiredBySystem,
@@ -233,16 +250,12 @@ describe('EventReasonAlertsSystemCheck', () => {
       await check.runCheck()
       check.onFail()
 
-      // The reason is persisted so useCardStatus can gate login, pairing, and Services on it.
+      // The saved reason is what marks the card inactive, so it is the only write.
       expect(mockUtils.dispatch).toHaveBeenCalledWith({
         type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA,
         payload: [expect.objectContaining({ bcscReason: BCSCReason.ExpiredBySystem })],
       })
-      expect(mockUtils.dispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_CREDENTIAL_DEACTIVATED,
-        payload: [true],
-      })
-      expect(mockUtils.dispatch).toHaveBeenCalledTimes(2)
+      expect(mockUtils.dispatch).toHaveBeenCalledTimes(1)
       // ias-ios suppresses the expiry alert deliberately (IASP-12489); v4 matches it.
       expect(emitAlert).not.toHaveBeenCalled()
       expect(mockNavigation.navigate).not.toHaveBeenCalled()

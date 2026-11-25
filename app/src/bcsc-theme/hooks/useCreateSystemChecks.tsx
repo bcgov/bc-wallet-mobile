@@ -274,9 +274,9 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     const systemChecks: SystemCheckStrategy[] = []
     const refreshTokenExpired = isRefreshTokenExpired(store.bcscSecure.refreshToken, new Date())
 
-    // DeviceCount and EventReasonAlerts need a verified user's cached id token; hydration never
-    // fetches one when the stored refresh token is expired, so they'd misfire on that path (#4654).
-    const shouldRunIdTokenChecks = isVerified && !refreshTokenExpired
+    // EventReasonAlerts needs the cached id token of any device with a usable refresh token, verified or
+    // not; hydration never fetches one when the stored refresh token is expired, so it'd misfire (#4654).
+    const shouldRunIdTokenChecks = !!store.bcscSecure.refreshToken && !refreshTokenExpired
     // Needs the user's chosen nickname: without one (e.g. during initial onboarding) the check fails with
     // "No client name found for registration update" on every launch until setup completes.
     const shouldUpdateRegistration =

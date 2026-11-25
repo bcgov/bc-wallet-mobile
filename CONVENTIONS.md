@@ -391,8 +391,8 @@ flag that something has to remember to set and clear. The three live together in
 (`bcsc-theme/state/account/`) is the example:
 
 - `getAccountPhase` (`account-phase.ts`) is the only definition of "expired" and "expiring soon".
-- `selectAccountPhase` (`selectors.ts`) reads its inputs: verification (through `selectVerificationState`), the ID
-  token `bcscReason`, the stored refresh token's expiry (`isRefreshTokenExpired`), and the account's
+- `selectAccountPhase` (`selectors.ts`) reads its inputs: verification and "card not active" (both through
+  `selectVerificationState`), the stored refresh token's expiry (`isRefreshTokenExpired`), and the account's
   `account_expiration_date`.
 - `useAccountPhase` re-derives it when the store or the account changes. `useCardStatus` (feature locks) and
   `selectHomeNotice` (Home notices, `bcsc-theme/state/home/`) both read it, so they cannot disagree.
@@ -401,6 +401,10 @@ flag that something has to remember to set and clear. The three live together in
 - `getVerificationState` (`bcsc-theme/state/verification/`) is the only definition of "verified", "device verified by
   IAS" and "needs verification". Screens, navigators, Home and system checks read it through `useVerificationState`
   or `selectVerificationState`, never from `bcscSecure.verified`, `credentialDeactivated`, `inVerifyFlow` or the tokens directly.
+- `isCardInactive` (`bcsc-theme/state/verification/card-inactive.ts`) is the only definition of "card not active": the
+  credential record read at unlock says cancelled or expired, or the saved account details say "Expired by System".
+  Card expiry and the verification rule both take it from `selectVerificationState`. A saved cancel reason is not part
+  of it: the account-change check sends that card to the device-invalidated screen.
 
 The `unknown` phase (verified, but no usable date and no server signal) shows nothing; a notice is never built
 from data that did not load. Expiry is not refreshed at midnight or on foreground; it re-derives on the next
