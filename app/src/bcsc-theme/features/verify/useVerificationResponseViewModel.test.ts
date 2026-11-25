@@ -114,7 +114,7 @@ describe('useVerificationResponseViewModel', () => {
       expect(mockUpdateUserMetadata).toHaveBeenCalledWith(null)
       expect(mockGetCachedIdTokenMetadata).toHaveBeenCalledWith({ refreshCache: true })
       expect(storage.store.getState().account.profile?.nickname).toBe('TestNickname')
-      expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('test-registration-token', 'TestNickname')
+      expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('TestNickname')
       expect(mockUpdateVerified).toHaveBeenCalledWith(true)
       expect(storage.store.getState().session.verificationVideoSubmittedAt).toBeUndefined()
     })
@@ -375,7 +375,7 @@ describe('useVerificationResponseViewModel', () => {
       })
 
       expect(storage.store.getState().account.profile?.nickname).toBe('RC0000080')
-      expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('test-registration-token', 'RC0000080')
+      expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('RC0000080')
     })
 
     it('prefers given_name over family_name when both are present', async () => {
@@ -389,7 +389,7 @@ describe('useVerificationResponseViewModel', () => {
       })
 
       expect(storage.store.getState().account.profile?.nickname).toBe('Jamie')
-      expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('test-registration-token', 'Jamie')
+      expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('Jamie')
     })
   })
 })

@@ -55,30 +55,27 @@ export const useFactoryReset = () => {
    *
    * @returns A promise that resolves when the deletion attempt is complete.
    */
-  const deleteRegistration = useCallback(
-    async () => {
-      try {
-        const deviceRegistration = readDeviceRegistration()
+  const deleteRegistration = useCallback(async () => {
+    try {
+      const deviceRegistration = readDeviceRegistration()
 
-        if (!deviceRegistration) {
-          logger.info('FactoryReset: No registration found on the device, skipping IAS account deletion')
-          return
-        }
-
-        const deleteIASAccount = await registration.deleteRegistration(
-          deviceRegistration.registrationAccessToken,
-          deviceRegistration.clientId
-        )
-
-        if (!deleteIASAccount.success) {
-          logger.warn('FactoryReset: Failed to delete IAS account from server')
-        }
-      } catch (error) {
-        logger.warn('FactoryReset: Error occurred while deleting registration', { error })
+      if (!deviceRegistration) {
+        logger.info('FactoryReset: No registration found on the device, skipping IAS account deletion')
+        return
       }
-    },
-    [logger, registration]
-  )
+
+      const deleteIASAccount = await registration.deleteRegistration(
+        deviceRegistration.registrationAccessToken,
+        deviceRegistration.clientId
+      )
+
+      if (!deleteIASAccount.success) {
+        logger.warn('FactoryReset: Failed to delete IAS account from server')
+      }
+    } catch (error) {
+      logger.warn('FactoryReset: Error occurred while deleting registration', { error })
+    }
+  }, [logger, registration])
 
   /**
    * Removes all artifacts associated with the current BCSC account.

@@ -58,7 +58,10 @@ const pinAccount = { accountId: 'test-account-id', issuer: 'https://idsit.gov.bc
 
 // BasicAppContext resets the store, so the account goes in through it
 const accountSeed = (securityMethod: AccountSecurityMethod): BCSCStoreSeed => ({
-  account: { profile: { ...pinAccount, clientId: 'test-client-id', securityMethod } },
+  account: {
+    profile: { ...pinAccount, securityMethod },
+    registration: { clientId: 'test-client-id', issuer: pinAccount.issuer },
+  },
 })
 
 /** Shows the method held in secure state, so a test can watch the store follow the switch. */

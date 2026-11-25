@@ -5,7 +5,7 @@ import { clearPinAttempts } from '@/bcsc-theme/features/auth/services/pin-lockou
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { storage } from '@/bcsc-theme/storage'
-import { nativeAccount, seedAccount, seedBCSCStore, withBCSCStore } from '@/bcsc-theme/storage/testing'
+import { nativeAccount, seedAccount, seedBCSCStore, seedTokens, withBCSCStore } from '@/bcsc-theme/storage/testing'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import * as BcscCore from 'react-native-bcsc-core'
@@ -67,6 +67,10 @@ const setupFactoryReset = (overrides: FactoryResetSetup = {}) => {
   jest.mocked(useSecureActions).mockReturnValue({ clearSecureState, deleteSecureData } as any)
   seedAccount(account ? nativeAccount(account) : null)
   bifold.useStore.mockReturnValue(withBCSCStore([store, dispatch]))
+  // The registration access token lives with the registration, which needs an account
+  if (account && store?.bcscSecure?.registrationAccessToken) {
+    seedTokens({ registrationAccessToken: store.bcscSecure.registrationAccessToken })
+  }
   bifold.useServices.mockReturnValue([logger] as any)
 
   return { bcscCore, logger, deleteRegistration, dispatch, clearSecureState, deleteSecureData }
@@ -198,7 +202,7 @@ describe('useFactoryReset', () => {
   it('clears the account before the session, then logs out', async () => {
     seedBCSCStore({
       account: {
-        profile: { accountId: 'a', clientId: 'c', issuer: 'i', securityMethod: 'app_pin_no_device_authn' as never },
+        profile: { accountId: 'a', issuer: 'i', securityMethod: 'app_pin_no_device_authn' as never },
       },
       session: { didAuthenticate: true },
     })

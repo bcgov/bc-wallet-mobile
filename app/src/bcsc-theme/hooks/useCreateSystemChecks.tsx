@@ -1,13 +1,6 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
 import { useBCSCStore } from '@/bcsc-theme/storage'
-import {
-  getBCSCState,
-  useAccount,
-  useApp,
-  useDeveloper,
-  useNickname,
-  useSession,
-} from '@/bcsc-theme/storage/hooks'
+import { getBCSCState, useAccount, useApp, useDeveloper, useNickname, useSession } from '@/bcsc-theme/storage/hooks'
 
 import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
@@ -178,6 +171,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const app = useApp()
   const credentialMetadata = useAccount((a) => a.credentialMetadata)
   const tokens = useAccount((a) => a.tokens)
+  const registrationAccessToken = useAccount((a) => a.registration?.registrationAccessToken)
   const selectedNickname = useNickname()
   const { stateLoaded, isHydrated } = useSession(
     useShallow((s) => ({ stateLoaded: s.stateLoaded, isHydrated: s.isHydrated }))
@@ -283,10 +277,10 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     const shouldRunIdTokenChecks = !!tokens?.refreshToken && !refreshTokenExpired
     // Needs the user's chosen nickname: without one (e.g. during initial onboarding) the check fails with
     // "No client name found for registration update" on every launch until setup completes.
-    const shouldUpdateRegistration = isBCServicesCardBundle && !!tokens?.registrationAccessToken && !!selectedNickname
+    const shouldUpdateRegistration = isBCServicesCardBundle && !!registrationAccessToken && !!selectedNickname
     // Key rotation (#3876): gated like the registration update but deliberately skips selectedNickname
     // (rotation doesn't need one).
-    const shouldRotateKey = isBCServicesCardBundle && !!tokens?.registrationAccessToken && isVerified
+    const shouldRotateKey = isBCServicesCardBundle && !!registrationAccessToken && isVerified
 
     if (shouldRunIdTokenChecks) {
       systemChecks.push(
@@ -365,7 +359,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
               client: client as BCSCApiClient,
               logger,
               saveRegistration,
-              fallbackRegistrationAccessToken: tokens?.registrationAccessToken,
+              fallbackRegistrationAccessToken: registrationAccessToken,
             }),
           utils
         )
@@ -377,6 +371,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     isVerified,
     requestCheck,
     tokens,
+    registrationAccessToken,
     app.acceptedTermsOfUseVersion,
     selectedNickname,
     app.registeredBuild,

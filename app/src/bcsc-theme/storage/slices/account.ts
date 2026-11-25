@@ -13,8 +13,6 @@ export const newProfile = (profile: Omit<Profile, 'accountId'>): Profile => ({
 
 export const ProfileSchema = z.object({
   accountId: z.string(),
-  // Absent until the device registers
-  clientId: z.string().optional(),
   issuer: z.string(),
   // AccountSecurityMethod's values, listed so the schema doesn't depend on the native module loading
   securityMethod: z.enum([
@@ -31,9 +29,19 @@ export type Profile = z.infer<typeof ProfileSchema>
 export const TokensSchema = z.object({
   accessToken: z.string().optional(),
   refreshToken: z.string().optional(),
-  registrationAccessToken: z.string().optional(),
 })
 export type Tokens = z.infer<typeof TokensSchema>
+
+// The device's IAS registration: one keychain item, so the client ID and its token are always saved together
+// (#4925). services/device-registration is its only reader and writer. A gap dates from before the
+// registration had one owner (a v3 upgrade with no token, or a token whose client ID was lost); unlock fills
+// the client ID in.
+export const RegistrationSchema = z.object({
+  clientId: z.string().optional(),
+  issuer: z.string(),
+  registrationAccessToken: z.string().optional(),
+})
+export type Registration = z.infer<typeof RegistrationSchema>
 
 // The native credential record that marks the account verified. Loose, so native fields survive a write.
 export const CredentialSchema = z.looseObject({
@@ -75,6 +83,7 @@ export type PinAttempts = z.infer<typeof PinAttemptsSchema>
 export const ACCOUNT_KEYS = {
   profile: persistedKey({ key: 'account/profile', schema: ProfileSchema, backend: 'encrypted' }),
   tokens: persistedKey({ key: 'account/tokens', schema: TokensSchema, backend: 'keychain' }),
+  registration: persistedKey({ key: 'account/registration', schema: RegistrationSchema, backend: 'keychain' }),
   credential: persistedKey({ key: 'account/credential', schema: CredentialSchema, backend: 'encrypted' }),
   credentialMetadata: persistedKey({
     key: 'account/credentialMetadata',
@@ -88,6 +97,7 @@ export interface AccountSlice {
   account: {
     profile?: Profile
     tokens?: Tokens
+    registration?: Registration
     credential?: Credential
     credentialMetadata?: CredentialMetadata
     pinAttempts?: PinAttempts
@@ -102,6 +112,10 @@ export interface AccountSlice {
     // Merges into the stored tokens; pass undefined for a token to drop it
     setTokens(tokens: Partial<Tokens>): Promise<void>
     clearTokens(): Promise<void>
+    // Through services/device-registration only
+    setRegistration(registration: Registration | undefined): Promise<void>
+    // After a failed setRegistration: the session carries on with it, as with keepTokensInMemory
+    keepRegistrationInMemory(registration: Registration): void
     setCredential(credential: Credential | undefined): Promise<void>
     setCredentialMetadata(metadata: CredentialMetadata | undefined): Promise<void>
     setPinAttempts(attempts: PinAttempts | undefined): Promise<void>
@@ -136,6 +150,11 @@ export const createAccountSlice =
         }),
       setTokens: (tokens) => persist.update(ACCOUNT_KEYS.tokens, (current) => ({ ...current, ...tokens })),
       clearTokens: () => persist.remove(ACCOUNT_KEYS.tokens),
+      setRegistration: (registration) =>
+        registration
+          ? persist.write(ACCOUNT_KEYS.registration, registration)
+          : persist.remove(ACCOUNT_KEYS.registration),
+      keepRegistrationInMemory: (registration) => persist.remember(ACCOUNT_KEYS.registration, registration),
       setCredential: (credential) =>
         credential ? persist.write(ACCOUNT_KEYS.credential, credential) : persist.remove(ACCOUNT_KEYS.credential),
       setCredentialMetadata: (metadata) =>

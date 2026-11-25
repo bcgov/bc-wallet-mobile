@@ -46,14 +46,12 @@ describe('session slice', () => {
     expect(env.storage.store.getState().session.verificationRequestStatus).toBeUndefined()
   })
 
-  it('clears one of deactivated and in-flow when the other is set', async () => {
+  // #5137: deactivation outlives the verify flow, so entering the flow leaves it as it is
+  it('keeps the deactivated record through entering the verify flow', async () => {
     const env = await openEnv()
-    env.storage.store.getState().session.setCredentialDeactivated(true)
+    env.storage.store.getState().session.update({ credentialDeactivated: true })
     env.storage.store.getState().session.setInVerifyFlow(true)
-    expect(env.storage.store.getState().session).toMatchObject({ inVerifyFlow: true, credentialDeactivated: false })
-
-    env.storage.store.getState().session.setCredentialDeactivated(true)
-    expect(env.storage.store.getState().session).toMatchObject({ inVerifyFlow: false, credentialDeactivated: true })
+    expect(env.storage.store.getState().session).toMatchObject({ inVerifyFlow: true, credentialDeactivated: true })
   })
 
   it('drops the signed-in session on lock, keeping captured media', async () => {

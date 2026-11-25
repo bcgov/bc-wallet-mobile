@@ -10,7 +10,7 @@ const LOG_TAG = '[DeviceRegistration]'
  * that manages that registration. This module is its only owner: nothing else reads, saves or clears it,
  * and the three values are saved together and cleared together so they cannot stop matching (#4925).
  *
- * The client ID and issuer are on the account profile, and the token is with the account's tokens.
+ * All three are one keychain item (`account/registration`), so a save writes them in one step.
  *
  * What clears it: a verification reset and a registration cycle, each of which then registers again, and
  * removing the account. Locking the app, signing out and an app update leave it in place.
@@ -32,7 +32,7 @@ const isNonEmptyString = (value: unknown): value is string => typeof value === '
 
 /** Reads what the device holds of its registration. */
 export const readStoredDeviceRegistration = (): StoredDeviceRegistration => {
-  const { profile, tokens } = getBCSCState().account
+  const { profile, registration } = getBCSCState().account
 
   if (!profile) {
     // Nothing is registered without an account
@@ -40,9 +40,10 @@ export const readStoredDeviceRegistration = (): StoredDeviceRegistration => {
   }
 
   return {
-    clientId: profile.clientId || undefined,
-    issuer: profile.issuer || undefined,
-    registrationAccessToken: tokens?.registrationAccessToken || undefined,
+    clientId: registration?.clientId || undefined,
+    // The account's issuer until the device registers
+    issuer: registration?.issuer || profile.issuer || undefined,
+    registrationAccessToken: registration?.registrationAccessToken || undefined,
   }
 }
 
@@ -64,11 +65,20 @@ const rethrow = (error: unknown): never => {
   throw AppError.fromErrorDefinition(ErrorRegistry.STORAGE_WRITE_ERROR, { cause: error })
 }
 
+// The registration belongs to the account, so it is never saved without one
+const requireAccount = (logger: BifoldLogger) => {
+  if (!getBCSCState().account.profile) {
+    logger.error(`${LOG_TAG} Not saved: there is no account`)
+    throw AppError.fromErrorDefinition(ErrorRegistry.ACCOUNT_NOT_FOUND)
+  }
+}
+
 /**
- * Saves a registration the server returned: the client ID, issuer and registration access token.
+ * Saves a registration the server returned: the client ID, issuer and registration access token in one
+ * step. A failed save leaves the previous registration in place.
  *
  * @throws AppError: CLIENT_REGISTRATION_NULL when a value is missing, so part of a registration is never
- * saved; STORAGE_WRITE_ERROR when storage refuses the write
+ * saved; ACCOUNT_NOT_FOUND without an account; STORAGE_WRITE_ERROR when storage refuses the write
  */
 export const saveDeviceRegistration = async (registration: DeviceRegistration, logger: BifoldLogger): Promise<void> => {
   const { clientId, issuer, registrationAccessToken } = registration
@@ -78,12 +88,12 @@ export const saveDeviceRegistration = async (registration: DeviceRegistration, l
     throw AppError.fromErrorDefinition(ErrorRegistry.CLIENT_REGISTRATION_NULL)
   }
 
+  requireAccount(logger)
+
   try {
-    const { account } = getBCSCState()
-    await account.updateProfile({ clientId, issuer })
-    await account.setTokens({ registrationAccessToken })
+    await getBCSCState().account.setRegistration({ clientId, issuer, registrationAccessToken })
   } catch (error) {
-    logger.error(`${LOG_TAG} Failed to save the registration`, error as Error)
+    logger.error(`${LOG_TAG} Failed to save the registration; the previous one is still in place`, error as Error)
     rethrow(error)
   }
 
@@ -95,14 +105,24 @@ export const saveDeviceRegistration = async (registration: DeviceRegistration, l
  * registration token's own client ID, or a record carried over from v3. The stored token is left as it
  * is, because this is not a new registration and a v3 upgrade may have no token to save.
  *
- * @throws AppError: STORAGE_WRITE_ERROR when storage refuses the write
+ * @throws AppError: ACCOUNT_NOT_FOUND without an account; STORAGE_WRITE_ERROR when storage refuses the write
  */
 export const fillInDeviceRegistration = async (
   identity: Pick<DeviceRegistration, 'clientId' | 'issuer'>,
   logger: BifoldLogger
 ): Promise<void> => {
+  requireAccount(logger)
+
   try {
-    await getBCSCState().account.updateProfile({ clientId: identity.clientId, issuer: identity.issuer })
+    const { account } = getBCSCState()
+    await account.setRegistration({
+      ...identity,
+      registrationAccessToken: account.registration?.registrationAccessToken,
+    })
+    // A blank issuer on the account is the gap being filled, as the native account record had it
+    if (!account.profile?.issuer) {
+      await account.updateProfile({ issuer: identity.issuer })
+    }
   } catch (error) {
     logger.error(`${LOG_TAG} Failed to fill in the registration`, error as Error)
     rethrow(error)
@@ -119,15 +139,19 @@ export const fillInDeviceRegistration = async (
  */
 export const clearDeviceRegistration = async (logger: BifoldLogger): Promise<void> => {
   try {
-    const { account } = getBCSCState()
-    if (account.profile) {
-      await account.updateProfile({ clientId: undefined })
-    }
-    await account.setTokens({ registrationAccessToken: undefined })
+    await getBCSCState().account.setRegistration(undefined)
   } catch (error) {
     logger.error(`${LOG_TAG} Failed to clear the registration; it is still in place`, error as Error)
     rethrow(error)
   }
 
   logger.info(`${LOG_TAG} Registration cleared`)
+}
+
+/**
+ * After a failed save of a token the server rotated: the session carries on with it, because the server has
+ * revoked the stored one. The next unlock reads the stored registration again.
+ */
+export const keepDeviceRegistrationInMemory = (registration: DeviceRegistration): void => {
+  getBCSCState().account.keepRegistrationInMemory(registration)
 }

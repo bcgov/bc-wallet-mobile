@@ -104,7 +104,7 @@ const flagsFromBCState = (secure: Record<string, unknown> | undefined) => {
   return Object.keys(flags).length ? { flags: flags as never } : {}
 }
 
-const TOKEN_FIELDS = ['refreshToken', 'registrationAccessToken', 'accessToken']
+const TOKEN_FIELDS = ['refreshToken', 'accessToken']
 
 // sessionRecoveryRequired is worked out now (verified, no refresh token), so a verified test state that
 // doesn't ask for recovery gets a stand-in refresh token
@@ -140,10 +140,14 @@ export const seedBCSCStoreFromBCState = (state: LegacyStateShape, { reset = true
         ? {
             profile: {
               accountId: 'test-account-id',
-              clientId: 'test-client-id',
               issuer: 'https://idsit.gov.bc.ca/device/',
               securityMethod: bcscSecure?.securityMethod as never,
               nickname: bcsc?.selectedNickname as string | undefined,
+            },
+            registration: {
+              clientId: 'test-client-id',
+              issuer: 'https://idsit.gov.bc.ca/device/',
+              registrationAccessToken: bcscSecure?.registrationAccessToken as string | undefined,
             },
           }
         : {}),
@@ -268,16 +272,23 @@ export const nativeAccount = (overrides: Partial<NativeAccount> = {}): NativeAcc
   ...overrides,
 })
 
-// The account, in bcsc-core's getAccount() shape, as the store's profile; null removes it. For tests written
-// against a mocked getAccount: `seedAccount(nativeAccount())` where they had `getAccount.mockResolvedValue(...)`.
+// The account, in bcsc-core's getAccount() shape, as the store's profile and registration; null removes both.
+// For tests written against a mocked getAccount: `seedAccount(nativeAccount())` where they had
+// `getAccount.mockResolvedValue(...)`. The registration keeps any token already seeded.
 export const seedAccount = (account: Partial<NativeAccount> | null) => {
   storage.store.setState((state) => ({
     account: {
       ...state.account,
+      registration: account
+        ? {
+            clientId: account.clientID || undefined,
+            issuer: account.issuer ?? 'https://idsit.gov.bc.ca/device/',
+            registrationAccessToken: state.account.registration?.registrationAccessToken,
+          }
+        : undefined,
       profile: account
         ? {
             accountId: account.id ?? 'test-account-id',
-            clientId: account.clientID ?? '',
             issuer: account.issuer ?? 'https://idsit.gov.bc.ca/device/',
             securityMethod: account.securityMethod ?? ('app_pin_no_device_authn' as NativeAccount['securityMethod']),
             nickname: account.nickname,
@@ -289,10 +300,26 @@ export const seedAccount = (account: Partial<NativeAccount> | null) => {
   }))
 }
 
-// The stored tokens, merged; undefined drops one. For tests written against a mocked getToken.
-export const seedTokens = (tokens: Partial<NonNullable<BCSCStore['account']['tokens']>>) => {
+// The stored tokens, merged; undefined drops one. For tests written against a mocked getToken. The
+// registration access token goes to the registration record.
+export const seedTokens = (
+  tokens: Partial<NonNullable<BCSCStore['account']['tokens']>> & { registrationAccessToken?: string }
+) => {
+  const { registrationAccessToken, ...rest } = tokens
   storage.store.setState((state) => ({
-    account: { ...state.account, tokens: { ...state.account.tokens, ...tokens } },
+    account: {
+      ...state.account,
+      tokens: { ...state.account.tokens, ...rest },
+      ...('registrationAccessToken' in tokens
+        ? {
+            registration: {
+              issuer: state.account.profile?.issuer ?? 'https://idsit.gov.bc.ca/device/',
+              ...state.account.registration,
+              registrationAccessToken,
+            },
+          }
+        : {}),
+    },
   }))
 }
 

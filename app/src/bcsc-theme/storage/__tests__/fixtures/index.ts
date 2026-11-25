@@ -45,11 +45,13 @@ const credential = {
 // account above, as m0002 writes it to account/profile
 const profile = {
   accountId: 'account-1',
-  clientId: 'client-1',
   issuer: 'https://idsit.gov.bc.ca/device/',
   securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
   nickname: 'Bryce',
 }
+
+// account's client ID, as m0002 writes it to account/registration with the registration token, if there is one
+const registration = { clientId: 'client-1', issuer: 'https://idsit.gov.bc.ca/device/' }
 
 const verifiedNative = {
   account: { status: 'ok', value: account },
@@ -58,7 +60,10 @@ const verifiedNative = {
 } as TestInput['native']
 const verifiedMoved = {
   encrypted: { 'account/profile': profile, 'account/credential': credential },
-  keychain: { 'account/tokens': { refreshToken: 'refresh-1', registrationAccessToken: 'registration-1' } },
+  keychain: {
+    'account/tokens': { refreshToken: 'refresh-1' },
+    'account/registration': { ...registration, registrationAccessToken: 'registration-1' },
+  },
 }
 
 const midVerifyAsync = {
@@ -106,8 +111,7 @@ const midVerifyNative = {
 } as TestInput['native']
 
 const v3App = {
-  appVersion: '',
-  appBuildNumber: '',
+  appBuildHistory: [],
   analyticsOptIn: false,
   verificationSkipped: false,
   verificationStarted: true,
@@ -156,8 +160,9 @@ export const FIXTURES: Fixture[] = [
         ...META_S3,
         app: {
           installId: 'install-1',
-          appVersion: '4.1.0',
-          appBuildNumber: '100',
+          // The registered pair seeds the history when the last-seen pair is missing
+          registeredBuild: { version: '4.1.0', build: '100' },
+          appBuildHistory: [{ version: '4.1.0', build: '100' }],
           analyticsOptIn: true,
           acceptedTermsOfUseVersion: '1',
           hasSeenOnboardingIntro: true,
@@ -191,7 +196,7 @@ export const FIXTURES: Fixture[] = [
         },
         'verification/flags': { emailAddress: 'person@example.com', isEmailVerified: true },
       },
-      keychain: { 'meta/encryption-key': KEY },
+      keychain: { 'meta/encryption-key': KEY, 'account/registration': registration },
       native: {},
       async: { PreferencesState: midVerifyAsync.PreferencesState },
     },
@@ -207,8 +212,7 @@ export const FIXTURES: Fixture[] = [
       plain: {
         ...META_S3,
         app: {
-          appVersion: '',
-          appBuildNumber: '',
+          appBuildHistory: [],
           analyticsOptIn: false,
           verificationSkipped: true,
           verificationStarted: false,
@@ -220,7 +224,7 @@ export const FIXTURES: Fixture[] = [
         contacts: emptyContacts,
         'account/profile': { ...profile, nickname: 'New name', didPostNicknameToServer: false },
       },
-      keychain: { 'meta/encryption-key': KEY },
+      keychain: { 'meta/encryption-key': KEY, 'account/registration': registration },
       native: {},
       async: {},
     },
@@ -232,7 +236,7 @@ export const FIXTURES: Fixture[] = [
     expected: {
       plain: { ...META_S3, app: v3App, preferences: defaultPreferences },
       encrypted: { ...CANARY, contacts: emptyContacts, 'account/profile': profile },
-      keychain: { 'meta/encryption-key': KEY },
+      keychain: { 'meta/encryption-key': KEY, 'account/registration': registration },
       native: {},
       async: {},
     },
@@ -257,8 +261,7 @@ export const FIXTURES: Fixture[] = [
         'meta/encrypted-ready': '1',
         app: JSON.stringify({
           installId: 'install-1',
-          appVersion: '4.3.0',
-          appBuildNumber: '1',
+          appBuildHistory: [{ version: '4.3.0', build: '1' }],
           analyticsOptIn: false,
         }),
       },
@@ -270,7 +273,7 @@ export const FIXTURES: Fixture[] = [
     expected: {
       plain: {
         ...META_S3,
-        app: { installId: 'install-1', appVersion: '4.3.0', appBuildNumber: '1', analyticsOptIn: false },
+        app: { installId: 'install-1', appBuildHistory: [{ version: '4.3.0', build: '1' }], analyticsOptIn: false },
       },
       encrypted: { ...CANARY, contacts: emptyContacts, ...verifiedMoved.encrypted },
       keychain: { 'meta/encryption-key': KEY, ...verifiedMoved.keychain },

@@ -35,7 +35,7 @@ describe('KeyRotationSystemCheck', () => {
     it('passes (skips) when deferForPendingRegistrationUpdate is true', async () => {
       const utils = makeUtils()
       const rotate = jest.fn()
-      const check = new KeyRotationSystemCheck(true, undefined, rotate, utils)
+      const check = new KeyRotationSystemCheck(() => true, undefined, rotate, utils)
 
       expect(await check.runCheck()).toBe(true)
       expect(mockedGetAllKeys).not.toHaveBeenCalled()
@@ -45,7 +45,7 @@ describe('KeyRotationSystemCheck', () => {
       const utils = makeUtils()
       const rotate = jest.fn()
       mockedGetAllKeys.mockResolvedValue([])
-      const check = new KeyRotationSystemCheck(false, undefined, rotate, utils)
+      const check = new KeyRotationSystemCheck(() => false, undefined, rotate, utils)
 
       await check.runCheck()
 
@@ -57,7 +57,7 @@ describe('KeyRotationSystemCheck', () => {
       const rotate = jest.fn()
       // 3 days ago — inside the 7-day backoff.
       const lastAttempt = new Date(NOW - 3 * 24 * 60 * 60 * 1000).toISOString()
-      const check = new KeyRotationSystemCheck(false, lastAttempt, rotate, utils)
+      const check = new KeyRotationSystemCheck(() => false, lastAttempt, rotate, utils)
 
       expect(await check.runCheck()).toBe(true)
       expect(mockedGetAllKeys).not.toHaveBeenCalled()
@@ -69,7 +69,7 @@ describe('KeyRotationSystemCheck', () => {
       // 8 days ago — outside the 7-day backoff.
       const lastAttempt = new Date(NOW - 8 * 24 * 60 * 60 * 1000).toISOString()
       mockedGetAllKeys.mockResolvedValue([])
-      const check = new KeyRotationSystemCheck(false, lastAttempt, rotate, utils)
+      const check = new KeyRotationSystemCheck(() => false, lastAttempt, rotate, utils)
 
       await check.runCheck()
 
@@ -80,7 +80,7 @@ describe('KeyRotationSystemCheck', () => {
       const utils = makeUtils()
       const rotate = jest.fn()
       mockedGetAllKeys.mockRejectedValue(new Error('keystore unavailable'))
-      const check = new KeyRotationSystemCheck(false, undefined, rotate, utils)
+      const check = new KeyRotationSystemCheck(() => false, undefined, rotate, utils)
 
       expect(await check.runCheck()).toBe(true)
     })
@@ -89,7 +89,7 @@ describe('KeyRotationSystemCheck', () => {
       const utils = makeUtils()
       const rotate = jest.fn()
       mockedGetAllKeys.mockResolvedValue([])
-      const check = new KeyRotationSystemCheck(false, undefined, rotate, utils)
+      const check = new KeyRotationSystemCheck(() => false, undefined, rotate, utils)
 
       expect(await check.runCheck()).toBe(true)
     })
@@ -98,7 +98,7 @@ describe('KeyRotationSystemCheck', () => {
       const utils = makeUtils()
       const rotate = jest.fn()
       mockedGetAllKeys.mockResolvedValue([{ id: 'rsa1' } as any])
-      const check = new KeyRotationSystemCheck(false, undefined, rotate, utils)
+      const check = new KeyRotationSystemCheck(() => false, undefined, rotate, utils)
 
       expect(await check.runCheck()).toBe(true)
     })
@@ -108,7 +108,7 @@ describe('KeyRotationSystemCheck', () => {
       const createdSeconds = (NOW - 364 * 24 * 60 * 60 * 1000) / 1000
       mockedGetAllKeys.mockResolvedValue([{ id: 'rsa1', created: createdSeconds } as any])
       const utils = makeUtils()
-      const check = new KeyRotationSystemCheck(false, undefined, jest.fn(), utils)
+      const check = new KeyRotationSystemCheck(() => false, undefined, jest.fn(), utils)
 
       expect(await check.runCheck()).toBe(true)
     })
@@ -118,7 +118,7 @@ describe('KeyRotationSystemCheck', () => {
       const createdSeconds = (NOW - 366 * 24 * 60 * 60 * 1000) / 1000
       mockedGetAllKeys.mockResolvedValue([{ id: 'rsa1', created: createdSeconds } as any])
       const utils = makeUtils()
-      const check = new KeyRotationSystemCheck(false, undefined, jest.fn(), utils)
+      const check = new KeyRotationSystemCheck(() => false, undefined, jest.fn(), utils)
 
       expect(await check.runCheck()).toBe(false)
     })
@@ -128,7 +128,7 @@ describe('KeyRotationSystemCheck', () => {
       const createdMs = NOW - 364 * 24 * 60 * 60 * 1000
       mockedGetAllKeys.mockResolvedValue([{ id: 'rsa1', created: createdMs } as any])
       const utils = makeUtils()
-      const check = new KeyRotationSystemCheck(false, undefined, jest.fn(), utils)
+      const check = new KeyRotationSystemCheck(() => false, undefined, jest.fn(), utils)
 
       expect(await check.runCheck()).toBe(true)
     })
@@ -138,7 +138,7 @@ describe('KeyRotationSystemCheck', () => {
       const createdMs = NOW - 366 * 24 * 60 * 60 * 1000
       mockedGetAllKeys.mockResolvedValue([{ id: 'rsa1', created: createdMs } as any])
       const utils = makeUtils()
-      const check = new KeyRotationSystemCheck(false, undefined, jest.fn(), utils)
+      const check = new KeyRotationSystemCheck(() => false, undefined, jest.fn(), utils)
 
       expect(await check.runCheck()).toBe(false)
     })
@@ -148,7 +148,7 @@ describe('KeyRotationSystemCheck', () => {
       const createdMs = NOW - 365 * 24 * 60 * 60 * 1000
       mockedGetAllKeys.mockResolvedValue([{ id: 'rsa1', created: createdMs } as any])
       const utils = makeUtils()
-      const check = new KeyRotationSystemCheck(false, undefined, jest.fn(), utils)
+      const check = new KeyRotationSystemCheck(() => false, undefined, jest.fn(), utils)
 
       expect(await check.runCheck()).toBe(false)
     })
@@ -160,7 +160,7 @@ describe('KeyRotationSystemCheck', () => {
         { id: 'rsa2', created: NOW - 10 * 24 * 60 * 60 * 1000 } as any, // newest, well within threshold
       ])
       const utils = makeUtils()
-      const check = new KeyRotationSystemCheck(false, undefined, jest.fn(), utils)
+      const check = new KeyRotationSystemCheck(() => false, undefined, jest.fn(), utils)
 
       expect(await check.runCheck()).toBe(true)
     })
@@ -170,7 +170,7 @@ describe('KeyRotationSystemCheck', () => {
       const lastAttempt = new Date(NOW + 3 * 24 * 60 * 60 * 1000).toISOString()
       mockedGetAllKeys.mockResolvedValue([{ id: 'rsa1', created: NOW - 400 * 24 * 60 * 60 * 1000 } as any])
       const utils = makeUtils()
-      const check = new KeyRotationSystemCheck(false, lastAttempt, jest.fn(), utils)
+      const check = new KeyRotationSystemCheck(() => false, lastAttempt, jest.fn(), utils)
 
       expect(await check.runCheck()).toBe(false)
       expect(mockedGetAllKeys).toHaveBeenCalled()
@@ -184,7 +184,7 @@ describe('KeyRotationSystemCheck', () => {
         { id: 'untracked-no-ts' } as any,
       ])
       const utils = makeUtils()
-      const check = new KeyRotationSystemCheck(false, undefined, jest.fn(), utils)
+      const check = new KeyRotationSystemCheck(() => false, undefined, jest.fn(), utils)
 
       expect(await check.runCheck()).toBe(false)
       expect(utils.logger.warn).toHaveBeenCalledWith(expect.stringContaining("ignoring key 'untracked-no-ts'"))
@@ -197,7 +197,7 @@ describe('KeyRotationSystemCheck', () => {
         { id: 'rsa3', created: 0 } as any,
       ])
       const utils = makeUtils()
-      const check = new KeyRotationSystemCheck(false, undefined, jest.fn(), utils)
+      const check = new KeyRotationSystemCheck(() => false, undefined, jest.fn(), utils)
 
       expect(await check.runCheck()).toBe(true)
       expect(utils.logger.warn).toHaveBeenCalledWith(expect.stringContaining("ignoring key 'rsa3'"))
@@ -206,7 +206,7 @@ describe('KeyRotationSystemCheck', () => {
     it('skips when the only key has created: 0 rather than reading it as an epoch-1970 key', async () => {
       mockedGetAllKeys.mockResolvedValue([{ id: 'rsa1', created: 0 } as any])
       const utils = makeUtils()
-      const check = new KeyRotationSystemCheck(false, undefined, jest.fn(), utils)
+      const check = new KeyRotationSystemCheck(() => false, undefined, jest.fn(), utils)
 
       expect(await check.runCheck()).toBe(true)
       expect(utils.logger.warn).toHaveBeenCalledWith(
@@ -218,7 +218,7 @@ describe('KeyRotationSystemCheck', () => {
       Object.defineProperty(Platform, 'OS', { get: () => 'android' })
       mockedGetAllKeys.mockResolvedValue([{ id: 'rsa1', created: 0 } as any, { id: 'rsa2' } as any])
       const utils = makeUtils()
-      const check = new KeyRotationSystemCheck(false, undefined, jest.fn(), utils)
+      const check = new KeyRotationSystemCheck(() => false, undefined, jest.fn(), utils)
 
       expect(await check.runCheck()).toBe(true)
       expect(utils.logger.warn).toHaveBeenCalledWith(
@@ -241,7 +241,7 @@ describe('KeyRotationSystemCheck', () => {
         callOrder.push('rotate')
         return { status: 'rotated', confirmed: true }
       })
-      const check = new KeyRotationSystemCheck(false, undefined, rotate, utils)
+      const check = new KeyRotationSystemCheck(() => false, undefined, rotate, utils)
 
       await check.onFail()
 
@@ -250,10 +250,26 @@ describe('KeyRotationSystemCheck', () => {
       expect(rotate).toHaveBeenCalled()
     })
 
+    it('skips rotation when the registration update PUT the current key after runCheck', async () => {
+      const utils = makeUtils()
+      const update = jest.fn()
+      seedBCSCStore({ app: { update } })
+      const rotate = jest.fn()
+      const defer = jest.fn().mockReturnValueOnce(false).mockReturnValue(true)
+      const check = new KeyRotationSystemCheck(defer, undefined, rotate, utils)
+      mockedGetAllKeys.mockResolvedValue([])
+
+      await check.runCheck()
+      await check.onFail()
+
+      expect(rotate).not.toHaveBeenCalled()
+      expect(update).not.toHaveBeenCalled()
+    })
+
     it('swallows a rejecting rotate() without throwing', async () => {
       const utils = makeUtils()
       const rotate = jest.fn().mockRejectedValue(new Error('rotation blew up'))
-      const check = new KeyRotationSystemCheck(false, undefined, rotate, utils)
+      const check = new KeyRotationSystemCheck(() => false, undefined, rotate, utils)
 
       await expect(check.onFail()).resolves.toBeUndefined()
       expect(utils.logger.error).toHaveBeenCalled()

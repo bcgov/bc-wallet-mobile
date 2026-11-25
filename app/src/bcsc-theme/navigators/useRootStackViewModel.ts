@@ -101,8 +101,7 @@ const useVerificationRouting = (appReady: boolean) => {
   // This prompt controls if the user is sent back into the verification stack or can continue into the main app
   // the value is only set when the user interacts with the prompt and is reset on a factory reset
   const showVerifyPrompt =
-    !verifyPromptAnswered &&
-    ((verificationSkipped === undefined && needsVerification) || resumeBlockedByOutage)
+    !verifyPromptAnswered && ((verificationSkipped === undefined && needsVerification) || resumeBlockedByOutage)
 
   // Render the verify journey when the prompt is due, OR whenever verification is actively in
   // progress. Combining both into a single VerifyStack render keeps it mounted across the prompt →
@@ -213,8 +212,7 @@ export const useRootStackViewModel = (): RootStackViewModel => {
 
   // Recovery gate: blocks every stack, independent of account state, until the environment is valid again
   // TODO (MD): Remove this gate after all users are on v4.2.0+
-  const showInvalidEnvironment =
-    stateLoaded && isProductionBundle() && !isProductionEnvironment(developer.environment)
+  const showInvalidEnvironment = stateLoaded && isProductionBundle() && !isProductionEnvironment(developer.environment)
 
   const phase = useRootPhase({ appReady, awaitingStatusForResume, showVerifyStack })
   const transition = useRootTransition(

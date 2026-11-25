@@ -1,5 +1,6 @@
+import { saveDeviceRegistration } from '@/bcsc-theme/services/device-registration'
 import { getBCSCState } from '@/bcsc-theme/storage/hooks'
-import { nativeAccount, seedAccount, seedBCSCStore } from '@/bcsc-theme/storage/testing'
+import { nativeAccount, seedAccount, seedBCSCStore, seedTokens } from '@/bcsc-theme/storage/testing'
 import { AppError } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { renderHook } from '@testing-library/react-native'
@@ -12,7 +13,6 @@ import {
 } from 'react-native-bcsc-core'
 import useRegistrationApi from './useRegistrationApi'
 
-const mockUpdateTokens = jest.fn()
 const mockLogger = {
   info: jest.fn(),
   debug: jest.fn(),
@@ -35,10 +35,12 @@ jest.mock('@bifold/core', () => ({
   TOKENS: { UTIL_LOGGER: 'UTIL_LOGGER' },
 }))
 
+// Saves through the registration owner, as the real action does, so a test can check the store
+const mockSaveRegistration = jest.fn()
 jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   __esModule: true,
   default: () => ({
-    updateTokens: mockUpdateTokens,
+    saveRegistration: mockSaveRegistration,
   }),
 }))
 
@@ -124,17 +126,28 @@ describe('useRegistrationApi', () => {
     jest.mocked(isBcscNativeError).mockReturnValue(false)
     mockApiClient.post.mockResolvedValue({ data: mockRegistrationResponse })
     mockApiClient.put.mockResolvedValue({ data: mockRegistrationResponse })
-    mockUpdateTokens.mockResolvedValue(undefined)
+    mockSaveRegistration.mockImplementation((registration) => saveDeviceRegistration(registration, mockLogger as any))
   })
 
   // ---------------------------------------------------------------------------
   // createRegistration
   // ---------------------------------------------------------------------------
   describe('createRegistration', () => {
+    const newRegistration = {
+      clientId: 'test-client-id',
+      issuer: mockApiClient.endpoints.issuer,
+      registrationAccessToken: 'new-reg-access-token',
+    }
+
+    beforeEach(() => {
+      // The account is made before registering: setup saves it with the security method
+      seedAccount(nativeAccount({ clientID: '', securityMethod: AccountSecurityMethod.PinNoDeviceAuth }))
+    })
+
     it('should complete registration successfully', async () => {
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const data = await result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+      const data = await result.current.createRegistration()
 
       expect(getDynamicClientRegistrationBody).toHaveBeenCalledWith(
         'mock-fcm-token',
@@ -144,16 +157,31 @@ describe('useRegistrationApi', () => {
       expect(mockApiClient.post).toHaveBeenCalledWith(mockApiClient.endpoints.registration, expect.any(String), {
         skipBearerAuth: true,
       })
-      expect(getBCSCState().account.profile).toEqual({
-        accountId: expect.any(String),
-        clientId: 'test-client-id',
-        issuer: mockApiClient.endpoints.issuer,
-        securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
-      })
-      expect(mockUpdateTokens).toHaveBeenCalledWith({
-        registrationAccessToken: 'new-reg-access-token',
-      })
+      expect(mockSaveRegistration).toHaveBeenCalledWith(newRegistration)
+      expect(getBCSCState().account.registration).toEqual(newRegistration)
+      expect(getBCSCState().account.profile).toEqual(
+        expect.objectContaining({ securityMethod: AccountSecurityMethod.PinNoDeviceAuth })
+      )
       expect(data).toEqual(mockRegistrationResponse)
+    })
+
+    it('throws ACCOUNT_NOT_FOUND without an account, before any request', async () => {
+      seedAccount(null)
+
+      const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
+
+      await expectAppErrorRejection(result.current.createRegistration(), AppEventCode.ACCOUNT_NOT_FOUND)
+      expect(mockApiClient.post).not.toHaveBeenCalled()
+      expect(getBCSCState().account.registration).toBeUndefined()
+    })
+
+    it('rejects when the registration cannot be saved', async () => {
+      const saveError = new Error('keychain write failed')
+      mockSaveRegistration.mockRejectedValue(saveError)
+
+      const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
+
+      await expect(result.current.createRegistration()).rejects.toBe(saveError)
     })
 
     // A verification reset registers again; the PIN is found through the account ID
@@ -162,24 +190,18 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      await result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+      await result.current.createRegistration()
 
       expect(getBCSCState().account.profile).toEqual(
-        expect.objectContaining({
-          accountId: 'existing-account-id',
-          clientId: 'test-client-id',
-          issuer: mockApiClient.endpoints.issuer,
-          nickname: 'Phone',
-        })
+        expect.objectContaining({ accountId: 'existing-account-id', nickname: 'Phone' })
       )
+      expect(getBCSCState().account.registration).toEqual(newRegistration)
     })
 
     it('should throw if client is not ready', async () => {
       const { result } = renderHook(() => useRegistrationApi(null, false))
 
-      await expect(result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)).rejects.toThrow(
-        'BCSC client not ready for registration'
-      )
+      await expect(result.current.createRegistration()).rejects.toThrow('BCSC client not ready for registration')
     })
 
     it('should throw CLIENT_REGISTRATION_NULL when DCR body is null', async () => {
@@ -187,7 +209,7 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const promise = result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+      const promise = result.current.createRegistration()
 
       await expectAppErrorRejection(promise, AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL)
     })
@@ -207,7 +229,7 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const promise = result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+      const promise = result.current.createRegistration()
 
       await expectAppErrorRejection(promise, expectedAppEvent)
     })
@@ -219,7 +241,7 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const promise = result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+      const promise = result.current.createRegistration()
 
       await expectAppErrorRejection(promise, AppEventCode.UNMAPPED_NATIVE_ERROR)
     })
@@ -230,7 +252,7 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const promise = result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+      const promise = result.current.createRegistration()
 
       await expectAppErrorRejection(promise, AppEventCode.UNMAPPED_NATIVE_ERROR)
     })
@@ -257,10 +279,9 @@ describe('useRegistrationApi', () => {
 
         const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-        const data = await result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+        const data = await result.current.createRegistration()
 
-        expect(getBCSCState().account.profile?.clientId).toBe('test-client-id')
-        expect(mockUpdateTokens).toHaveBeenCalled()
+        expect(getBCSCState().account.registration).toEqual(newRegistration)
         expect(data.jwks.keys).toHaveLength(2)
         expect(mockLogger.info).toHaveBeenCalledWith(
           expect.stringContaining('Confirmed sent signing key modulus is present in server jwks')
@@ -282,12 +303,12 @@ describe('useRegistrationApi', () => {
 
         const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-        const promise = result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+        const promise = result.current.createRegistration()
 
         await expectAppErrorRejection(promise, AppEventCode.ERR_121_REGISTRATION_KEY_NOT_CONFIRMED)
 
-        expect(getBCSCState().account.profile).toBeUndefined()
-        expect(mockUpdateTokens).not.toHaveBeenCalled()
+        expect(getBCSCState().account.registration?.clientId).toBeUndefined()
+        expect(mockSaveRegistration).not.toHaveBeenCalled()
       })
 
       it('proceeds (warns only) when the sent registration body cannot be parsed as JSON', async () => {
@@ -295,10 +316,10 @@ describe('useRegistrationApi', () => {
 
         const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-        const data = await result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+        const data = await result.current.createRegistration()
 
         expect(data).toEqual(mockRegistrationResponse)
-        expect(getBCSCState().account.profile?.clientId).toBe('test-client-id')
+        expect(getBCSCState().account.registration?.clientId).toBe('test-client-id')
         expect(mockLogger.warn).toHaveBeenCalledWith(
           expect.stringContaining('Could not parse sent registration body to confirm signing key')
         )
@@ -308,10 +329,10 @@ describe('useRegistrationApi', () => {
         // Default mocks: DCR body has no jwks at all, and mockRegistrationResponse.jwks.keys is empty.
         const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-        const data = await result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+        const data = await result.current.createRegistration()
 
         expect(data).toEqual(mockRegistrationResponse)
-        expect(getBCSCState().account.profile?.clientId).toBe('test-client-id')
+        expect(getBCSCState().account.registration?.clientId).toBe('test-client-id')
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('unparseable/empty'))
       })
     })
@@ -326,19 +347,19 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const data = await result.current.register(AccountSecurityMethod.PinNoDeviceAuth)
+      const data = await result.current.register()
 
       expect(data).toBeUndefined()
       expect(getDynamicClientRegistrationBody).not.toHaveBeenCalled()
       expect(mockApiClient.post).not.toHaveBeenCalled()
     })
 
-    it('should call createRegistration when no account exists', async () => {
-      seedAccount(null)
+    it('should call createRegistration when the account is not registered yet', async () => {
+      seedAccount(nativeAccount({ clientID: '' }))
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const data = await result.current.register(AccountSecurityMethod.PinNoDeviceAuth)
+      const data = await result.current.register()
 
       expect(getDynamicClientRegistrationBody).toHaveBeenCalled()
       expect(mockApiClient.post).toHaveBeenCalled()
@@ -358,12 +379,13 @@ describe('useRegistrationApi', () => {
 
     beforeEach(() => {
       seedAccount(nativeAccount(existingAccount))
+      seedTokens({ registrationAccessToken: 'reg-access-token' })
     })
 
     it('should complete update registration successfully', async () => {
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const data = await result.current.updateRegistration('reg-access-token', 'NewNickname')
+      const data = await result.current.updateRegistration('NewNickname')
 
       expect(getDynamicClientRegistrationBody).toHaveBeenCalledWith(
         'mock-fcm-token',
@@ -386,13 +408,14 @@ describe('useRegistrationApi', () => {
       )
       expect(getBCSCState().account.profile).toEqual(
         expect.objectContaining({
-          clientId: mockRegistrationResponse.client_id,
           securityMethod: AccountSecurityMethod.PinWithDeviceAuth,
           nickname: 'NewNickname',
           didPostNicknameToServer: true,
         })
       )
-      expect(mockUpdateTokens).toHaveBeenCalledWith({
+      expect(getBCSCState().account.registration).toEqual({
+        clientId: mockRegistrationResponse.client_id,
+        issuer: mockApiClient.endpoints.issuer,
         registrationAccessToken: mockRegistrationResponse.registration_access_token,
       })
       expect(data).toEqual(mockRegistrationResponse)
@@ -401,7 +424,7 @@ describe('useRegistrationApi', () => {
     it('should throw if client is not ready (with existing account)', async () => {
       const { result } = renderHook(() => useRegistrationApi(null, false))
 
-      await expect(result.current.updateRegistration('token', 'nickname')).rejects.toThrow(
+      await expect(result.current.updateRegistration('nickname')).rejects.toThrow(
         'BCSC client not ready for registration update'
       )
     })
@@ -411,15 +434,17 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(null, false))
 
-      await expect(result.current.updateRegistration('token', 'nickname')).rejects.toThrow(
+      await expect(result.current.updateRegistration('nickname')).rejects.toThrow(
         'No account found. Please register first.'
       )
     })
 
-    it('should throw if no registration access token is provided', async () => {
+    it('should throw if the device holds no registration access token', async () => {
+      seedTokens({ registrationAccessToken: undefined })
+
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      await expect(result.current.updateRegistration(undefined, 'nickname')).rejects.toThrow(
+      await expect(result.current.updateRegistration('nickname')).rejects.toThrow(
         'No registration access token found for registration update'
       )
     })
@@ -427,7 +452,7 @@ describe('useRegistrationApi', () => {
     it('should throw if no nickname is provided', async () => {
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      await expect(result.current.updateRegistration('token', undefined)).rejects.toThrow(
+      await expect(result.current.updateRegistration(undefined)).rejects.toThrow(
         'No client name found for registration update'
       )
     })
@@ -437,7 +462,7 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      await expect(result.current.updateRegistration('token', 'nickname')).rejects.toThrow(
+      await expect(result.current.updateRegistration('nickname')).rejects.toThrow(
         'No account found. Please register first.'
       )
     })
@@ -447,7 +472,7 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const promise = result.current.updateRegistration('token', 'nickname')
+      const promise = result.current.updateRegistration('nickname')
 
       await expectAppErrorRejection(promise, AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL)
     })
@@ -466,7 +491,7 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const promise = result.current.updateRegistration('token', 'nickname')
+      const promise = result.current.updateRegistration('nickname')
 
       await expectAppErrorRejection(promise, expectedAppEvent)
     })
@@ -476,7 +501,7 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const promise = result.current.updateRegistration('token', 'nickname')
+      const promise = result.current.updateRegistration('nickname')
 
       await expectAppErrorRejection(promise, AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON)
     })
@@ -486,18 +511,48 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      await expect(result.current.updateRegistration('token', 'nickname')).rejects.toThrow('Server unavailable')
+      await expect(result.current.updateRegistration('nickname')).rejects.toThrow('Server unavailable')
       expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to update registration'))
     })
 
-    it('should still return data even if post-update storage fails', async () => {
+    it("keeps the request's client ID and token when the response leaves them out", async () => {
+      mockApiClient.put.mockResolvedValue({
+        data: { ...mockRegistrationResponse, client_id: undefined, registration_access_token: undefined },
+      })
+
+      const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
+
+      await result.current.updateRegistration('nickname')
+
+      expect(getBCSCState().account.registration).toEqual({
+        clientId: existingAccount.clientID,
+        issuer: mockApiClient.endpoints.issuer,
+        registrationAccessToken: 'reg-access-token',
+      })
+    })
+
+    it('should still return data even if the nickname save fails', async () => {
       seedBCSCStore({ account: { updateProfile: jest.fn().mockRejectedValue(new Error('storage write failure')) } })
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const data = await result.current.updateRegistration('token', 'nickname')
+      const data = await result.current.updateRegistration('nickname')
 
       expect(data).toEqual(mockRegistrationResponse)
+      expect(getBCSCState().account.registration?.registrationAccessToken).toBe(
+        mockRegistrationResponse.registration_access_token
+      )
+      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to store updated account nickname'))
+    })
+
+    it('still saves the nickname, then rejects, when the registration save fails', async () => {
+      const saveError = new Error('keychain write failed')
+      mockSaveRegistration.mockRejectedValue(saveError)
+
+      const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
+
+      await expect(result.current.updateRegistration('nickname')).rejects.toBe(saveError)
+      expect(getBCSCState().account.profile?.nickname).toBe('nickname')
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to store updated registration data')
       )

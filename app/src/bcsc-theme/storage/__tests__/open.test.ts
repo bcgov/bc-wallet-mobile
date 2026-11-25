@@ -30,7 +30,6 @@ describe('storage.open', () => {
     expect(await env.storage.open()).toEqual({ status: 'ok' })
     expect(env.storage.store.getState().account.profile).toEqual({
       accountId: 'account-1',
-      clientId: 'client-1',
       issuer: nativeAccount.issuer,
       securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
       nickname: 'Bryce',
@@ -113,7 +112,6 @@ describe('storage.open', () => {
     expect(await env.storage.open()).toEqual({ status: 'ok' })
     expect(env.storage.store.getState().account.profile).toEqual({
       accountId: 'account-1',
-      clientId: 'client-1',
       issuer: nativeAccount.issuer,
       securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
     })

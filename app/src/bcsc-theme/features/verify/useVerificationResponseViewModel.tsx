@@ -1,7 +1,7 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { useTokenService } from '@/bcsc-theme/services/hooks/useTokenService'
-import { getBCSCState, useAccount } from '@/bcsc-theme/storage/hooks'
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
 import { getShortDisplayName } from '@/bcsc-theme/utils/account-utils'
 import { TOKENS, useServices } from '@bifold/core'
 import { useCallback, useState } from 'react'

@@ -113,7 +113,7 @@ export const overlayBCSCState = (bifold: BCState, s: BCSCStore): BCState => {
       userSubmittedVerificationVideo: verification.flags?.userSubmittedVerificationVideo,
       additionalEvidenceData: verification.evidence ?? NO_EVIDENCE,
       refreshToken: account.tokens?.refreshToken,
-      registrationAccessToken: account.tokens?.registrationAccessToken,
+      registrationAccessToken: account.registration?.registrationAccessToken,
       accessToken: account.tokens?.accessToken,
     },
   }

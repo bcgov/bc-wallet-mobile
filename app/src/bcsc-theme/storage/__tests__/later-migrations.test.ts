@@ -34,13 +34,59 @@ describe('m0002', () => {
     const dump = env.dump()
     expect(dump.encrypted['account/profile']).toEqual({
       accountId: 'account-1',
-      clientId: 'client-1',
       issuer: account.issuer,
       securityMethod: AccountSecurityMethod.DeviceAuth,
     })
     expect(dump.encrypted['verification/flags']).toEqual({ isEmailVerified: true })
     expect(dump.encrypted.savedServices).toEqual({ ids: ['s1'] })
     expect(dump.keychain['account/tokens']).toEqual({ refreshToken: 'refresh-1' })
+    expect(dump.keychain['account/registration']).toEqual({ clientId: 'client-1', issuer: account.issuer })
+  })
+
+  it('moves the client ID and its token into one registration record', async () => {
+    const env = createTestEnv({
+      native: {
+        account: { status: 'ok', value: account },
+        tokens: { status: 'ok', value: { refresh: 'refresh-1', registration: 'registration-1' } },
+      },
+    })
+    expect(await env.storage.open()).toEqual({ status: 'ok' })
+    const { account: stored } = env.storage.store.getState()
+    expect(stored.registration).toEqual({
+      clientId: 'client-1',
+      issuer: account.issuer,
+      registrationAccessToken: 'registration-1',
+    })
+    expect(stored.tokens).toEqual({ refreshToken: 'refresh-1' })
+    expect(stored.profile).not.toHaveProperty('clientId')
+  })
+
+  it('writes no registration for an account that has not registered', async () => {
+    const env = createTestEnv({ native: { account: { status: 'ok', value: { ...account, clientID: undefined } } } })
+    expect(await env.storage.open()).toEqual({ status: 'ok' })
+    expect(env.storage.store.getState().account.registration).toBeUndefined()
+    expect(env.dump().keychain).not.toHaveProperty('account/registration')
+  })
+
+  it('fails verify when the stored registration is not the pair the device held', async () => {
+    const env = createTestEnv({
+      native: {
+        account: { status: 'ok', value: account },
+        tokens: { status: 'ok', value: { registration: 'registration-1' } },
+      },
+    })
+    await env.storage.open()
+    // m0003 removed the originals on the way: put them back, as on a device where m0002 has just run
+    env.device.native.account = { status: 'ok', value: account }
+    env.device.native.tokens = { status: 'ok', value: { registration: 'registration-1' } }
+    const ctx = env.migrationContext()
+    await m0002.up(ctx)
+    await ctx.put('keychain', 'account/registration', {
+      clientId: 'client-other',
+      issuer: account.issuer,
+      registrationAccessToken: 'registration-1',
+    })
+    await expect(m0002.verify(ctx)).rejects.toThrow('account.registration')
   })
 
   it('imports iOS records, whose missing fields arrive as null, without the nulls', async () => {
@@ -68,7 +114,6 @@ describe('m0002', () => {
     const { account: stored, verification } = env.storage.store.getState()
     expect(stored.profile).toEqual({
       accountId: 'account-1',
-      clientId: 'client-1',
       issuer: account.issuer,
       securityMethod: AccountSecurityMethod.DeviceAuth,
       didPostNicknameToServer: false,

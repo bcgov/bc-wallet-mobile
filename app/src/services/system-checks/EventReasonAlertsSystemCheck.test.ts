@@ -223,7 +223,7 @@ describe('EventReasonAlertsSystemCheck', () => {
         })
       )
     })
-    it('should mark the credential deactivated without alerting when the event is Expire', async () => {
+    it('should save the expiry with the account details, without alerting, when the event is Expire', async () => {
       const mockIdToken = createMockIdToken({
         bcsc_event: BCSCEvent.Expire,
         bcsc_reason: BCSCReason.ExpiredBySystem,
@@ -233,13 +233,13 @@ describe('EventReasonAlertsSystemCheck', () => {
       await check.runCheck()
       check.onFail()
 
-      // The reason is persisted so useCardStatus can gate login, pairing, and Services on it.
+      // The saved reason is what marks the card inactive, so it is the only write.
       await waitFor(() =>
         expect(storage.store.getState().account.credentialMetadata).toMatchObject({
           bcscReason: BCSCReason.ExpiredBySystem,
         })
       )
-      expect(storage.store.getState().session.credentialDeactivated).toEqual(true)
+      expect(storage.store.getState().session.credentialDeactivated).toEqual(false)
       expect(mockUtils.dispatch).not.toHaveBeenCalled()
       // ias-ios suppresses the expiry alert deliberately (IASP-12489); v4 matches it.
       expect(emitAlert).not.toHaveBeenCalled()

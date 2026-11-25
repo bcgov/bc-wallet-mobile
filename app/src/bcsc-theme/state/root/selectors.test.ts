@@ -1,4 +1,5 @@
-import { BCState, initialState } from '@/store'
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
+import { nativeAccount, nativeCredential, seedAccount, seedBCSCStore, seedTokens } from '@/bcsc-theme/storage/testing'
 import { RootPhase } from './root-phase'
 import { RootPhaseRoutingFacts, selectRootPhase } from './selectors'
 
@@ -12,16 +13,20 @@ const routing = (overrides: Partial<RootPhaseRoutingFacts> = {}): RootPhaseRouti
 // An account that is unlocked, unless the overrides say otherwise
 const buildState = (
   overrides: { hasAccount?: boolean; didAuthenticate?: boolean; sessionRecoveryRequired?: boolean } = {}
-): BCState => ({
-  ...initialState,
-  bcsc: { ...initialState.bcsc, hasAccount: overrides.hasAccount ?? true },
-  authentication: { ...initialState.authentication, didAuthenticate: overrides.didAuthenticate ?? true },
-  bcscSecure: { ...initialState.bcscSecure, sessionRecoveryRequired: overrides.sessionRecoveryRequired },
-})
+) => {
+  seedAccount(overrides.hasAccount === false ? null : nativeAccount())
+  seedBCSCStore({ session: { didAuthenticate: overrides.didAuthenticate ?? true } })
+  // Session recovery is a verified account that has lost its refresh token
+  if (overrides.sessionRecoveryRequired) {
+    seedBCSCStore({ account: { ...getBCSCState().account, credential: nativeCredential() } })
+    seedTokens({ refreshToken: undefined })
+  }
+  return getBCSCState()
+}
 
 describe('selectRootPhase', () => {
   it('is onboarding in the initial state, which has no account', () => {
-    expect(selectRootPhase(initialState, routing())).toBe(RootPhase.Onboarding)
+    expect(selectRootPhase(getBCSCState(), routing())).toBe(RootPhase.Onboarding)
   })
 
   it('is main for an unlocked account', () => {

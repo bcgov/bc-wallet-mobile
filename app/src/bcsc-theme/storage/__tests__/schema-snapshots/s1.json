@@ -8,17 +8,34 @@
         "installId": {
           "type": "string"
         },
-        "appVersion": {
-          "type": "string"
+        "appBuildHistory": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "type": "string"
+              },
+              "build": {
+                "type": "string"
+              }
+            },
+            "required": ["version", "build"],
+            "additionalProperties": false
+          }
         },
-        "appBuildNumber": {
-          "type": "string"
-        },
-        "lastSeenAppVersion": {
-          "type": "string"
-        },
-        "lastSeenAppBuildNumber": {
-          "type": "string"
+        "registeredBuild": {
+          "type": "object",
+          "properties": {
+            "version": {
+              "type": "string"
+            },
+            "build": {
+              "type": "string"
+            }
+          },
+          "required": ["version", "build"],
+          "additionalProperties": false
         },
         "lastKeyRotationAttemptAt": {
           "type": "string"
@@ -68,7 +85,7 @@
           "type": "string"
         }
       },
-      "required": ["appVersion", "appBuildNumber", "analyticsOptIn"],
+      "required": ["appBuildHistory", "analyticsOptIn"],
       "additionalProperties": false
     }
   },
@@ -270,7 +287,7 @@
           "type": "boolean"
         }
       },
-      "required": ["accountId", "clientId", "issuer", "securityMethod"],
+      "required": ["accountId", "issuer", "securityMethod"],
       "additionalProperties": false
     }
   },

@@ -5,7 +5,6 @@ import { LegacyNotReadyError, type Migration, type MigrationContext, VerifyError
 // Frozen copies of the native backend's read mapping at s1; never imported from it
 const toProfileV2 = (account: LegacyValues['account']) => ({
   accountId: account.id,
-  clientId: account.clientID,
   issuer: account.issuer,
   securityMethod: account.securityMethod,
   nickname: account.nickname,
@@ -15,8 +14,17 @@ const toProfileV2 = (account: LegacyValues['account']) => ({
 const toTokensV2 = (tokens: LegacyValues['tokens']) => ({
   accessToken: tokens.access,
   refreshToken: tokens.refresh,
-  registrationAccessToken: tokens.registration,
 })
+// The client ID was on the account record and its token with the others; at s2 they are one record (#4925).
+// A blank client ID means not registered.
+const toRegistrationV2 = (account: LegacyValues['account'], tokens: LegacyValues['tokens'] | undefined) => {
+  const clientId = account.clientID || undefined
+  const registrationAccessToken = tokens?.registration || undefined
+  if (!clientId && !registrationAccessToken) {
+    return undefined
+  }
+  return { clientId, issuer: account.issuer, registrationAccessToken }
+}
 const toFlagsV2 = ({ notShowDeviceAuthenticationPrepAgain: _, ...flags }: LegacyValues['accountFlags']) => flags // eslint-disable-line @typescript-eslint/no-unused-vars
 const toSavedServicesV2 = (services: LegacyValues['savedServices']) => ({
   ids: services.filter((s) => s.bookmarked).map((s) => s.clientRefId),
@@ -44,8 +52,6 @@ const stripRecord = <T>(record: LegacyRecord<T>): LegacyRecord<T> =>
 // unreadable stops this step, while the native originals are still there (m0003 deletes them).
 const ProfileV2 = z.object({
   accountId: z.string(),
-  // Absent until the device registers (#5159)
-  clientId: z.string().optional(),
   issuer: z.string(),
   securityMethod: z.enum(['app_pin_no_device_authn', 'app_pin_has_device_authn', 'device_authentication']),
   nickname: z.string().optional(),
@@ -55,6 +61,10 @@ const ProfileV2 = z.object({
 const TokensV2 = z.object({
   accessToken: z.string().optional(),
   refreshToken: z.string().optional(),
+})
+const RegistrationV2 = z.object({
+  clientId: z.string().optional(),
+  issuer: z.string(),
   registrationAccessToken: z.string().optional(),
 })
 const CredentialV2 = z.looseObject({
@@ -164,6 +174,14 @@ export const m0002: Migration = {
     if (tokens.status === 'ok') {
       await put('keychain', 'account/tokens', toTokensV2(tokens.value))
     }
+    // The registration belongs to the account: a token without one has nothing to register
+    const registration =
+      account.status === 'ok'
+        ? toRegistrationV2(account.value, tokens.status === 'ok' ? tokens.value : undefined)
+        : undefined
+    if (registration) {
+      await put('keychain', 'account/registration', registration)
+    }
     if (credential.status === 'ok') {
       await put('encrypted', 'account/credential', credential.value)
     }
@@ -204,6 +222,22 @@ export const m0002: Migration = {
       const stored = await check('keychain', 'account/tokens', TokensV2)
       if (stored && stored.refreshToken !== snapshot.tokens.value.refresh) {
         failed.push('account.tokens')
+      }
+    }
+    if (snapshot.account.status === 'ok') {
+      const expected = toRegistrationV2(
+        snapshot.account.value,
+        snapshot.tokens.status === 'ok' ? snapshot.tokens.value : undefined
+      )
+      if (expected) {
+        // The client ID and its token must still be the pair the device held
+        const stored = await check('keychain', 'account/registration', RegistrationV2)
+        if (
+          stored &&
+          (stored.clientId !== expected.clientId || stored.registrationAccessToken !== expected.registrationAccessToken)
+        ) {
+          failed.push('account.registration')
+        }
       }
     }
     const records: [string, LegacyRecord<unknown>, z.ZodType][] = [

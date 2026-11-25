@@ -37,17 +37,21 @@ const mockAccount = {
   securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
 }
 
-// The account as the store's profile. BasicAppContext resets the store, so it's seeded through it.
+const mockProfile = {
+  accountId: mockAccount.id,
+  issuer: mockAccount.issuer,
+  securityMethod: mockAccount.securityMethod,
+}
+
+// The account as the store's profile and registration. BasicAppContext resets the store, so it's seeded through it.
 const withAccount: BCSCStoreSeed = {
   account: {
-    profile: {
-      accountId: mockAccount.id,
-      issuer: mockAccount.issuer,
-      clientId: mockAccount.clientID,
-      securityMethod: mockAccount.securityMethod,
-    },
+    profile: mockProfile,
+    registration: { clientId: mockAccount.clientID, issuer: mockAccount.issuer },
   },
 }
+
+const withUnregisteredAccount: BCSCStoreSeed = { account: { profile: mockProfile } }
 
 // Holds the createDeviceSignedJWT() await "in flight" so a test can control exactly when the
 // signed JWT comes back, relative to unmount/completion.
@@ -102,10 +106,8 @@ describe('TransferQRDisplayScreen', () => {
 
   it('shows the same alert, signing nothing, when the account has no registration', async () => {
     // The transfer token is signed as the device's client, and this account has no client ID
-    jest.mocked(getAccount).mockResolvedValueOnce({ ...mockAccount, clientID: undefined })
-
     render(
-      <BasicAppContext>
+      <BasicAppContext bcscState={withUnregisteredAccount}>
         <TransferQRDisplayScreen />
       </BasicAppContext>
     )

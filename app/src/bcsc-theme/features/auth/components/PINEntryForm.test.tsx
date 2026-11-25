@@ -1,7 +1,6 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { clearPinAttempts } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
 import { getBCSCState } from '@/bcsc-theme/storage/hooks'
-import { TEMPORARY_ACCOUNT_CLIENT_ID } from '@/constants'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
@@ -183,7 +182,6 @@ describe('PINEntryForm', () => {
         walletKey: 'test-wallet-key',
         profile: {
           accountId: expect.any(String),
-          clientId: TEMPORARY_ACCOUNT_CLIENT_ID,
           issuer: 'https://mock-issuer',
           securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
         },

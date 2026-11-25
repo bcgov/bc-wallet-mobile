@@ -1,5 +1,5 @@
 import { getBCSCState } from '@/bcsc-theme/storage/hooks'
-import { nativeAccount, seedAccount, withBCSCStore } from '@/bcsc-theme/storage/testing'
+import { nativeAccount, seedAccount, seedBCSCStore, seedTokens, withBCSCStore } from '@/bcsc-theme/storage/testing'
 import * as useAlertsModule from '@/hooks/useAlerts'
 import * as Bifold from '@bifold/core'
 import { useNavigation } from '@react-navigation/core'
@@ -38,6 +38,7 @@ const mockNavigation = {
 const mockFactoryResetAlert = jest.fn()
 const mockClearSecureState = jest.fn()
 const mockDeleteVerificationData = jest.fn().mockResolvedValue(undefined)
+const mockClearRegistration = jest.fn().mockResolvedValue(undefined)
 const mockDeleteRegistration = jest.fn().mockResolvedValue({ success: true })
 const mockCreateRegistration = jest.fn().mockResolvedValue({})
 
@@ -66,12 +67,15 @@ describe('useVerificationReset', () => {
     jest.mocked(useSecureActionsModule.useSecureActions).mockReturnValue({
       clearSecureState: mockClearSecureState,
       deleteVerificationData: mockDeleteVerificationData,
+      clearRegistration: mockClearRegistration,
     } as any)
     jest.mocked(useRegistrationServiceModule.useRegistrationService).mockReturnValue({
       deleteRegistration: mockDeleteRegistration,
       createRegistration: mockCreateRegistration,
     } as any)
     seedAccount(nativeAccount({ clientID: 'client-id', securityMethod: 'device_authentication' as never }))
+    seedBCSCStore({ account: { credentialMetadata: { expiry: 'reason' } as never } })
+    seedTokens({ accessToken: 'access-token', refreshToken: 'refresh-token' })
   })
 
   it('account is renewed successfully', async () => {
@@ -91,8 +95,15 @@ describe('useVerificationReset', () => {
     })
     expect(mockDeleteRegistration).toHaveBeenCalledWith('registration-token', 'client-id')
     expect(mockDeleteVerificationData).toHaveBeenCalledTimes(1)
-    expect(getBCSCState().account.tokens).toBeUndefined()
-    expect(mockCreateRegistration).toHaveBeenCalledWith('device_authentication')
+    expect(getBCSCState().account.tokens?.accessToken).toBeUndefined()
+    expect(getBCSCState().account.tokens?.refreshToken).toBeUndefined()
+    expect(mockClearRegistration).toHaveBeenCalledTimes(1)
+    expect(getBCSCState().account.credentialMetadata).toBeUndefined()
+    // The old registration is cleared before the new one is created
+    expect(mockClearRegistration.mock.invocationCallOrder[0]).toBeLessThan(
+      mockCreateRegistration.mock.invocationCallOrder[0]
+    )
+    expect(mockCreateRegistration).toHaveBeenCalledWith()
     expect(mockFactoryResetAlert).not.toHaveBeenCalled()
     expect(mockLogger.error).not.toHaveBeenCalled()
   })
@@ -106,7 +117,7 @@ describe('useVerificationReset', () => {
 
     // Backing out of identity selection pops to the setup question; the stack must stay mounted
     expect(mockClearSecureState).toHaveBeenCalledWith(expect.objectContaining({ verified: false, inVerifyFlow: true }))
-    expect(mockCreateRegistration).toHaveBeenCalledWith('device_authentication')
+    expect(mockCreateRegistration).toHaveBeenCalledWith()
   })
 
   it('clears the facts in memory before the native deletes, so a failed delete leaves the reset incomplete', async () => {
@@ -144,6 +155,35 @@ describe('useVerificationReset', () => {
     )
   })
 
+  it('shows the factory reset alert when the device holds no registration to delete', async () => {
+    seedBCSCStore({ account: { registration: undefined } })
+
+    const { result } = renderHook(() => useVerificationReset())
+
+    await act(async () => {
+      await result.current()
+    })
+
+    expect(mockClearSecureState).not.toHaveBeenCalled()
+    expect(mockDeleteRegistration).not.toHaveBeenCalled()
+    expect(mockCreateRegistration).not.toHaveBeenCalled()
+    expect(mockFactoryResetAlert).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps the credential metadata when clearing the registration fails', async () => {
+    mockClearRegistration.mockRejectedValueOnce(new Error('clear failed'))
+
+    const { result } = renderHook(() => useVerificationReset())
+
+    await act(async () => {
+      await result.current()
+    })
+
+    expect(getBCSCState().account.credentialMetadata).toEqual({ expiry: 'reason' })
+    expect(mockCreateRegistration).not.toHaveBeenCalled()
+    expect(mockFactoryResetAlert).toHaveBeenCalledTimes(1)
+  })
+
   it('shows the factory reset alert when re-registration fails', async () => {
     mockCreateRegistration.mockRejectedValueOnce(new Error('create failed'))
 
@@ -156,7 +196,7 @@ describe('useVerificationReset', () => {
     expect(mockClearSecureState).toHaveBeenCalledTimes(1)
     expect(mockDeleteVerificationData).toHaveBeenCalledTimes(1)
     expect(mockDeleteRegistration).toHaveBeenCalledWith('registration-token', 'client-id')
-    expect(mockCreateRegistration).toHaveBeenCalledWith('device_authentication')
+    expect(mockCreateRegistration).toHaveBeenCalledWith()
     expect(mockFactoryResetAlert).toHaveBeenCalledTimes(1)
     expect(mockLogger.error).toHaveBeenCalledWith(
       '[useVerificationReset] Error during account renewal reset',

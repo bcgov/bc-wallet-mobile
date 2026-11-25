@@ -113,7 +113,7 @@ export const selectAccountRecord = (s: BCSCStore): NativeAccount | null => {
   return {
     id: profile.accountId,
     issuer: profile.issuer,
-    clientID: profile.clientId,
+    clientID: s.account.registration?.clientId,
     securityMethod: profile.securityMethod,
     nickname: profile.nickname,
     displayName: profile.displayName,

@@ -1,3 +1,4 @@
+import type { BCSCStoreSeed } from '@/bcsc-theme/storage/testing'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { BCState, initialState } from '@/store'
 import { reportProblem } from '@/utils/logger'
@@ -22,9 +23,13 @@ describe('ReportProblemModal', () => {
     jest.clearAllMocks()
   })
 
-  const renderModal = (onClose: () => void = jest.fn(), initialStateOverride?: Partial<BCState>) =>
+  const renderModal = (
+    onClose: () => void = jest.fn(),
+    initialStateOverride?: Partial<BCState>,
+    bcscState?: BCSCStoreSeed
+  ) =>
     render(
-      <BasicAppContext initialStateOverride={initialStateOverride}>
+      <BasicAppContext initialStateOverride={initialStateOverride} bcscState={bcscState}>
         <ReportProblemModal visible onClose={onClose} />
       </BasicAppContext>
     )
@@ -136,9 +141,8 @@ describe('ReportProblemModal', () => {
   })
 
   it('includes the formatted build history in the report, newest first', () => {
-    const { getByTestId } = renderModal(jest.fn(), {
-      bcsc: {
-        ...initialState.bcsc,
+    const { getByTestId } = renderModal(jest.fn(), undefined, {
+      app: {
         appBuildHistory: [
           { version: '4.0.0', build: '100' },
           { version: '3.9.0', build: '90' },

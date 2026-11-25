@@ -45,6 +45,8 @@ describe('useQuickLoginURL', () => {
   beforeEach(() => {
     jest.resetAllMocks()
     jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
+    // resetAllMocks drops the bcsc-core mock's implementation
+    jest.mocked(BcscCore.isAccountRegistered).mockImplementation((account) => Boolean(account?.clientID))
   })
 
   // resetAllMocks leaves the account read spy in place, answering undefined
@@ -126,6 +128,29 @@ describe('useQuickLoginURL', () => {
     expect(tokensMock.getNotificationTokens).toHaveBeenCalledTimes(1)
     expect(readAccount).toHaveBeenCalledTimes(1)
     expect(fetchJwkMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('should return error, signing nothing, when the account has no registration', async () => {
+    const useClientMock = jest.mocked(useBCSCApiClient)
+    const bifoldMock = jest.mocked(Bifold)
+    const bcscCoreMock = jest.mocked(BcscCore)
+    const tokensMock = jest.mocked(tokens)
+
+    seedAccount(nativeAccount({ clientID: '' }))
+    tokensMock.getNotificationTokens = jest.fn().mockResolvedValue(true)
+    bcscCoreMock.createQuickLoginJWT = jest.fn()
+
+    useClientMock.useBCSCApiClient.mockReturnValue({
+      tokens: { access_token: true },
+      fetchJwkResult: jest.fn().mockResolvedValue({ jwk: true }),
+    } as any)
+    bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
+
+    const hook = renderHook(() => useQuickLoginURL())
+    const result = await hook.result.current({ client_ref_id: 'test', initiate_login_uri: 'https://example.com' })
+
+    expect(result).toEqual({ success: false, error: failure('account', 'no registration') })
+    expect(bcscCoreMock.createQuickLoginJWT).not.toHaveBeenCalled()
   })
 
   it('should return error and show alert when no jwk available', async () => {

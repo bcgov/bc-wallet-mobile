@@ -8,7 +8,6 @@ const openFresh = async () => {
 }
 
 const newProfile = {
-  clientId: '',
   issuer: 'https://idsit.gov.bc.ca/device/',
   securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
 }

@@ -53,7 +53,7 @@ export const useRegistrationService = () => {
    * Whether the device holds a registration access token, so `ensureRegistered` has nothing to wait for.
    * A hint for screens only: `ensureRegistered` itself asks the stored account.
    */
-  const isRegistered = useAccount((a) => Boolean(a.tokens?.registrationAccessToken))
+  const isRegistered = useAccount((a) => Boolean(a.registration?.registrationAccessToken))
 
   /** @returns whether a mapped registration alert was shown */
   const emitRegistrationAlert = useCallback(

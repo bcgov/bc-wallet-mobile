@@ -31,6 +31,7 @@ import {
   clearDeviceRegistration,
   DeviceRegistration,
   fillInDeviceRegistration,
+  keepDeviceRegistrationInMemory,
   readStoredDeviceRegistration,
   saveDeviceRegistration,
 } from '../services/device-registration'
@@ -957,8 +958,8 @@ export const useSecureActions = () => {
         logger.error(
           '[hydrateSecureState] Failed to persist the rotated registration access token; continuing with it in memory'
         )
-        if (registrationAccessToken) {
-          getBCSCState().account.keepTokensInMemory({ registrationAccessToken })
+        if (registrationAccessToken && clientID && issuer) {
+          keepDeviceRegistrationInMemory({ clientId: clientID, issuer, registrationAccessToken })
         }
       }
 

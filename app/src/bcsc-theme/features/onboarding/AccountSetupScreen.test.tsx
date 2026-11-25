@@ -54,15 +54,23 @@ const renderScreen = (stateOverride?: Partial<BCState>, bcscState?: BCSCStoreSee
   )
 }
 
+const accountProfile = {
+  accountId: 'test-account-id',
+  issuer: 'https://idsit.gov.bc.ca/device/',
+  securityMethod: 'app_pin_no_device_authn' as never,
+}
+
 // An account not registered yet, with a ready client, so ensureRegistered runs the real registration up to the
 // registration body
-const unregisteredAccount: BCSCStoreSeed = {
+const unregisteredAccount: BCSCStoreSeed = { account: { profile: accountProfile } }
+
+const registeredAccount: BCSCStoreSeed = {
   account: {
-    profile: {
-      accountId: 'test-account-id',
-      clientId: '',
+    profile: accountProfile,
+    registration: {
+      clientId: 'client-id',
       issuer: 'https://idsit.gov.bc.ca/device/',
-      securityMethod: 'app_pin_no_device_authn' as never,
+      registrationAccessToken: 'existing-token',
     },
   },
 }
@@ -174,9 +182,7 @@ describe('AccountSetup', () => {
   })
 
   it('dispatches AddAccount and navigates to IdentitySelection when "Add Account" is pressed', async () => {
-    const { getByTestId } = renderScreen({
-      bcscSecure: { ...initialState.bcscSecure, registrationAccessToken: 'existing-token' },
-    })
+    const { getByTestId } = renderScreen(undefined, registeredAccount)
     const overlay = () => getByTestId(testIdWithKey(TestIds.common.loadingOverlay), hidden)
 
     fireEvent.press(getByTestId(testIdWithKey('AddAccount')))
@@ -193,9 +199,7 @@ describe('AccountSetup', () => {
   })
 
   it('dispatches TransferAccount and navigates to TransferAccountInstructions when "Transfer Account" is pressed', async () => {
-    const { getByTestId } = renderScreen({
-      bcscSecure: { ...initialState.bcscSecure, registrationAccessToken: 'existing-token' },
-    })
+    const { getByTestId } = renderScreen(undefined, registeredAccount)
     const overlay = () => getByTestId(testIdWithKey(TestIds.common.loadingOverlay), hidden)
 
     fireEvent.press(getByTestId(testIdWithKey('TransferAccount')))

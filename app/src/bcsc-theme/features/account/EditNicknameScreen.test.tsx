@@ -1,6 +1,7 @@
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
-import { BCState, initialState } from '@/store'
-import { testIdWithKey, useStore } from '@bifold/core'
+import { useNickname } from '@/bcsc-theme/storage/hooks'
+import { nativeAccount, seedAccount } from '@/bcsc-theme/storage/testing'
+import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
@@ -16,8 +17,8 @@ const NICKNAME_INPUT = 'com.ariesbifold:id/accountNickname-input'
 
 /** Exposes the saved nickname in the tree so tests can observe store updates. */
 const NicknameProbe = () => {
-  const [store] = useStore<BCState>()
-  return <Text testID="NicknameProbe">{String(store.bcsc.selectedNickname)}</Text>
+  const nickname = useNickname()
+  return <Text testID="NicknameProbe">{String(nickname)}</Text>
 }
 
 describe('EditNickname', () => {
@@ -34,19 +35,17 @@ describe('EditNickname', () => {
     jest.useRealTimers()
   })
 
-  const renderScreen = () =>
-    render(
-      <BasicAppContext
-        initialStateOverride={{
-          bcsc: { ...initialState.bcsc, selectedNickname: 'Old name' },
-          // A token in app state is not what the update uses: the service reads the registration from storage
-          bcscSecure: { ...initialState.bcscSecure, registrationAccessToken: 'state-token' },
-        }}
-      >
+  const renderScreen = () => {
+    const tree = render(
+      <BasicAppContext>
         <EditNicknameScreen />
         <NicknameProbe />
       </BasicAppContext>
     )
+    // The service reads the registration token itself, so the screen passes only the nickname
+    act(() => seedAccount(nativeAccount({ nickname: 'Old name' })))
+    return tree
+  }
 
   const rename = async (tree: ReturnType<typeof renderScreen>, nickname: string) => {
     fireEvent.changeText(tree.getByTestId(NICKNAME_INPUT), nickname)

@@ -1,9 +1,9 @@
 import * as useRegistrationApiModule from '@/bcsc-theme/api/hooks/useRegistrationApi'
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
 import { BCSCStoreSeed } from '@/bcsc-theme/storage/testing'
 import { AppError } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import * as useAlertsModule from '@/hooks/useAlerts'
-import { initialState } from '@/store'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { mockAppError } from '@mocks/helpers/error'
 import { renderHook } from '@testing-library/react-native'
@@ -20,15 +20,21 @@ const withBCSCState = (bcscState: BCSCStoreSeed) => {
   return Wrapper
 }
 
-const accountWith = (profile: { clientId?: string; securityMethod: string }, registrationAccessToken?: string) => ({
+const accountWith = (
+  profile: { clientId?: string; securityMethod: string },
+  registrationAccessToken?: string
+): BCSCStoreSeed => ({
   account: {
     profile: {
       accountId: 'test-account-id',
-      clientId: profile.clientId ?? 'test-client-id',
       issuer: 'https://idsit.gov.bc.ca/device/',
       securityMethod: profile.securityMethod as never,
     },
-    ...(registrationAccessToken ? { tokens: { registrationAccessToken } } : {}),
+    registration: {
+      clientId: (profile.clientId ?? 'test-client-id') || undefined,
+      issuer: 'https://idsit.gov.bc.ca/device/',
+      registrationAccessToken,
+    },
   },
 })
 
@@ -49,9 +55,9 @@ describe('useRegistrationService', () => {
 
       const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-      const data = await result.current.register('deviceAuth' as any)
+      const data = await result.current.register()
 
-      expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+      expect(registrationApi.register).toHaveBeenCalledWith()
       expect(data).toEqual(mockData)
     })
 
@@ -69,8 +75,8 @@ describe('useRegistrationService', () => {
 
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
-        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        await expect(result.current.register()).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith()
         expect(keychainKeyGenerationAlert).toHaveBeenCalled()
       })
 
@@ -87,8 +93,8 @@ describe('useRegistrationService', () => {
 
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
-        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        await expect(result.current.register()).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith()
         expect(keychainKeyGenerationAlert).not.toHaveBeenCalled()
       })
     })
@@ -107,8 +113,8 @@ describe('useRegistrationService', () => {
 
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
-        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        await expect(result.current.register()).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith()
         expect(toJsonMethodFailureAlert).toHaveBeenCalled()
       })
     })
@@ -127,8 +133,8 @@ describe('useRegistrationService', () => {
 
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
-        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        await expect(result.current.register()).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith()
         expect(toJsonStringMethodFailureAlert).toHaveBeenCalled()
       })
     })
@@ -147,8 +153,8 @@ describe('useRegistrationService', () => {
 
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
-        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        await expect(result.current.register()).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith()
         expect(keychainKeyExistsAlert).toHaveBeenCalled()
       })
     })
@@ -167,8 +173,8 @@ describe('useRegistrationService', () => {
 
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
-        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        await expect(result.current.register()).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith()
         // The alert must receive the original error so its cause (incl. native
         // keychain diagnostics) reaches the problem-report log
         expect(keychainKeyDoesntExistAlert).toHaveBeenCalledWith(mockError)
@@ -189,8 +195,8 @@ describe('useRegistrationService', () => {
 
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
-        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        await expect(result.current.register()).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith()
         expect(jwtDeviceInfoAlert).toHaveBeenCalled()
       })
     })
@@ -209,8 +215,8 @@ describe('useRegistrationService', () => {
 
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
-        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        await expect(result.current.register()).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith()
         expect(clientRegistrationFailureAlert).toHaveBeenCalled()
       })
     })
@@ -233,7 +239,7 @@ describe('useRegistrationService', () => {
 
           const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-          await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
+          await expect(result.current.register()).rejects.toThrow(mockError)
           expect(clientRegistrationFailureAlert).toHaveBeenCalledWith(mockError)
         })
       }
@@ -253,8 +259,8 @@ describe('useRegistrationService', () => {
 
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
-        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        await expect(result.current.register()).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith()
         expect(clientRegistrationNullAlert).toHaveBeenCalled()
       })
 
@@ -271,8 +277,8 @@ describe('useRegistrationService', () => {
 
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
-        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        await expect(result.current.register()).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith()
         expect(clientRegistrationNullAlert).not.toHaveBeenCalled()
       })
     })
@@ -291,8 +297,8 @@ describe('useRegistrationService', () => {
 
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
-        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        await expect(result.current.register()).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith()
         expect(failedToSerializeJsonAlert).toHaveBeenCalled()
       })
 
@@ -309,8 +315,8 @@ describe('useRegistrationService', () => {
 
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
-        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        await expect(result.current.register()).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith()
         expect(failedToSerializeJsonAlert).not.toHaveBeenCalled()
       })
     })
@@ -329,8 +335,8 @@ describe('useRegistrationService', () => {
 
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
-        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        await expect(result.current.register()).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith()
         expect(failedToRetrieveStringResourceAlert).toHaveBeenCalled()
       })
     })
@@ -349,8 +355,8 @@ describe('useRegistrationService', () => {
 
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
-        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        await expect(result.current.register()).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith()
         expect(invalidUrlAlert).toHaveBeenCalled()
       })
     })
@@ -369,8 +375,8 @@ describe('useRegistrationService', () => {
 
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
-        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        await expect(result.current.register()).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith()
         expect(invalidRegistrationRequestAlert).toHaveBeenCalled()
       })
     })
@@ -413,8 +419,8 @@ describe('useRegistrationService', () => {
 
       const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-      await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
-      expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+      await expect(result.current.register()).rejects.toThrow(mockError)
+      expect(registrationApi.register).toHaveBeenCalledWith()
       expect(toJsonMethodFailureAlert).not.toHaveBeenCalled()
       expect(toJsonStringMethodFailureAlert).not.toHaveBeenCalled()
       expect(keychainKeyExistsAlert).not.toHaveBeenCalled()
@@ -442,9 +448,9 @@ describe('useRegistrationService', () => {
 
       const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-      const data = await result.current.updateRegistration('someToken', 'someNickname')
+      const data = await result.current.updateRegistration('someNickname')
 
-      expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
+      expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someNickname')
       expect(data).toEqual(mockData)
     })
 
@@ -462,8 +468,8 @@ describe('useRegistrationService', () => {
 
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-        await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
-        expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
+        await expect(result.current.updateRegistration('someNickname')).rejects.toThrow(mockError)
+        expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someNickname')
         expect(keychainKeyGenerationAlert).toHaveBeenCalled()
       })
     })
@@ -482,8 +488,8 @@ describe('useRegistrationService', () => {
 
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-        await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
-        expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
+        await expect(result.current.updateRegistration('someNickname')).rejects.toThrow(mockError)
+        expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someNickname')
         expect(toJsonMethodFailureAlert).toHaveBeenCalled()
       })
     })
@@ -502,8 +508,8 @@ describe('useRegistrationService', () => {
 
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-        await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
-        expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
+        await expect(result.current.updateRegistration('someNickname')).rejects.toThrow(mockError)
+        expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someNickname')
         expect(toJsonStringMethodFailureAlert).toHaveBeenCalled()
       })
     })
@@ -522,8 +528,8 @@ describe('useRegistrationService', () => {
 
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-        await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
-        expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
+        await expect(result.current.updateRegistration('someNickname')).rejects.toThrow(mockError)
+        expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someNickname')
         expect(keychainKeyExistsAlert).toHaveBeenCalled()
       })
     })
@@ -542,8 +548,8 @@ describe('useRegistrationService', () => {
 
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-        await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
-        expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
+        await expect(result.current.updateRegistration('someNickname')).rejects.toThrow(mockError)
+        expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someNickname')
         // The alert must receive the original error so its cause (incl. native
         // keychain diagnostics) reaches the problem-report log
         expect(keychainKeyDoesntExistAlert).toHaveBeenCalledWith(mockError)
@@ -571,7 +577,7 @@ describe('useRegistrationService', () => {
 
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-        await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
+        await expect(result.current.updateRegistration('someNickname')).rejects.toThrow(mockError)
         expect(keychainUnavailableAlert).toHaveBeenCalledWith(mockError)
       })
 
@@ -582,7 +588,7 @@ describe('useRegistrationService', () => {
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(
-          result.current.updateRegistration('someToken', 'someNickname', { suppressTransientAlerts: true })
+          result.current.updateRegistration('someNickname', { suppressTransientAlerts: true })
         ).rejects.toThrow(mockError)
         expect(keychainUnavailableAlert).not.toHaveBeenCalled()
       })
@@ -594,7 +600,7 @@ describe('useRegistrationService', () => {
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(
-          result.current.updateRegistration('someToken', 'someNickname', { suppressTransientAlerts: true })
+          result.current.updateRegistration('someNickname', { suppressTransientAlerts: true })
         ).rejects.toThrow(mockError)
         expect(keychainKeyDoesntExistAlert).toHaveBeenCalledWith(mockError)
       })
@@ -614,8 +620,8 @@ describe('useRegistrationService', () => {
 
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-        await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
-        expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
+        await expect(result.current.updateRegistration('someNickname')).rejects.toThrow(mockError)
+        expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someNickname')
         expect(jwtDeviceInfoAlert).toHaveBeenCalled()
       })
     })
@@ -634,8 +640,8 @@ describe('useRegistrationService', () => {
 
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-        await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
-        expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
+        await expect(result.current.updateRegistration('someNickname')).rejects.toThrow(mockError)
+        expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someNickname')
         expect(clientRegistrationFailureAlert).toHaveBeenCalled()
       })
     })
@@ -654,8 +660,8 @@ describe('useRegistrationService', () => {
 
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-        await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
-        expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
+        await expect(result.current.updateRegistration('someNickname')).rejects.toThrow(mockError)
+        expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someNickname')
         expect(clientRegistrationNullAlert).toHaveBeenCalled()
       })
     })
@@ -695,8 +701,8 @@ describe('useRegistrationService', () => {
 
       const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-      await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
-      expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
+      await expect(result.current.updateRegistration('someNickname')).rejects.toThrow(mockError)
+      expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someNickname')
       expect(toJsonMethodFailureAlert).not.toHaveBeenCalled()
       expect(toJsonStringMethodFailureAlert).not.toHaveBeenCalled()
       expect(keychainKeyExistsAlert).not.toHaveBeenCalled()
@@ -725,8 +731,8 @@ describe('useRegistrationService', () => {
 
       const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-      await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
-      expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
+      await expect(result.current.updateRegistration('someNickname')).rejects.toThrow(mockError)
+      expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someNickname')
       expect(failedToSerializeJsonAlert).toHaveBeenCalled()
     })
   })
@@ -745,8 +751,8 @@ describe('useRegistrationService', () => {
 
       const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
-      await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
-      expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
+      await expect(result.current.updateRegistration('someNickname')).rejects.toThrow(mockError)
+      expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someNickname')
       expect(failedToDeserializeJsonAlert).toHaveBeenCalled()
     })
   })
@@ -756,15 +762,7 @@ describe('useRegistrationService', () => {
       jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue({} as any)
       jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
 
-      const wrapper = ({ children }: React.PropsWithChildren) => (
-        <BasicAppContext
-          initialStateOverride={{
-            bcscSecure: { ...initialState.bcscSecure, registrationAccessToken: 'existing-token' },
-          }}
-        >
-          {children}
-        </BasicAppContext>
-      )
+      const wrapper = withBCSCState(accountWith({ securityMethod: 'app_pin_no_device_authn' }, 'existing-token'))
 
       const { result } = renderHook(() => useRegistrationService(), { wrapper })
 
@@ -782,32 +780,26 @@ describe('useRegistrationService', () => {
   })
 
   describe('ensureRegistered', () => {
-    it('should skip registration when a registration access token already exists', async () => {
+    // registrationApi.register is what skips an account that already has a client ID
+    it('resolves without alerting when the account is already registered', async () => {
       const registrationApi = {
-        register: jest.fn(),
+        register: jest.fn().mockResolvedValue(undefined),
       } as any
+      const clientRegistrationFailureAlert = jest.fn()
 
       jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
-      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({ clientRegistrationFailureAlert } as any)
 
-      const wrapper = ({ children }: React.PropsWithChildren) => (
-        <BasicAppContext
-          initialStateOverride={{
-            bcscSecure: { ...initialState.bcscSecure, registrationAccessToken: 'existing-token' },
-          }}
-        >
-          {children}
-        </BasicAppContext>
-      )
-
+      const wrapper = withBCSCState(accountWith({ securityMethod: 'app_pin_no_device_authn' }, 'existing-token'))
       const { result } = renderHook(() => useRegistrationService(), { wrapper })
 
-      await result.current.ensureRegistered()
+      await expect(result.current.ensureRegistered()).resolves.toBeUndefined()
 
-      expect(registrationApi.register).not.toHaveBeenCalled()
+      expect(registrationApi.register).toHaveBeenCalledWith()
+      expect(clientRegistrationFailureAlert).not.toHaveBeenCalled()
     })
 
-    it('should register with the current security method when no token exists', async () => {
+    it('should register when the account is not registered yet', async () => {
       const mockSecurityMethod = 'app_pin_no_device_authn'
 
       const registrationApi = {
@@ -823,7 +815,7 @@ describe('useRegistrationService', () => {
 
       await result.current.ensureRegistered()
 
-      expect(registrationApi.register).toHaveBeenCalledWith(mockSecurityMethod)
+      expect(registrationApi.register).toHaveBeenCalledWith()
     })
 
     it('should propagate registration failures and emit the mapped alert', async () => {
@@ -869,14 +861,14 @@ describe('useRegistrationService', () => {
         expect(clientRegistrationFailureAlert).toHaveBeenCalledTimes(1)
       })
 
-      it('alerts once and does not register when there is no security method to register with', async () => {
+      it('alerts once when there is no account to register', async () => {
         const clientRegistrationFailureAlert = jest.fn()
-        const register = jest.fn()
-        const { result } = setup(register, { clientRegistrationFailureAlert }, {})
+        const noAccount = mockAppError(AppEventCode.ACCOUNT_NOT_FOUND)
+        const { result } = setup(jest.fn().mockRejectedValue(noAccount), { clientRegistrationFailureAlert }, {})
 
-        await expect(result.current.ensureRegistered()).rejects.toBeInstanceOf(AppError)
+        await expect(result.current.ensureRegistered()).rejects.toBe(noAccount)
 
-        expect(register).not.toHaveBeenCalled()
+        expect(noAccount.handled).toBe(true)
         expect(clientRegistrationFailureAlert).toHaveBeenCalledTimes(1)
       })
 
@@ -923,9 +915,14 @@ describe('useRegistrationService', () => {
 
   describe('cycleRegistration', () => {
     it('deletes the existing registration and creates a fresh one', async () => {
+      // The registration the server deleted is gone from the device before the new one is created
+      let registrationWhenCreating: unknown = 'not called'
       const registrationApi = {
         deleteRegistration: jest.fn().mockResolvedValue({ success: true }),
-        createRegistration: jest.fn().mockResolvedValue({ client_id: 'new-client-id' }),
+        createRegistration: jest.fn().mockImplementation(async () => {
+          registrationWhenCreating = getBCSCState().account.registration
+          return { client_id: 'new-client-id' }
+        }),
       } as any
       const mockSecurityMethod = 'pin' as any
 
@@ -940,7 +937,10 @@ describe('useRegistrationService', () => {
       await result.current.cycleRegistration()
 
       expect(registrationApi.deleteRegistration).toHaveBeenCalledWith('existing-token', 'old-client-id')
-      expect(registrationApi.createRegistration).toHaveBeenCalledWith(mockSecurityMethod)
+      expect(registrationApi.createRegistration).toHaveBeenCalledWith()
+      expect(registrationWhenCreating).toBeUndefined()
+      // The account keeps its security method
+      expect(getBCSCState().account.profile?.securityMethod).toBe(mockSecurityMethod)
       // deleteRegistration must resolve before createRegistration fires, otherwise the new
       // registration could race the deletion of the old one.
       expect(registrationApi.deleteRegistration.mock.invocationCallOrder[0]).toBeLessThan(
@@ -964,7 +964,7 @@ describe('useRegistrationService', () => {
       await result.current.cycleRegistration()
 
       expect(registrationApi.deleteRegistration).not.toHaveBeenCalled()
-      expect(registrationApi.createRegistration).toHaveBeenCalledWith('pin')
+      expect(registrationApi.createRegistration).toHaveBeenCalledWith()
     })
 
     it('throws without registering when there is no account to take the security method from', async () => {

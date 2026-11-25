@@ -1,29 +1,19 @@
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
+import { seedAccount, seedBCSCStore, seedTokens } from '@/bcsc-theme/storage/testing'
 import { AppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
 import type { BifoldLogger } from '@bifold/core'
-import {
-  clearRegistration,
-  getAccount,
-  getToken,
-  setAccount,
-  setRegistration,
-  setToken,
-  TokenType,
-} from 'react-native-bcsc-core'
+import { clearRegistration, setAccount, setRegistration, setToken } from 'react-native-bcsc-core'
 import {
   clearDeviceRegistration,
   fillInDeviceRegistration,
+  keepDeviceRegistrationInMemory,
   readDeviceRegistration,
   readStoredDeviceRegistration,
   saveDeviceRegistration,
 } from './device-registration'
 
 jest.mock('react-native-bcsc-core')
-
-const mockGetAccount = jest.mocked(getAccount)
-const mockGetToken = jest.mocked(getToken)
-const mockSetRegistration = jest.mocked(setRegistration)
-const mockClearRegistration = jest.mocked(clearRegistration)
 
 const logger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() } as unknown as BifoldLogger
 
@@ -32,16 +22,18 @@ const ISSUER = 'https://idsit.gov.bc.ca/device/'
 const CLIENT_ID = 'b5a1c3d2-7e44-4f0a-9d21-3c8a6f1e5b70'
 const TOKEN = 'eyJhbGciOiJSUzI1NiJ9.registration-access-token.signature'
 
-const registeredAccount = {
-  id: 'account-1',
-  issuer: ISSUER,
-  clientID: CLIENT_ID,
-  securityMethod: 'app_pin_no_device_authn',
-}
-const unregisteredAccount = { id: 'account-1', issuer: ISSUER, securityMethod: 'app_pin_no_device_authn' }
+const registeredAccount = { id: 'account-1', issuer: ISSUER, clientID: CLIENT_ID }
+const unregisteredAccount = { id: 'account-1', issuer: ISSUER }
 const registration = { clientId: CLIENT_ID, issuer: ISSUER, registrationAccessToken: TOKEN }
 
-const nativeError = (code: string) => Object.assign(new Error(`native ${code}`), { code })
+const writeError = () => new Error('keychain write failed')
+
+// Swaps the store's setRegistration for one that rejects, keeping the rest of the account slice
+const failRegistrationWrites = (error: Error) => {
+  const setRegistrationMock = jest.fn().mockRejectedValue(error)
+  seedBCSCStore({ account: { setRegistration: setRegistrationMock } })
+  return setRegistrationMock
+}
 
 /** Everything the logger was given, at every level, with error arguments reduced to their messages. */
 const allLoggedText = () =>
@@ -53,33 +45,26 @@ const allLoggedText = () =>
 describe('device registration', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockGetAccount.mockResolvedValue(registeredAccount as any)
-    mockGetToken.mockResolvedValue({ token: TOKEN } as any)
-    mockSetRegistration.mockReset().mockResolvedValue(undefined)
-    mockClearRegistration.mockReset().mockResolvedValue(undefined)
+    seedAccount(registeredAccount)
+    seedTokens({ registrationAccessToken: TOKEN })
   })
 
   describe('readStoredDeviceRegistration', () => {
-    it('reads the client ID and issuer from the account and the token from secure storage', async () => {
-      await expect(readStoredDeviceRegistration()).resolves.toEqual(registration)
-
-      expect(mockGetAccount).toHaveBeenCalledTimes(1)
-      expect(mockGetToken).toHaveBeenCalledWith(TokenType.Registration)
+    it('reads the client ID, issuer and token from the stored registration', () => {
+      expect(readStoredDeviceRegistration()).toEqual(registration)
     })
 
-    it('holds nothing when there is no account, and does not read a token that needs one', async () => {
-      mockGetAccount.mockResolvedValue(null)
+    it('holds nothing when there is no account, even with a registration left over', () => {
+      seedBCSCStore({ account: { profile: undefined, registration } })
 
-      await expect(readStoredDeviceRegistration()).resolves.toEqual({})
-
-      expect(mockGetToken).not.toHaveBeenCalled()
+      expect(readStoredDeviceRegistration()).toEqual({})
     })
 
-    it('holds only the issuer for an account that has not registered yet', async () => {
-      mockGetAccount.mockResolvedValue(unregisteredAccount as any)
-      mockGetToken.mockResolvedValue(null)
+    it('holds only the issuer for an account that has not registered yet', () => {
+      seedAccount(unregisteredAccount)
+      seedBCSCStore({ account: { registration: undefined } })
 
-      await expect(readStoredDeviceRegistration()).resolves.toEqual({
+      expect(readStoredDeviceRegistration()).toEqual({
         clientId: undefined,
         issuer: ISSUER,
         registrationAccessToken: undefined,
@@ -87,71 +72,54 @@ describe('device registration', () => {
     })
 
     it.each([
-      ['client ID', { ...registeredAccount, clientID: '' }, { token: TOKEN }, 'clientId'],
-      ['issuer', { ...registeredAccount, issuer: '' }, { token: TOKEN }, 'issuer'],
-      ['token', registeredAccount, { token: '' }, 'registrationAccessToken'],
-    ] as const)('reads a blank %s as none', async (_label, account, token, field) => {
-      mockGetAccount.mockResolvedValue(account as any)
-      mockGetToken.mockResolvedValue(token as any)
+      ['client ID', { ...registration, clientId: '' }, 'clientId'],
+      ['token', { ...registration, registrationAccessToken: '' }, 'registrationAccessToken'],
+    ] as const)('reads a blank %s as none', (_label, stored, field) => {
+      seedBCSCStore({ account: { registration: stored } })
 
-      const stored = await readStoredDeviceRegistration()
-
-      expect(stored[field]).toBeUndefined()
+      expect(readStoredDeviceRegistration()[field]).toBeUndefined()
     })
 
-    it('uses an account the caller already read instead of reading it again', async () => {
-      await expect(readStoredDeviceRegistration(registeredAccount as any)).resolves.toEqual(registration)
+    it("falls back to the account's issuer when the registration has none", () => {
+      seedBCSCStore({ account: { registration: { ...registration, issuer: '' } } })
 
-      expect(mockGetAccount).not.toHaveBeenCalled()
-    })
-
-    it('takes a null account from the caller as no account, without reading it again', async () => {
-      await expect(readStoredDeviceRegistration(null)).resolves.toEqual({})
-
-      expect(mockGetAccount).not.toHaveBeenCalled()
-      expect(mockGetToken).not.toHaveBeenCalled()
-    })
-
-    it('rejects when the token cannot be read, rather than reporting a registration with no token', async () => {
-      const readError = nativeError('E_STORAGE_ERROR')
-      mockGetToken.mockRejectedValue(readError)
-
-      await expect(readStoredDeviceRegistration()).rejects.toBe(readError)
+      expect(readStoredDeviceRegistration().issuer).toBe(ISSUER)
     })
   })
 
   describe('readDeviceRegistration', () => {
-    it('returns the registration when the device holds all of it', async () => {
-      await expect(readDeviceRegistration()).resolves.toEqual(registration)
+    it('returns the registration when the device holds all of it', () => {
+      expect(readDeviceRegistration()).toEqual(registration)
     })
 
     it.each([
-      ['no account', null, { token: TOKEN }],
-      ['no client ID', unregisteredAccount, { token: TOKEN }],
-      ['no issuer', { ...registeredAccount, issuer: '' }, { token: TOKEN }],
-      ['no token', registeredAccount, null],
-    ])('returns null when the device holds %s: a client ID and its token are only usable together', async (...args) => {
-      const [, account, token] = args
-      mockGetAccount.mockResolvedValue(account as any)
-      mockGetToken.mockResolvedValue(token as any)
+      ['no account', { profile: undefined }],
+      ['no client ID', { registration: { issuer: ISSUER, registrationAccessToken: TOKEN } }],
+      ['no token', { registration: { clientId: CLIENT_ID, issuer: ISSUER } }],
+      ['no registration', { registration: undefined }],
+    ])('returns null when the device holds %s: a client ID and its token are only usable together', (_label, seed) => {
+      seedBCSCStore({ account: seed })
 
-      await expect(readDeviceRegistration()).resolves.toBeNull()
+      expect(readDeviceRegistration()).toBeNull()
     })
 
-    it('uses an account the caller already read', async () => {
-      await expect(readDeviceRegistration(registeredAccount as any)).resolves.toEqual(registration)
+    it('returns null when neither the registration nor the account has an issuer', () => {
+      seedAccount({ ...registeredAccount, issuer: '' })
+      seedBCSCStore({ account: { registration: { ...registration, issuer: '' } } })
 
-      expect(mockGetAccount).not.toHaveBeenCalled()
+      expect(readDeviceRegistration()).toBeNull()
     })
   })
 
   describe('saveDeviceRegistration', () => {
-    it('saves the client ID, issuer and token in one native call', async () => {
+    it('saves the client ID, issuer and token together in the store', async () => {
+      seedBCSCStore({ account: { registration: undefined } })
+
       await saveDeviceRegistration(registration, logger)
 
-      expect(mockSetRegistration).toHaveBeenCalledTimes(1)
-      expect(mockSetRegistration).toHaveBeenCalledWith(CLIENT_ID, ISSUER, TOKEN)
-      // Never as an account save plus a token save, which is how the two came to disagree
+      expect(getBCSCState().account.registration).toEqual(registration)
+      // Never through the native account and token records, which is how the two came to disagree
+      expect(setRegistration).not.toHaveBeenCalled()
       expect(setAccount).not.toHaveBeenCalled()
       expect(setToken).not.toHaveBeenCalled()
     })
@@ -166,33 +134,45 @@ describe('device registration', () => {
         { ...registration, registrationAccessToken: undefined as unknown as string },
       ],
     ])('never saves part of a registration: rejects one with no %s before any write', async (_label, partial) => {
+      const setRegistrationMock = jest.fn()
+      seedBCSCStore({ account: { setRegistration: setRegistrationMock } })
+
       const error = await saveDeviceRegistration(partial, logger).catch((e: unknown) => e)
 
       expect(error).toBeInstanceOf(AppError)
       expect((error as AppError).appEvent).toBe(AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL)
-      expect(mockSetRegistration).not.toHaveBeenCalled()
+      expect(setRegistrationMock).not.toHaveBeenCalled()
     })
 
-    it.each([
-      ['E_TOKEN_SAVE_FAILED', AppEventCode.TOKEN_SAVE_FAILED],
-      ['E_SAVE_ACCOUNT_FAILED', AppEventCode.NATIVE_STORAGE_WRITE_FAILED],
-      ['E_ACCOUNT_NOT_FOUND', AppEventCode.ACCOUNT_NOT_FOUND],
-      ['E_INVALID_PARAMETERS', AppEventCode.NATIVE_INVALID_PARAMETERS],
-    ])('maps a native %s rejection, keeping the native error as the cause', async (code, appEvent) => {
-      const rejection = nativeError(code)
-      mockSetRegistration.mockRejectedValue(rejection)
+    it('rejects with ACCOUNT_NOT_FOUND when there is no account, before any write', async () => {
+      seedAccount(null)
+      const setRegistrationMock = jest.fn()
+      seedBCSCStore({ account: { setRegistration: setRegistrationMock } })
+
+      await expect(saveDeviceRegistration(registration, logger)).rejects.toMatchObject({
+        appEvent: AppEventCode.ACCOUNT_NOT_FOUND,
+      })
+      expect(setRegistrationMock).not.toHaveBeenCalled()
+    })
+
+    it('maps a failed write to STORAGE_WRITE_ERROR, keeping the cause and the previous registration', async () => {
+      const previous = { ...registration, registrationAccessToken: 'previous-token' }
+      seedBCSCStore({ account: { registration: previous } })
+      const rejection = writeError()
+      failRegistrationWrites(rejection)
 
       const error = await saveDeviceRegistration(registration, logger).catch((e: unknown) => e)
 
       expect(error).toBeInstanceOf(AppError)
-      expect((error as AppError).appEvent).toBe(appEvent)
+      expect((error as AppError).appEvent).toBe(AppEventCode.ERR_100_FAILED_TO_WRITE_LOCAL_STORAGE)
       expect((error as AppError).cause).toBe(rejection)
+      expect(getBCSCState().account.registration).toEqual(previous)
       expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('previous one is still in place'), rejection)
     })
 
     it('logs the outcome, never the client ID or the token', async () => {
       await saveDeviceRegistration(registration, logger)
-      mockSetRegistration.mockRejectedValue(nativeError('E_TOKEN_SAVE_FAILED'))
+      failRegistrationWrites(writeError())
       await saveDeviceRegistration(registration, logger).catch(() => undefined)
       await saveDeviceRegistration({ ...registration, issuer: '' }, logger).catch(() => undefined)
 
@@ -205,38 +185,73 @@ describe('device registration', () => {
 
   describe('fillInDeviceRegistration', () => {
     it('saves the client ID and issuer and leaves the stored token as it is', async () => {
+      seedBCSCStore({ account: { registration: { issuer: ISSUER, registrationAccessToken: TOKEN } } })
+
       await fillInDeviceRegistration({ clientId: CLIENT_ID, issuer: ISSUER }, logger)
 
-      // null, not the token: this is not a new registration, and a v3 upgrade may have no token to save
-      expect(mockSetRegistration).toHaveBeenCalledWith(CLIENT_ID, ISSUER, null)
+      expect(getBCSCState().account.registration).toEqual(registration)
     })
 
-    it('maps a native rejection', async () => {
-      mockSetRegistration.mockRejectedValue(nativeError('E_SAVE_ACCOUNT_FAILED'))
+    it('saves no token when there is none stored: a v3 upgrade may have none', async () => {
+      seedBCSCStore({ account: { registration: undefined } })
+
+      await fillInDeviceRegistration({ clientId: CLIENT_ID, issuer: ISSUER }, logger)
+
+      expect(getBCSCState().account.registration).toEqual({ clientId: CLIENT_ID, issuer: ISSUER })
+    })
+
+    it('rejects with ACCOUNT_NOT_FOUND when there is no account', async () => {
+      seedAccount(null)
 
       await expect(fillInDeviceRegistration({ clientId: CLIENT_ID, issuer: ISSUER }, logger)).rejects.toMatchObject({
-        appEvent: AppEventCode.NATIVE_STORAGE_WRITE_FAILED,
+        appEvent: AppEventCode.ACCOUNT_NOT_FOUND,
+      })
+      expect(getBCSCState().account.registration).toBeUndefined()
+    })
+
+    it('maps a failed write', async () => {
+      failRegistrationWrites(writeError())
+
+      await expect(fillInDeviceRegistration({ clientId: CLIENT_ID, issuer: ISSUER }, logger)).rejects.toMatchObject({
+        appEvent: AppEventCode.ERR_100_FAILED_TO_WRITE_LOCAL_STORAGE,
       })
       expect(allLoggedText()).not.toContain(CLIENT_ID)
     })
   })
 
   describe('clearDeviceRegistration', () => {
-    it('clears the client ID and the token in one native call', async () => {
+    it('clears the client ID and the token together, keeping the account', async () => {
       await clearDeviceRegistration(logger)
 
-      expect(mockClearRegistration).toHaveBeenCalledTimes(1)
+      expect(getBCSCState().account.registration).toBeUndefined()
+      expect(getBCSCState().account.profile).toBeDefined()
+      expect(readStoredDeviceRegistration()).toEqual({
+        clientId: undefined,
+        issuer: ISSUER,
+        registrationAccessToken: undefined,
+      })
+      expect(clearRegistration).not.toHaveBeenCalled()
       expect(logger.info).toHaveBeenCalledWith('[DeviceRegistration] Registration cleared')
     })
 
-    it.each([
-      ['E_SAVE_ACCOUNT_FAILED', AppEventCode.NATIVE_STORAGE_WRITE_FAILED],
-      ['E_TOKEN_DELETE_ERROR', AppEventCode.TOKEN_DELETE_FAILED],
-    ])('maps a native %s rejection, so the caller does not go on as if it were cleared', async (code, appEvent) => {
-      mockClearRegistration.mockRejectedValue(nativeError(code))
+    it('maps a failed write, so the caller does not go on as if it were cleared', async () => {
+      failRegistrationWrites(writeError())
 
-      await expect(clearDeviceRegistration(logger)).rejects.toMatchObject({ appEvent })
+      await expect(clearDeviceRegistration(logger)).rejects.toMatchObject({
+        appEvent: AppEventCode.ERR_100_FAILED_TO_WRITE_LOCAL_STORAGE,
+      })
+      expect(getBCSCState().account.registration).toEqual(registration)
       expect(logger.info).not.toHaveBeenCalledWith('[DeviceRegistration] Registration cleared')
+    })
+  })
+
+  describe('keepDeviceRegistrationInMemory', () => {
+    it('makes the registration readable for the rest of the session', () => {
+      const rotated = { ...registration, registrationAccessToken: 'rotated-token' }
+
+      keepDeviceRegistrationInMemory(rotated)
+
+      expect(readDeviceRegistration()).toEqual(rotated)
     })
   })
 })

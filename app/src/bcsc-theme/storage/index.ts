@@ -37,6 +37,7 @@ const nativeReader = createNativeRecordReader(readLegacyRecord)
 const removeLegacyRecords = async (): Promise<void> => {
   await Promise.allSettled([
     deleteToken(TokenType.Refresh),
+    // eslint-disable-next-line no-restricted-syntax -- the native copy, once m0002 has moved it to account/registration
     deleteToken(TokenType.Registration),
     deleteToken(TokenType.Access),
     deleteAuthorizationRequest(),

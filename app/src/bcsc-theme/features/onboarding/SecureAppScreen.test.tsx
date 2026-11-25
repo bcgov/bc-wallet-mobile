@@ -131,7 +131,6 @@ describe('SecureApp', () => {
   describe('choosing device authentication', () => {
     const existingProfile = {
       accountId: 'existing-account-id',
-      clientId: 'existing-client-id',
       issuer: 'https://existing-issuer',
       securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
     }
@@ -165,7 +164,6 @@ describe('SecureApp', () => {
       await waitFor(() =>
         expect(mockHandleSuccessfulAuth).toHaveBeenCalledWith('wallet-key', {
           accountId: expect.any(String),
-          clientId: '',
           issuer: 'https://mock-issuer',
           securityMethod: AccountSecurityMethod.DeviceAuth,
         })
@@ -175,8 +173,9 @@ describe('SecureApp', () => {
         accountId: created.accountId,
         issuer: 'https://mock-issuer',
       })
-      // handleSuccessfulAuth saves it, mocked here
+      // handleSuccessfulAuth saves it, mocked here; the account has no client ID until it is registered
       expect(getBCSCState().account.profile).toBeUndefined()
+      expect(getBCSCState().account.registration).toBeUndefined()
     })
 
     it('keeps an existing account and sets the security method after device security succeeds', async () => {
