@@ -85,7 +85,7 @@ const CardScanningErrorScreen = ({ navigation }: CardScanningErrorScreenProps) =
         position="only"
         onPress={handleUseAnotherId}
         accessibilityLabel={a11yLabel(t('BCSC.CardScanningError.UseAnotherID'))}
-        testID={testIdWithKey(TestIds.verify.cardScanningError.tryAnotherCard)}
+        testID={testIdWithKey(TestIds.verify.cardScanningError.useAnotherId)}
       >
         <View style={styles.listButtonContainer}>
           <ThemedText style={styles.listButtonTitle}>{t('BCSC.CardScanningError.UseAnotherID')}</ThemedText>

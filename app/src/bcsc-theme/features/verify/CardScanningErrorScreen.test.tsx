@@ -40,9 +40,9 @@ describe('CardScanningErrorScreen', () => {
       </BasicAppContext>
     )
 
-  const pressTryAnotherCard = async (screen: ReturnType<typeof renderScreen>) => {
+  const pressUseAnotherId = async (screen: ReturnType<typeof renderScreen>) => {
     await act(async () => {
-      fireEvent.press(screen.getByTestId(testIdWithKey(TestIds.verify.cardScanningError.tryAnotherCard)))
+      fireEvent.press(screen.getByTestId(testIdWithKey(TestIds.verify.cardScanningError.useAnotherId)))
     })
   }
 
@@ -83,11 +83,11 @@ describe('CardScanningErrorScreen', () => {
     expect(mockNavigation.replace).toHaveBeenCalledWith(BCSCScreens.ManualSerial)
   })
 
-  describe('try another card', () => {
+  describe('use another ID', () => {
     it('enters the non-BCSC flow above IdentitySelection', async () => {
       const screen = renderScreen()
 
-      await pressTryAnotherCard(screen)
+      await pressUseAnotherId(screen)
 
       // The stack rewrite itself is covered by pop-to-then-navigate.test.ts.
       expect(mockNavigation.dispatch).toHaveBeenCalledTimes(1)
@@ -103,7 +103,7 @@ describe('CardScanningErrorScreen', () => {
         expect(mockNavigation.dispatch).not.toHaveBeenCalled()
       })
 
-      await pressTryAnotherCard(screen)
+      await pressUseAnotherId(screen)
 
       expect(mockNavigation.dispatch).toHaveBeenCalledTimes(1)
     })
@@ -113,7 +113,7 @@ describe('CardScanningErrorScreen', () => {
         bcscSecure: { ...initialState.bcscSecure, serial: 'K12345678', birthdate: new Date(1982, 0, 4) },
       })
 
-      await pressTryAnotherCard(screen)
+      await pressUseAnotherId(screen)
 
       expect(infoSpy).toHaveBeenCalledWith(
         '[CardScanningError] User chose to try another card, entering the non-BCSC flow'
@@ -126,7 +126,7 @@ describe('CardScanningErrorScreen', () => {
         bcscSecure: { ...initialState.bcscSecure, serial: 'K12345678', birthdate: new Date(1982, 0, 4) },
       })
 
-      await pressTryAnotherCard(screen)
+      await pressUseAnotherId(screen)
 
       expect(mockDeleteScannedCardData).toHaveBeenCalledTimes(1)
     })
@@ -134,7 +134,7 @@ describe('CardScanningErrorScreen', () => {
     it('leaves card data alone when nothing was scanned', async () => {
       const screen = renderScreen()
 
-      await pressTryAnotherCard(screen)
+      await pressUseAnotherId(screen)
 
       expect(mockDeleteScannedCardData).not.toHaveBeenCalled()
     })
