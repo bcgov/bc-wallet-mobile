@@ -155,13 +155,14 @@ async function issueCard(kind: IdentityKind, recipe: Recipe, surname: string, bi
     birthDate,
     groupingLabel: label,
   })
+  // Counted before any check: the card exists on IAS whether or not this session can use it.
+  recordMintedIdentity()
+  const host = new URL(getIasTestApiConfig().origin).host
+  console.log(`[identity] Minted a ${recipe.cardType} card for the ${kind} journey on ${host} (${label})`)
   // The journey types the birthdate it asked for; a card issued under another one would never authorize.
   if (issued.birthDate !== birthDate) {
     throw new Error(`The test API issued the ${kind} card under another birthdate than the one requested`)
   }
-  recordMintedIdentity()
-  const host = new URL(getIasTestApiConfig().origin).host
-  console.log(`[identity] Minted a ${recipe.cardType} card for the ${kind} journey on ${host} (${label})`)
   return issued.csn
 }
 
