@@ -22,6 +22,7 @@ export type VerificationState =
       isVerificationInProgress: false
       needsVerification: false
       isCardInactive: boolean
+      needsFreshStart: false
     }
   | {
       isVerified: false
@@ -30,6 +31,12 @@ export type VerificationState =
       isVerificationInProgress: boolean
       needsVerification: boolean
       isCardInactive: boolean
+      /**
+       * A registration cancelled or expired before setup finished: whatever progress it holds (a submitted
+       * video, a request, evidence) belongs to a registration IAS no longer honours, so Start begins again
+       * from nothing instead of resuming it
+       */
+      needsFreshStart: boolean
     }
 
 /** The single definition of "verified", "device verified by IAS" and "needs verification". */
@@ -44,6 +51,7 @@ export const getVerificationState = (facts: VerificationFacts): VerificationStat
       isVerificationInProgress: false,
       needsVerification: false,
       isCardInactive: cardInactive,
+      needsFreshStart: false,
     }
   }
 
@@ -53,5 +61,6 @@ export const getVerificationState = (facts: VerificationFacts): VerificationStat
     isDeviceVerifiedByIas: hasRefreshToken && !cardInactive,
     needsVerification: !inVerifyFlow,
     isCardInactive: cardInactive,
+    needsFreshStart: cardInactive,
   }
 }

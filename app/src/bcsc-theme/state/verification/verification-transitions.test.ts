@@ -80,6 +80,15 @@ const finish: Step = (state) =>
     { type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [true] }
   )
 
+// A video and review request the registration submitted before it was cancelled or expired
+const submittedReview: Step = (state) =>
+  apply(
+    state,
+    { type: BCDispatchAction.UPDATE_SECURE_USER_SUBMITTED_VERIFICATION_VIDEO, payload: [true] },
+    { type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID, payload: ['req-1'] },
+    { type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: ['pending'] }
+  )
+
 const enterFlow: Step = (state) =>
   apply(
     state,
@@ -202,6 +211,24 @@ const scenarios: { name: string; start: Step; unlockAgain: Step; steps?: [string
     steps: [['cancel', cancel]],
   },
   {
+    name: 'token-only account with a submitted review, then the card is cancelled',
+    start: (state) => submittedReview(unlock(null)(state)),
+    unlockAgain: unlock(null),
+    steps: [
+      ['cancel', cancel],
+      ['enter the flow', enterFlow],
+    ],
+  },
+  {
+    name: 'token-only account with a submitted review, then the card expires',
+    start: (state) => submittedReview(unlock(null)(state)),
+    unlockAgain: unlock(null),
+    steps: [
+      ['expire', expire],
+      ['enter the flow', enterFlow],
+    ],
+  },
+  {
     name: 'finished account, expires, then renews',
     start: unlock(credential(BCSCEvent.Authorization)),
     unlockAgain: unlock(credential(BCSCEvent.Authorization)),
@@ -303,6 +330,20 @@ const expected: Record<string, Observation[]> = {
   'token-only account, then the card is cancelled': [
     row(false, true, HomeNoticeType.BCSCVerified, null),
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
+    row(false, false, HomeNoticeType.BCSCStartVerification, null),
+  ],
+  // The submitted review belongs to a registration IAS no longer honours: Home offers Start, and the
+  // verify stack opens on the setup question instead of the pending review
+  'token-only account with a submitted review, then the card is cancelled': [
+    row(false, true, HomeNoticeType.BCSCVerified, null),
+    row(false, false, HomeNoticeType.BCSCStartVerification, null),
+    row(true, false, HomeNoticeType.BCSCStartVerification, BCSCScreens.AccountSetup),
+    row(false, false, HomeNoticeType.BCSCStartVerification, null),
+  ],
+  'token-only account with a submitted review, then the card expires': [
+    row(false, true, HomeNoticeType.BCSCVerified, null),
+    row(false, false, HomeNoticeType.BCSCStartVerification, null),
+    row(true, false, HomeNoticeType.BCSCStartVerification, BCSCScreens.AccountSetup),
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
   ],
   'finished account, expires, then renews': [

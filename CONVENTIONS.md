@@ -406,6 +406,9 @@ flag that something has to remember to set and clear. The three live together in
   (`bcscEvent`) is Expire or Cancel. Details saved before the event was kept fall back to the "Expired by System" reason.
   Card expiry and the verification rule both take it from `selectVerificationState`. A cancelled card is inactive and
   still goes to the device-invalidated screen: the account-change check sends it there.
+- `needsFreshStart` (from `getVerificationState`) marks a registration cancelled or expired before setup finished. Home
+  shows Start verification for it, the verify stack opens on the setup question, and pressing Start runs the same restart
+  a renewal does (`useRestartVerificationAction`), so a stale review request or video is never resumed.
 
 The `unknown` phase (verified, but no usable date and no server signal) shows nothing; a notice is never built
 from data that did not load. Expiry is not refreshed at midnight or on foreground; it re-derives on the next

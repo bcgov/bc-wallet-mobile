@@ -1,4 +1,6 @@
-import { BCLocalStorageKeys, initialBCSCState } from '@/store'
+import { UNEXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
+import { BCSCEvent } from '@/bcsc-theme/utils/id-token'
+import { BCLocalStorageKeys, initialBCSCSecureState, initialBCSCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import { PersistentStorage, testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -9,6 +11,11 @@ import StartVerificationNotification from './StartVerificationNotification'
 const mockUseServerStatus = jest.fn()
 jest.mock('@/bcsc-theme/contexts/ServerStatusContext', () => ({
   useServerStatus: () => mockUseServerStatus(),
+}))
+
+const mockRestartVerification = jest.fn()
+jest.mock('@/bcsc-theme/hooks/useRestartVerification', () => ({
+  useRestartVerificationAction: () => mockRestartVerification,
 }))
 
 describe('StartVerificationNotification', () => {
@@ -40,4 +47,43 @@ describe('StartVerificationNotification', () => {
     )
     expect(bcscWrites()).not.toContainEqual(expect.objectContaining({ verificationSkipped: false }))
   })
+
+  it('keeps the plain start for a fresh install', async () => {
+    const tree = render(
+      <BasicAppContext>
+        <StartVerificationNotification />
+      </BasicAppContext>
+    )
+
+    await act(async () => {
+      fireEvent.press(tree.getByTestId(testIdWithKey(TestIds.main.notification.view)))
+    })
+
+    expect(mockRestartVerification).not.toHaveBeenCalled()
+    expect(bcscWrites()).toContainEqual(expect.objectContaining({ verificationStarted: true }))
+  })
+
+  it.each([BCSCEvent.Cancel, BCSCEvent.Expire])(
+    'restarts from scratch for a registration that never finished setup and was %s',
+    async (event) => {
+      const tree = render(
+        <BasicAppContext
+          initialStateOverride={{
+            bcsc: { ...initialBCSCState, credentialMetadata: { bcscEvent: event } as never },
+            bcscSecure: { ...initialBCSCSecureState, refreshToken: UNEXPIRED_JWT, verificationRequestId: 'req-1' },
+          }}
+        >
+          <StartVerificationNotification />
+        </BasicAppContext>
+      )
+
+      await act(async () => {
+        fireEvent.press(tree.getByTestId(testIdWithKey(TestIds.main.notification.view)))
+      })
+
+      // The restart owns re-entering the flow, so the plain start is not also run
+      expect(mockRestartVerification).toHaveBeenCalledTimes(1)
+      expect(bcscWrites()).not.toContainEqual(expect.objectContaining({ verificationStarted: true }))
+    }
+  )
 })

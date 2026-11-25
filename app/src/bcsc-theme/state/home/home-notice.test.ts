@@ -7,6 +7,7 @@ const EXPIRES_AT = new Date('2026-10-22T00:00:00.000Z')
 const facts = (overrides: Partial<HomeNoticeFacts> = {}): HomeNoticeFacts => ({
   isVerified: true,
   cardInactive: false,
+  needsFreshStart: false,
   deviceVerifiedByIas: false,
   refreshTokenExpired: false,
   requestStatus: undefined,
@@ -41,6 +42,31 @@ describe('getHomeNotice', () => {
       'a reviewed request (VERIFIED status)',
       unverified({ requestStatus: VerificationRequestStatus.VERIFIED }),
       HomeNoticeType.BCSCVerified,
+    ],
+    [
+      'an inactive registration that never finished setup, with a pending review',
+      unverified({
+        cardInactive: true,
+        needsFreshStart: true,
+        requestStatus: VerificationRequestStatus.PENDING,
+        hasVerificationRequest: true,
+      }),
+      HomeNoticeType.BCSCStartVerification,
+    ],
+    [
+      'an inactive registration that never finished setup, with a cancelled review',
+      unverified({
+        cardInactive: true,
+        needsFreshStart: true,
+        requestStatus: VerificationRequestStatus.CANCELLED,
+        hasVerificationRequest: true,
+      }),
+      HomeNoticeType.BCSCStartVerification,
+    ],
+    [
+      'an inactive registration that never finished setup, with the ID step done',
+      unverified({ cardInactive: true, needsFreshStart: true, isIdStepCompleted: () => true }),
+      HomeNoticeType.BCSCStartVerification,
     ],
     ['a device IAS has verified', unverified({ deviceVerifiedByIas: true }), HomeNoticeType.BCSCVerified],
     [
