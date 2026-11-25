@@ -1016,7 +1016,6 @@ export const TestIds = {
     toggleWalletNaming: 'ToggleWalletNamingSwitch',
     togglePreventAutoLock: 'TogglePreventAutoLockSwitch',
     toggleEnableAppToAppPersonFlow: 'ToggleEnableAppToAppPersonFlow',
-    toggleEnableAttestation: 'ToggleEnableAttestation',
     toggleRemoteLogging: 'ToggleRemoteLoggingSwitch',
     toggleEnableProxy: 'ToggleEnableProxy',
     toggleTheme: 'ToggleTheme',

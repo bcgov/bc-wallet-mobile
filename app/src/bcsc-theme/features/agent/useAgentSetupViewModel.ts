@@ -1,7 +1,6 @@
 import { ledgerResolver } from '@/configs/ledgers/indy/ledgerResolver'
 import { WALLET_ID } from '@/constants'
 import { AppError, ErrorRegistry } from '@/errors'
-import { AttestationMonitor as BCAttestationMonitor } from '@/services/attestation'
 import { BCState } from '@/store'
 import { activate, deactivate } from '@/utils/PushNotificationsHelper'
 import { createLinkSecretIfRequired, TOKENS, useServices, useStore } from '@bifold/core'
@@ -69,15 +68,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
   const mediatorUrl = store.preferences.selectedMediator
   const walletLabel = store.preferences.walletName || 'BC Wallet'
   const enableProxy = store.developer.enableProxy
-  const enableAttestation = store.developer.enableAttestation
   const usePushNotifications = store.preferences.usePushNotifications
-
-  useEffect(() => {
-    const monitor = attestationMonitor as BCAttestationMonitor | undefined
-    if (monitor) {
-      monitor.enabled = enableAttestation
-    }
-  }, [attestationMonitor, enableAttestation])
 
   // Cancel the background cache warm-up and wait for its in-flight promise to drain
   const stopWarmCache = useCallback(async () => {

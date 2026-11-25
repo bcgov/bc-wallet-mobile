@@ -41,7 +41,6 @@ type AgentSubscription = ReturnType<ReturnType<Agent['events']['observable']>['s
 
 export type AttestationMonitorOptions = {
   shouldHandleProofRequestAutomatically?: boolean
-  enabled?: boolean
 }
 
 type AttestationEventTypeKeys = keyof typeof AttestationEventTypes
@@ -173,7 +172,6 @@ export class AttestationMonitor implements AttestationMonitorI {
   private log?: AbstractBifoldLogger
   private _attestationWorkflowInProgress = false
   private _shouldHandleProofRequestAutomatically = false
-  private _enabled = true
   private _proofRequest?: DidCommProofExchangeRecord
   // private _currentWorkflowState?: typeof AttestationEventTypes
 
@@ -182,21 +180,12 @@ export class AttestationMonitor implements AttestationMonitorI {
   public constructor(logger: AbstractBifoldLogger, options: AttestationMonitorOptions) {
     this.log = logger
     this.options = options
-    const { shouldHandleProofRequestAutomatically, enabled } = options
+    const { shouldHandleProofRequestAutomatically } = options
     this._shouldHandleProofRequestAutomatically = shouldHandleProofRequestAutomatically ?? false
-    this._enabled = enabled ?? true
   }
 
   public get attestationWorkflowInProgress() {
     return this._attestationWorkflowInProgress
-  }
-
-  public set enabled(value: boolean) {
-    this._enabled = value
-  }
-
-  public get enabled() {
-    return this._enabled
   }
 
   public set shouldHandleProofRequestAutomatically(value: boolean) {
@@ -252,11 +241,6 @@ export class AttestationMonitor implements AttestationMonitorI {
     proof: DidCommProofExchangeRecord,
     timeoutInMs: number = attestationCompletionTimeoutInMs
   ): Promise<boolean> => {
-    if (!this._enabled) {
-      this.log?.info('Attestation is disabled, not attempting to obtain a credential')
-      return false
-    }
-
     this._proofRequest = proof
     this.startWorkflow()
 
@@ -463,10 +447,6 @@ export class AttestationMonitor implements AttestationMonitorI {
         'The agent cannot be undefined.',
         AttestationErrorCodes.FailedToFetchNonceForAttestation
       )
-    }
-
-    if (!this._enabled) {
-      return
     }
 
     const proof = event.payload.proofRecord
