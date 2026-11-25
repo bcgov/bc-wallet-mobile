@@ -170,6 +170,7 @@ export enum BCSCScreens {
   AuthDeveloper = `${BCSCStacks.Auth} Developer`,
   ConnectionLoading = 'BCSCConnectionLoading',
   QRCore = 'QRCore',
+  RootLoading = 'Loading',
 }
 
 export enum BCSCQRCoreScreens {
@@ -267,6 +268,7 @@ export type BCSCVerifyStackParams = {
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
   [BCSCModals.VerificationSessionExpired]: undefined
+  [BCSCModals.TermsOfUseUpdated]: undefined
   [BCSCModals.ServiceOutage]: ServiceOutageParams
   [BCSCScreens.TransferAccountInstructions]: undefined
   [BCSCScreens.TransferAccountQRScan]: undefined
@@ -359,4 +361,16 @@ export type BCSCAuthStackParams = {
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
   [BCSCModals.ServiceOutage]: ServiceOutageParams
+}
+
+/**
+ * Routes of the root navigator: the startup loading screen and one nested stack per phase of the app.
+ * RootStack registers exactly one of them at a time, chosen by the store.
+ */
+export type BCSCRootStackParams = {
+  [BCSCScreens.RootLoading]: undefined
+  [BCSCStacks.Onboarding]: NavigatorScreenParams<BCSCOnboardingStackParams>
+  [BCSCStacks.Auth]: NavigatorScreenParams<BCSCAuthStackParams>
+  [BCSCStacks.Verify]: NavigatorScreenParams<BCSCVerifyStackParams>
+  [BCSCStacks.Main]: NavigatorScreenParams<BCSCMainStackParams>
 }

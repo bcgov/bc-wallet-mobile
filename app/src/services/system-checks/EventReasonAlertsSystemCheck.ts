@@ -13,7 +13,7 @@ import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './
  *  - displays a modal instructing user to reset their app
  *
  * Expire:
- *  - marks the credential deactivated; no alert (see IASP-12489)
+ *  - saved with the account details, which is what marks the card inactive; no alert (see IASP-12489)
  *
  * Renew:
  *  - emits an alert informing the user their information has been updated
@@ -74,10 +74,6 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
         break
       case BCSCEvent.Expire:
         // Login, pairing, and Services, will only be usable in emergency mode, but don't force reverification
-        this.utils.dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_CREDENTIAL_DEACTIVATED,
-          payload: [true],
-        })
         break
       case BCSCEvent.Renewal:
         this.alertBuilder(AppEventCode.CARD_STATUS_UPDATED)

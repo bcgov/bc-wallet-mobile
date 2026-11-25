@@ -3,8 +3,8 @@ import moment from 'moment'
 
 export interface ExpiryFacts {
   isVerified: boolean
-  /** ID token `bcsc_reason` is 'Expired by System' */
-  expiredByServer: boolean
+  /** The card is cancelled or expired, from `isCardInactive` */
+  cardInactive: boolean
   /** The stored refresh token has expired (#4654) */
   credentialExpired: boolean
   /** Undefined until the account loads */
@@ -36,7 +36,7 @@ const daysUntil = (date: Date, now: Date): number =>
  * even when the account never loads; `unknown` means verified with no usable date and no signal.
  */
 export const getAccountPhase = (facts: ExpiryFacts, now: Date): AccountPhase => {
-  const { isVerified, expiredByServer, credentialExpired, cardExpiresAt } = facts
+  const { isVerified, cardInactive, credentialExpired, cardExpiresAt } = facts
 
   if (!isVerified) {
     return { phase: AccountPhaseType.None }
@@ -44,7 +44,7 @@ export const getAccountPhase = (facts: ExpiryFacts, now: Date): AccountPhase => 
 
   const hasDate = cardExpiresAt !== undefined && !Number.isNaN(cardExpiresAt.getTime())
 
-  if (expiredByServer || credentialExpired) {
+  if (cardInactive || credentialExpired) {
     return hasDate ? { phase: AccountPhaseType.Expired, expiresAt: cardExpiresAt } : { phase: AccountPhaseType.Expired }
   }
 

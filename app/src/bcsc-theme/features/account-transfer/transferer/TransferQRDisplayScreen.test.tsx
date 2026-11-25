@@ -100,6 +100,22 @@ describe('TransferQRDisplayScreen', () => {
     })
   })
 
+  it('shows the same alert, signing nothing, when the account has no registration', async () => {
+    // The transfer token is signed as the device's client, and this account has no client ID
+    jest.mocked(getAccount).mockResolvedValueOnce({ ...mockAccount, clientID: undefined })
+
+    render(
+      <BasicAppContext>
+        <TransferQRDisplayScreen />
+      </BasicAppContext>
+    )
+
+    await waitFor(() => {
+      expect(mockAccountNotFoundAlert).toHaveBeenCalled()
+    })
+    expect(createDeviceSignedJWT).not.toHaveBeenCalled()
+  })
+
   describe('createToken', () => {
     it('creates a signed JWT and displays a QR code when account is found', async () => {
       jest.mocked(getAccount).mockResolvedValueOnce(mockAccount)

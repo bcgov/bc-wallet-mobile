@@ -994,25 +994,27 @@ class BcscCoreModule internal constructor(
         }
     }
 
+    /**
+     * Creates the account, or updates its issuer, security method and nickname.
+     *
+     * Never changes the client ID: a new account has none and an existing account keeps the one it has.
+     * Only [setRegistration] and [clearRegistration] change it.
+     */
     @ReactMethod
     override fun setAccount(
         account: ReadableMap,
         promise: Promise,
     ) {
         try {
-            if (!account.hasKey("issuer") || !account.hasKey("clientID") || !account.hasKey("securityMethod")) {
-                promise.reject("E_INVALID_PARAMETERS", "Account must have issuer, clientID, and securityMethod fields")
+            if (!account.hasKey("issuer") || !account.hasKey("securityMethod")) {
+                promise.reject("E_INVALID_PARAMETERS", "Account must have issuer and securityMethod fields")
                 return
             }
 
             val issuer = account.getString("issuer")
-            val clientID = account.getString("clientID")
             val securityMethod = account.getString("securityMethod")
 
-            // clientID may be an empty placeholder for accounts created before registration
-            // completes (see TEMPORARY_ACCOUNT_CLIENT_ID); only issuer and securityMethod are
-            // required to be non-empty. Matches iOS, which never rejects on an empty clientID.
-            if (issuer.isNullOrEmpty() || clientID == null || securityMethod.isNullOrEmpty()) {
+            if (issuer.isNullOrEmpty() || securityMethod.isNullOrEmpty()) {
                 promise.reject("E_INVALID_PARAMETERS", "Account issuer and securityMethod cannot be empty")
                 return
             }
@@ -1026,16 +1028,20 @@ class BcscCoreModule internal constructor(
 
                 val accountId: String
                 val createdAt: Long
+                val clientId: String
 
                 if (existingAccount != null) {
-                    // Update existing account - preserve ID and creation timestamp
+                    // Update existing account - preserve ID, creation timestamp and client ID
                     Log.d(NAME, "setAccount - Updating existing account with id: ${existingAccount.uuid}")
                     accountId = existingAccount.uuid
                     createdAt = existingAccount.createdAt
+                    // Gson leaves a client ID that is missing from the file as null
+                    clientId = if (hasClientId(existingAccount)) existingAccount.clientId else ""
                 } else {
-                    // Create new account
+                    // Create new account. It has no registration yet, so no client ID.
                     accountId = UUID.randomUUID().toString()
                     createdAt = System.currentTimeMillis()
+                    clientId = ""
                     Log.d(NAME, "setAccount - Creating new account with generated id: $accountId")
                 }
 
@@ -1060,7 +1066,7 @@ class BcscCoreModule internal constructor(
                         uuid = accountId,
                         nickName = nickname,
                         issuer = issuer,
-                        clientId = clientID,
+                        clientId = clientId,
                         createdAt = createdAt,
                         accountSecurityType = accountSecurityType,
                     )
@@ -1095,7 +1101,7 @@ class BcscCoreModule internal constructor(
 
     /**
      * Saves the device registration in one call: the client ID and issuer on the account record, and the
-     * registration access token in the tokens file.
+     * registration access token in the tokens file. Nothing else writes the client ID.
      *
      * The token is written first. It names its own client ID (`aud`), so a save that stops before the
      * account is written can be completed from the token, and the newest token is never the one lost. If
@@ -1368,7 +1374,11 @@ class BcscCoreModule internal constructor(
 
         account.putString("id", nativeAccount.uuid)
         account.putString("issuer", nativeAccount.issuer)
-        account.putString("clientID", nativeAccount.clientId)
+        // An account with no registration has no client ID. It is stored as an empty string and left
+        // out here, so JS never sees a blank one.
+        if (hasClientId(nativeAccount)) {
+            account.putString("clientID", nativeAccount.clientId)
+        }
 
         // Map AccountSecurityType to securityMethod
         val securityMethod =

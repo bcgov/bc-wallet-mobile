@@ -116,7 +116,7 @@ describe('useAccountTransferQRCodeStrategy', () => {
       .mockReturnValue({ ensureRegistered: mockEnsureRegistered, cycleRegistration: jest.fn() } as any)
 
     const bifoldMock = jest.mocked(Bifold)
-    bifoldMock.useStore.mockReturnValue([{ bcscSecure: {} } as any, jest.fn()])
+    bifoldMock.useStore.mockReturnValue([{ bcsc: {}, bcscSecure: {} } as any, jest.fn()])
     bifoldMock.useServices.mockReturnValue([mockLogger] as any)
 
     jest.mocked(getAccount).mockResolvedValue(mockAccount as any)
@@ -147,7 +147,9 @@ describe('useAccountTransferQRCodeStrategy', () => {
     })
 
     it('does not register again when a device code already exists', async () => {
-      jest.mocked(Bifold).useStore.mockReturnValue([{ bcscSecure: { deviceCode: 'existing-code' } } as any, jest.fn()])
+      jest
+        .mocked(Bifold)
+        .useStore.mockReturnValue([{ bcsc: {}, bcscSecure: { deviceCode: 'existing-code' } } as any, jest.fn()])
 
       await setup().handle(validQrValue)
 
@@ -232,7 +234,7 @@ describe('useAccountTransferQRCodeStrategy', () => {
 
   describe('already verified', () => {
     beforeEach(() => {
-      jest.mocked(Bifold).useStore.mockReturnValue([{ bcscSecure: { verified: true } } as any, jest.fn()])
+      jest.mocked(Bifold).useStore.mockReturnValue([{ bcsc: {}, bcscSecure: { verified: true } } as any, jest.fn()])
     })
 
     it('calls onAlreadyVerified and leaves the wallet untouched', async () => {
@@ -331,6 +333,16 @@ describe('useAccountTransferQRCodeStrategy', () => {
       expect(onSuccess).not.toHaveBeenCalled()
     })
 
+    it('throws, signing nothing, when the account has no registration', async () => {
+      // The transfer is requested as this device's client, and this account has no client ID
+      jest.mocked(getAccount).mockResolvedValue({ ...mockAccount, clientID: undefined } as any)
+
+      await expect(setup().handle(validQrValue)).rejects.toThrow('Local account is not registered')
+
+      expect(createDeviceSignedJWT).not.toHaveBeenCalled()
+      expect(onSuccess).not.toHaveBeenCalled()
+    })
+
     it('throws when attestation returns no response', async () => {
       mockVerifyAttestation.mockResolvedValue(null)
 
@@ -377,7 +389,9 @@ describe('useAccountTransferQRCodeStrategy', () => {
     })
 
     it('reports that the device was not registered during the scan when it already had a device code', async () => {
-      jest.mocked(Bifold).useStore.mockReturnValue([{ bcscSecure: { deviceCode: 'existing-code' } } as any, jest.fn()])
+      jest
+        .mocked(Bifold)
+        .useStore.mockReturnValue([{ bcsc: {}, bcscSecure: { deviceCode: 'existing-code' } } as any, jest.fn()])
       mockVerifyAttestation.mockResolvedValue(null)
       const strategy = setup()
       const thrown = await Promise.resolve(strategy.handle(validQrValue)).catch((error: unknown) => error)

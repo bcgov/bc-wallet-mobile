@@ -76,6 +76,7 @@ jest.mock('react-native-bcsc-core', () => ({
   setToken: jest.fn(),
   // Delegate to the central manual mock so the predicates can't drift from the real implementation.
   isBcscNativeError: jest.requireActual('../../../__mocks__/react-native-bcsc-core').isBcscNativeError,
+  isAccountRegistered: (account?: { clientID?: string } | null) => Boolean(account?.clientID),
   getAccount: jest.fn(),
   getAccountFlags: jest.fn(),
   getAuthorizationRequest: jest.fn(),
@@ -725,8 +726,8 @@ describe('useSecureActions', () => {
     it.each([
       ['no record', null, { verified: false, credentialDeactivated: false }],
       ['an Authorization record', { bcscEvent: 'Authorization' }, { verified: true, credentialDeactivated: false }],
-      ['a Cancel record', { bcscEvent: 'Cancel' }, { verified: false, credentialDeactivated: true }],
-      ['an Expire record', { bcscEvent: 'Expire' }, { verified: false, credentialDeactivated: true }],
+      ['a Cancel record', { bcscEvent: 'Cancel' }, { verified: true, credentialDeactivated: true }],
+      ['an Expire record', { bcscEvent: 'Expire' }, { verified: true, credentialDeactivated: true }],
     ])('hydrates the verification facts from %s', async (_label, record, facts) => {
       jest.mocked(getAccount).mockResolvedValue(baseAccount as any)
       jest.mocked(getAuthorizationRequest).mockResolvedValue(null as any)
@@ -740,6 +741,23 @@ describe('useSecureActions', () => {
       expect(captureHydrateField('verified')).toBe(facts.verified)
       expect(captureHydrateField('credentialDeactivated')).toBe(facts.credentialDeactivated)
       expect(captureHydrateField('inVerifyFlow')).toBe(false)
+    })
+
+    it.each([
+      ['a Cancel record', { bcscEvent: 'Cancel' }],
+      ['an Expire record', { bcscEvent: 'Expire' }],
+    ])('flags sessionRecoveryRequired for %s with no refresh token', async (_label, record) => {
+      jest.mocked(getAccount).mockResolvedValue(baseAccount as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue(null as any)
+      jest.mocked(getCredential).mockResolvedValue(record as any)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(captureHydrateField('verified')).toBe(true)
+      expect(captureSessionRecoveryRequired()).toBe(true)
     })
 
     it('flags sessionRecoveryRequired when a verified user has a registration token but no refresh token', async () => {
@@ -1593,6 +1611,26 @@ describe('useSecureActions', () => {
       expect(captureHydrateField('sessionRecoveryRequired')).toBe(false)
     })
 
+    // The restore ignores the saved account details and never writes them: an expiry stays with them
+    it('restores the record without touching a saved Expired by System reason', async () => {
+      jest.mocked(Bifold.useStore).mockReturnValue([
+        {
+          bcsc: { credentialMetadata: { bcscReason: 'Expired by System' } },
+          bcscSecure: { isHydrated: true, additionalEvidenceData: [] },
+        } as any,
+        mockDispatch,
+      ])
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(setCredential).toHaveBeenCalled()
+      expect(mockDispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA })
+      )
+    })
+
     it('leaves the device unverified when the refresh fails, since IAS has not confirmed it', async () => {
       mockGetTokensForRefreshToken.mockRejectedValue(new Error('network'))
       jest.mocked(performKeyRecovery).mockResolvedValue({ status: 'failed' } as any)
@@ -1859,6 +1897,23 @@ describe('useSecureActions', () => {
       })
     })
 
+    it('clears the saved account details after the record is written, together with the verified flag', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.updateVerified(true)
+      })
+
+      const clear = {
+        type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA,
+        payload: [undefined],
+      }
+      expect(mockDispatch).toHaveBeenCalledWith(clear)
+      expect(jest.mocked(setCredential).mock.invocationCallOrder[0]).toBeLessThan(
+        mockDispatch.mock.invocationCallOrder[mockDispatch.mock.calls.findIndex(([a]) => a.type === clear.type)]
+      )
+    })
+
     it('cancels pending verification reminders when marking verified', async () => {
       const { result } = renderHook(() => useSecureActions())
 
@@ -1882,6 +1937,9 @@ describe('useSecureActions', () => {
       expect(mockDispatch).not.toHaveBeenCalledWith(
         expect.objectContaining({ type: BCDispatchAction.SET_VERIFICATION_STARTED })
       )
+      expect(mockDispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA })
+      )
     })
 
     it('throws and leaves the store alone when there is no account to attach the record to', async () => {
@@ -1889,6 +1947,18 @@ describe('useSecureActions', () => {
       const { result } = renderHook(() => useSecureActions())
 
       await expect(result.current.updateVerified(true)).rejects.toThrow('no account found')
+
+      expect(setCredential).not.toHaveBeenCalled()
+      expect(mockDispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.UPDATE_SECURE_VERIFIED })
+      )
+    })
+
+    it('throws and leaves the store alone when the account has no registration to verify', async () => {
+      jest.mocked(getAccount).mockResolvedValue({ id: 'account-1', issuer: 'https://idsit.gov.bc.ca' } as any)
+      const { result } = renderHook(() => useSecureActions())
+
+      await expect(result.current.updateVerified(true)).rejects.toThrow('the account has no registration')
 
       expect(setCredential).not.toHaveBeenCalled()
       expect(mockDispatch).not.toHaveBeenCalledWith(
@@ -1906,6 +1976,9 @@ describe('useSecureActions', () => {
       expect(deleteCredential).toHaveBeenCalled()
       expect(setCredential).not.toHaveBeenCalled()
       expect(cancelVerificationReminders).not.toHaveBeenCalled()
+      expect(mockDispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA })
+      )
       expect(mockDispatch).toHaveBeenCalledWith({
         type: BCDispatchAction.UPDATE_SECURE_VERIFIED,
         payload: [false],

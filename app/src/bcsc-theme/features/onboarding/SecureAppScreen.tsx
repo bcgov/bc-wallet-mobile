@@ -3,7 +3,6 @@ import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
-import { TEMPORARY_ACCOUNT_CLIENT_ID } from '@/constants'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
@@ -31,12 +30,11 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.Rea
 
   const handleDeviceAuthPress = useCallback(async () => {
     try {
-      // IMPORTANT: Account must exist before setting up device security. An existing account is kept as is,
-      // because overwriting it with the placeholder would wipe its client ID.
+      // IMPORTANT: Account must exist before setting up device security. A new account has no client ID
+      // until the device registers; an existing account is kept as is.
       const account = await getAccount()
       if (!account) {
         await setAccount({
-          clientID: TEMPORARY_ACCOUNT_CLIENT_ID,
           issuer: client.endpoints.issuer,
           securityMethod: AccountSecurityMethod.DeviceAuth,
         })

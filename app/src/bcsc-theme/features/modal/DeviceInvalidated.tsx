@@ -3,9 +3,11 @@ import { BCSCMainStackParams, BCSCModals } from '@/bcsc-theme/types/navigators'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { BCSCState, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
+import { useFocusEffect } from '@react-navigation/native'
 import { StackScreenProps } from '@react-navigation/stack'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
+import { BackHandler } from 'react-native'
 import { SystemModal } from './components/SystemModal'
 
 type DeviceInvalidatedProps = StackScreenProps<BCSCMainStackParams, BCSCModals.DeviceInvalidated>
@@ -16,6 +18,14 @@ export const DeviceInvalidated = ({ route }: DeviceInvalidatedProps): React.Reac
   const invalidationReason = route.params?.invalidationReason
   const factoryReset = useFactoryReset()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+
+  // The only way out is removing the account: back would return to Home with a cancelled card
+  useFocusEffect(
+    useCallback(() => {
+      const subscription = BackHandler.addEventListener('hardwareBackPress', () => true)
+      return subscription.remove
+    }, [])
+  )
 
   const handleFactoryReset = useCallback(async () => {
     const factoryResetParams: Partial<Record<BCSCReason, Partial<BCSCState>>> = {

@@ -155,9 +155,10 @@ final class AccountArchivingTests: XCTestCase {
     XCTAssertEqual(account?.clientID, "")
   }
 
-  /// TEMPORARY_ACCOUNT_CLIENT_ID is "", written by onboarding before registration completes. That
-  /// is an explicit value, not a gap, and must be distinguishable from v3's absent client_id so the
-  /// repair in StorageService never re-registers a deliberately blanked account.
+  /// An account with no registration is stored with a client ID of "": a new account before it
+  /// registers, or one whose registration was cleared (`RegistrationStore.clear`). That is an
+  /// explicit value, not a gap, and must be distinguishable from v3's absent client_id so the
+  /// repair in StorageService never takes a client ID back for a deliberately blanked account.
   func testExplicitEmptyClientIDIsNotTreatedAsMissing() throws {
     let account = try decodeAsV4Account(archiveAsV3(LegacyV3Account(clientID: "")))
 
@@ -547,7 +548,7 @@ final class AccountClientIDRepairTests: XCTestCase {
   }
 
   func testDeliberatelyBlankedClientIDIsNotRepaired() throws {
-    // TEMPORARY_ACCOUNT_CLIENT_ID: onboarding writes an explicit "" before registration completes.
+    // An account with no registration: an explicit "" is stored until the device registers.
     try writeAccountMetadata(clientID: "")
     try writeClientRegistration(clientID: "stale-registration-client-id")
 

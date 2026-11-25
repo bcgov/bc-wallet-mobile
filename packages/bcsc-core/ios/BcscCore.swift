@@ -868,6 +868,10 @@ class BcscCore: NSObject {
     resolve(issuer)
   }
 
+  /// Creates the account, or updates its issuer, security method and nickname.
+  ///
+  /// Never changes the client ID: a new account has none and an existing account keeps the one it has.
+  /// Only `setRegistration` and `clearRegistration` change it.
   func setAccount(
     _ account: NSDictionary, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -878,14 +882,14 @@ class BcscCore: NSObject {
     // Extract required fields from the dictionary
     // `as? String ?? ""` rather than `as!` — a force-cast inside the guard's own condition traps
     // the process when JS omits securityMethod, instead of rejecting as this guard intends.
-    guard let issuer = account["issuer"] as? String, let clientID = account["clientID"] as? String,
+    guard let issuer = account["issuer"] as? String,
           let securityMethod = AccountSecurityMethod(
             rawValue: account["securityMethod"] as? String ?? ""
           )
     else {
       reject(
         "E_INVALID_ACCOUNT_DATA",
-        "Account must have an 'issuer', 'clientID' and 'securityMethod' fields", nil
+        "Account must have 'issuer' and 'securityMethod' fields", nil
       )
       return
     }
@@ -900,13 +904,12 @@ class BcscCore: NSObject {
     let accountID: String
 
     if let existing = existingAccount {
-      // Update existing account - preserve the ID and update fields
+      // Update existing account - preserve the ID and the client ID, update the other fields
       logger.log("setAccount - Updating existing account with ID: \(existing.id)")
       accountID = existing.id
       accountToSave = existing
 
       // Update fields
-      accountToSave.clientID = clientID
       accountToSave.issuer = issuer
       accountToSave.securityMethod = securityMethod
       if let displayName = account["displayName"] as? String {
@@ -920,11 +923,11 @@ class BcscCore: NSObject {
         accountToSave.nickname = nickname
       }
     } else {
-      // Create new account with new ID
+      // Create new account with new ID. It has no registration yet, so no client ID.
       logger.log("setAccount - Creating new account")
       accountID = UUID().uuidString
       accountToSave = Account(
-        id: accountID, clientID: clientID, issuer: issuer, securityMethod: securityMethod
+        id: accountID, clientID: "", issuer: issuer, securityMethod: securityMethod
       )
 
       if let displayName = account["displayName"] as? String {
@@ -1031,15 +1034,19 @@ class BcscCore: NSObject {
     )
 
     if let acc = account {
-      let result: [String: Any?] = [
+      var result: [String: Any?] = [
         "id": acc.id,
         "issuer": acc.issuer,
-        "clientID": acc.clientID,
         "securityMethod": acc.securityMethod.rawValue,
         "displayName": acc.displayName,
         "didPostNicknameToServer": acc.didPostNicknameToServer,
         "nickname": acc.nickname,
       ]
+      // An account with no registration has no client ID. It is stored as an empty string (see
+      // RegistrationStore.clear) and left out here, so JS never sees a blank one.
+      if !acc.clientID.isEmpty {
+        result["clientID"] = acc.clientID
+      }
       resolve(result)
     } else {
       resolve(nil)

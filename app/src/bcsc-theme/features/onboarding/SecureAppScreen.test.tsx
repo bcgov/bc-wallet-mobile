@@ -162,15 +162,15 @@ describe('SecureApp', () => {
       return tree
     }
 
-    it('creates the placeholder account when none exists, before setting up device security', async () => {
+    it('creates the account when none exists, with no client ID, before setting up device security', async () => {
       mockGetAccount.mockResolvedValue(null)
       mockSetupDeviceSecurity.mockResolvedValue({ success: true, walletKey: 'wallet-key' } as never)
 
       await pressDeviceAuth()
 
       await waitFor(() => expect(mockHandleSuccessfulAuth).toHaveBeenCalledWith('wallet-key'))
+      // Exactly these fields: the account has no client ID until the device registers, not a blank one
       expect(mockSetAccount).toHaveBeenCalledWith({
-        clientID: '',
         issuer: 'https://mock-issuer',
         securityMethod: AccountSecurityMethod.DeviceAuth,
       })

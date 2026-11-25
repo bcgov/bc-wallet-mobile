@@ -1,8 +1,5 @@
-import {
-  PinVerification,
-  PinVerificationType,
-  verifyPinWithLockout,
-} from '@/bcsc-theme/features/auth/services/pin-lockout-service'
+import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { PinVerificationType, verifyPinWithLockout } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
 import { testIdWithKey } from '@bifold/core'
@@ -17,12 +14,6 @@ jest.mock('@/bcsc-theme/features/auth/services/pin-lockout-service', () => ({
 }))
 
 const mockHandleSuccessfulAuth = jest.fn()
-const mockStopLoading = jest.fn()
-const mockStartLoading = jest.fn(() => mockStopLoading)
-
-jest.mock('@/bcsc-theme/contexts/BCSCLoadingContext', () => ({
-  useLoadingScreen: () => ({ startLoading: mockStartLoading }),
-}))
 
 jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   __esModule: true,
@@ -103,7 +94,6 @@ describe('EnterPINScreen', () => {
           })
         )
       })
-      expect(mockStartLoading).not.toHaveBeenCalled()
     })
   })
 
@@ -165,41 +155,90 @@ describe('EnterPINScreen', () => {
     })
   })
 
-  it('starts account loading only after PIN verification succeeds and cleans up a hydration failure', async () => {
-    let resolveVerification!: (result: PinVerification) => void
-    let rejectHydration!: (error: Error) => void
-    mockVerifyPinWithLockout.mockReturnValue(
-      new Promise((resolve) => {
-        resolveVerification = resolve
+  describe('the wait for the unlock', () => {
+    /** Renders the screen under the real overlay provider, enters a PIN and presses Continue. */
+    const submitPIN = () => {
+      const tree = render(
+        <BasicAppContext>
+          <BCSCLoadingProvider>
+            <EnterPINScreen navigation={mockNavigation} />
+          </BCSCLoadingProvider>
+        </BasicAppContext>
+      )
+      fireEvent.changeText(tree.getByA11yHint('Enter your 6-digit PIN'), '123456')
+      fireEvent.press(tree.getByTestId(testIdWithKey('Continue')))
+      return tree
+    }
+
+    const overlayShown = (tree: ReturnType<typeof render>) =>
+      tree.getByTestId(testIdWithKey('BCSCLoadingProviderOverlay'), { includeHiddenElements: true }).props.accessible
+
+    it('stays on the button, and keeps spinning once the unlock succeeds as the root slides the screen away', async () => {
+      mockVerifyPinWithLockout.mockResolvedValueOnce({ type: PinVerificationType.Success, walletKey: 'test-key' })
+      let completeUnlock!: () => void
+      mockHandleSuccessfulAuth.mockReturnValueOnce(
+        new Promise<void>((resolve) => {
+          completeUnlock = resolve
+        })
+      )
+
+      const tree = submitPIN()
+      await waitFor(() => expect(mockHandleSuccessfulAuth).toHaveBeenCalledWith('test-key'))
+      // No overlay while the unlock completes: it flashed the loading screen between this screen and the
+      // next phase
+      expect(overlayShown(tree)).toBe(false)
+      expect(tree.getByTestId(testIdWithKey('ButtonLoading'))).toBeTruthy()
+
+      await act(async () => {
+        completeUnlock()
       })
-    )
-    mockHandleSuccessfulAuth.mockReturnValue(
-      new Promise((_, reject) => {
-        rejectHydration = reject
+
+      expect(overlayShown(tree)).toBe(false)
+      expect(tree.getByTestId(testIdWithKey('ButtonLoading'))).toBeTruthy()
+    })
+
+    it('stops spinning and shows the error when completing the unlock fails', async () => {
+      mockVerifyPinWithLockout.mockResolvedValueOnce({ type: PinVerificationType.Success, walletKey: 'test-key' })
+      mockHandleSuccessfulAuth.mockRejectedValueOnce(new Error('hydration failed'))
+
+      const tree = submitPIN()
+
+      await waitFor(() => expect(tree.getByText('BCSC.EnterPIN.VerifyError')).toBeTruthy())
+      expect(tree.queryByTestId(testIdWithKey('ButtonLoading'))).toBeNull()
+      expect(overlayShown(tree)).toBe(false)
+      expect(tree.getByA11yHint('Enter your 6-digit PIN').props.editable).toBe(true)
+    })
+
+    it('locks the PIN input while the unlock completes', async () => {
+      mockVerifyPinWithLockout.mockResolvedValueOnce({ type: PinVerificationType.Success, walletKey: 'test-key' })
+      mockHandleSuccessfulAuth.mockReturnValueOnce(new Promise<void>(() => {}))
+
+      const tree = submitPIN()
+
+      await waitFor(() => expect(mockHandleSuccessfulAuth).toHaveBeenCalledWith('test-key'))
+      expect(tree.getByA11yHint('Enter your 6-digit PIN').props.editable).toBe(false)
+    })
+
+    it('starts one unlock when the PIN completes and Continue is pressed in the same commit', async () => {
+      mockVerifyPinWithLockout.mockResolvedValueOnce({ type: PinVerificationType.Success, walletKey: 'test-key' })
+      mockHandleSuccessfulAuth.mockReturnValueOnce(new Promise<void>(() => {}))
+
+      const tree = render(
+        <BasicAppContext>
+          <EnterPINScreen navigation={mockNavigation} />
+        </BasicAppContext>
+      )
+      // One act, so one commit: the press lands before the wait has disabled the button
+      act(() => {
+        fireEvent.changeText(tree.getByA11yHint('Enter your 6-digit PIN'), '123456')
+        fireEvent.press(tree.getByTestId(testIdWithKey('Continue')))
       })
-    )
 
-    const tree = render(
-      <BasicAppContext>
-        <EnterPINScreen navigation={mockNavigation} />
-      </BasicAppContext>
-    )
-    fireEvent.changeText(tree.getByA11yHint('Enter your 6-digit PIN'), '123456')
-    fireEvent.press(tree.getByTestId(testIdWithKey('Continue')))
-    await waitFor(() => expect(mockVerifyPinWithLockout).toHaveBeenCalled())
-    expect(mockStartLoading).not.toHaveBeenCalled()
-
-    await act(async () => {
-      resolveVerification({ type: PinVerificationType.Success, walletKey: 'test-key' })
+      await waitFor(() => expect(mockHandleSuccessfulAuth).toHaveBeenCalledWith('test-key'))
+      expect(mockVerifyPinWithLockout).toHaveBeenCalledTimes(1)
+      expect(tree.queryByText('BCSC.PIN.PINTooShort')).toBeNull()
+      expect(tree.getByTestId(testIdWithKey('ButtonLoading'))).toBeTruthy()
     })
-    expect(mockStartLoading).toHaveBeenCalledWith('BCSC.Loading.AppStartup')
-    expect(mockHandleSuccessfulAuth).toHaveBeenCalledWith('test-key')
-    expect(mockStopLoading).not.toHaveBeenCalled()
-
-    await act(async () => {
-      rejectHydration(new Error('hydration failed'))
-    })
-    expect(mockStopLoading).toHaveBeenCalledTimes(1)
   })
 
   describe('UI elements', () => {

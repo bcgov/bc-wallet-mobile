@@ -1,12 +1,13 @@
-import {
-  getBaseScreenName,
-  getCurrentStateScreenName,
-  getRouteNamesBelowFocus,
-  isForwardPush,
-} from '@/bcsc-theme/navigators/stack-utils'
+import { getBaseScreenName, getRouteNamesBelowFocus, isForwardPush } from '@/bcsc-theme/navigators/stack-utils'
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { useTheme } from '@bifold/core'
-import { createNavigationContainerRef, NavigationContainer, NavigationState } from '@react-navigation/native'
+import {
+  createNavigationContainerRef,
+  findFocusedRoute,
+  NavigationContainer,
+  NavigationState,
+} from '@react-navigation/native'
 import { createContext, PropsWithChildren, useContext, useMemo, useRef, useState } from 'react'
 
 export const navigationRef = createNavigationContainerRef()
@@ -25,9 +26,22 @@ export const NAVIGATION_TRAIL: { screens: VisitedScreen[]; droppedCount: number 
   droppedCount: 0,
 }
 
+/**
+ * The raw (stack-prefixed) name of the focused screen, found the way `navigationRef.getCurrentRoute()`
+ * finds it: by following the focused route of each nested navigator.
+ */
+const getFocusedRouteName = (state: NavigationState): string => findFocusedRoute(state)?.name ?? ''
+
+/**
+ * The display name of a route, with the stack prefix removed. The root's startup Loading route is no
+ * screen at all, so it never reaches analytics or the trail.
+ */
+const toScreenName = (routeName: string): string =>
+  routeName === BCSCScreens.RootLoading ? '' : getBaseScreenName(routeName)
+
 const recordVisit = (previousState: NavigationState | undefined, state: NavigationState) => {
-  const currentRouteName = getCurrentStateScreenName(state)
-  const currentScreenName = getBaseScreenName(currentRouteName)
+  const currentRouteName = getFocusedRouteName(state)
+  const currentScreenName = toScreenName(currentRouteName)
 
   // Update the visited screens list only if the current screen is different from the last visited screen
   const { screens } = NAVIGATION_TRAIL
@@ -75,7 +89,7 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren): Re
         ref={navigationRef}
         theme={NavigationTheme}
         onReady={() => {
-          // onStateChange skips the initial render, so the entry screen is recorded here
+          // onStateChange skips the initial state, so the entry screen is recorded here
           const initialState = navigationRef.getRootState()
           if (initialState) {
             previousStateRef.current = initialState
@@ -93,9 +107,8 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren): Re
           const previousState = previousStateRef.current
           previousStateRef.current = state
 
-          const previousScreenName = previousState && getBaseScreenName(getCurrentStateScreenName(previousState))
-          const currentRouteName = getCurrentStateScreenName(state)
-          const currentScreenName = getBaseScreenName(currentRouteName)
+          const previousScreenName = (previousState && toScreenName(getFocusedRouteName(previousState))) || undefined
+          const currentScreenName = toScreenName(getFocusedRouteName(state))
 
           const screenTransitionKey = `${previousScreenName}->${currentScreenName}`
 
