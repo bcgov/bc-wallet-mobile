@@ -16,6 +16,7 @@ import { useFocusEffect } from '@react-navigation/native'
 import { act, fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import { Rect } from 'react-native-svg'
+import { FAILED_SCAN_ATTEMPTS_BEFORE_ASKING } from './failed-scan-attempts'
 import ScanSerialScreen from './ScanSerialScreen'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')
@@ -89,17 +90,7 @@ const renderScreen = async () => {
   return utils
 }
 
-// Mirror DECODE_FAILURE_STREAK_MS and DECODE_FAILURE_STREAK_GAP_MS in the screen.
-const STREAK_MS = 5000
-const GAP_MS = 1500
-// How often the tests deliver a batch while failing; well inside GAP_MS.
-const FRAME_MS = 500
-
-// The screen times the failure streak with Date.now, so the tests drive the clock.
-let mockNow = 0
-const advance = (ms: number) => {
-  mockNow += ms
-}
+const ATTEMPTS = FAILED_SCAN_ATTEMPTS_BEFORE_ASKING
 
 const navigationMock = () => navigation as ReturnType<typeof useNavigation>
 
@@ -111,11 +102,10 @@ const scan = async (codes: ScanableCode[]): Promise<void | boolean> => {
   return result
 }
 
-// Scans `codes` now and then every FRAME_MS until `ms` has passed, returning each batch's result.
-const failFor = async (ms: number, codes: ScanableCode[] = [damaged]) => {
-  const results = [await scan(codes)]
-  for (let elapsed = FRAME_MS; elapsed <= ms; elapsed += FRAME_MS) {
-    advance(FRAME_MS)
+// Hands `codes` to the screen as `times` separate attempts, returning each attempt's result.
+const failTimes = async (times: number, codes: ScanableCode[] = [damaged]) => {
+  const results: (void | boolean)[] = []
+  for (let attempt = 0; attempt < times; attempt++) {
     results.push(await scan(codes))
   }
   return results
@@ -124,18 +114,16 @@ const failFor = async (ms: number, codes: ScanableCode[] = [damaged]) => {
 describe('ScanSerialScreen onCodeScanned', () => {
   // The container's init() swaps in this shared logger, whatever BasicAppContext registers.
   const debugSpy = jest.spyOn(bifoldLoggerInstance, 'debug').mockImplementation(() => undefined)
-  const nowSpy = jest.spyOn(Date, 'now').mockImplementation(() => mockNow)
 
   beforeEach(() => {
     navigation = useNavigation()
     jest.clearAllMocks()
     mockIsDriversLicenceSerial.mockReturnValue(false)
-    mockNow = 1_000_000
+    mockHandleScanComboCard.mockResolvedValue(true)
   })
 
   afterAll(() => {
     debugSpy.mockRestore()
-    nowSpy.mockRestore()
   })
 
   it('skips an unknown code, then hands a complete card to handleScanComboCard', async () => {
@@ -309,54 +297,36 @@ describe('ScanSerialScreen onCodeScanned', () => {
       ['a code-39 with no value', code39(undefined)],
       ['a code-128 with an empty value', code128('')],
       ['a QR code', { type: 'qr-code', value: 'A12345678' } as ScanableCode],
-    ])(
-      'keeps scanning on %s until it has failed for the whole streak, then routes to the card scanning error',
-      async (_, unreadable) => {
-        await renderScreen()
-
-        expect(await failFor(STREAK_MS - FRAME_MS, [unreadable])).not.toContain(true)
-        expect(navigationMock().navigate).not.toHaveBeenCalled()
-
-        advance(FRAME_MS)
-        expect(await scan([unreadable])).toBe(true)
-        expect(navigationMock().navigate).toHaveBeenCalledTimes(1)
-        expect(navigationMock().navigate).toHaveBeenCalledWith(BCSCScreens.CardScanningError)
-        expect(mockHandleScanComboCard).not.toHaveBeenCalled()
-      }
-    )
-
-    it('does not route sooner for batches with several unreadable codes', async () => {
+    ])('keeps scanning on %s until it has failed repeatedly, then asks about the card', async (_, unreadable) => {
       await renderScreen()
 
-      expect(await failFor(STREAK_MS - FRAME_MS, [damaged, damaged, damaged])).not.toContain(true)
+      expect(await failTimes(ATTEMPTS - 1, [unreadable])).not.toContain(true)
       expect(navigationMock().navigate).not.toHaveBeenCalled()
-    })
 
-    it('carries the streak across a pause no longer than the gap', async () => {
-      await renderScreen()
-
-      expect(await failFor(STREAK_MS - FRAME_MS - GAP_MS)).not.toContain(true)
-      advance(GAP_MS)
-      expect(await scan([damaged])).toBe(false)
-      advance(FRAME_MS)
-      expect(await scan([damaged])).toBe(true)
+      expect(await scan([unreadable])).toBe(true)
+      expect(navigationMock().navigate).toHaveBeenCalledTimes(1)
       expect(navigationMock().navigate).toHaveBeenCalledWith(BCSCScreens.CardScanningError)
+      expect(mockHandleScanComboCard).not.toHaveBeenCalled()
     })
 
-    it('starts a new streak after a pause longer than the gap', async () => {
+    it('never changes the path on a single failed read', async () => {
       await renderScreen()
 
-      expect(await failFor(STREAK_MS - FRAME_MS)).not.toContain(true)
-      advance(GAP_MS + 1)
-      expect(await failFor(STREAK_MS - FRAME_MS)).not.toContain(true)
+      expect(await scan([damaged])).toBe(false)
       expect(navigationMock().navigate).not.toHaveBeenCalled()
     })
 
-    it('completes on a good scan just before the streak runs out', async () => {
+    it('counts a batch with several unreadable codes as one attempt', async () => {
       await renderScreen()
 
-      expect(await failFor(STREAK_MS - FRAME_MS)).not.toContain(true)
-      advance(FRAME_MS)
+      expect(await failTimes(ATTEMPTS - 1, [damaged, damaged, damaged])).not.toContain(true)
+      expect(navigationMock().navigate).not.toHaveBeenCalled()
+    })
+
+    it('completes on a good scan just before the attempts run out', async () => {
+      await renderScreen()
+
+      expect(await failTimes(ATTEMPTS - 1)).not.toContain(true)
       expect(await scan([serial, licence])).toBe(true)
       expect(mockHandleScanComboCard).toHaveBeenCalledTimes(1)
       expect(navigationMock().navigate).not.toHaveBeenCalled()
@@ -370,17 +340,36 @@ describe('ScanSerialScreen onCodeScanned', () => {
       expect(mockHandleScanComboCard).toHaveBeenCalledWith('K12345678', { birthDate: SERIAL_BIRTH_DATE })
     })
 
-    it('stops counting failures once a barcode has decoded', async () => {
+    it('keeps counting once half the card has decoded, so a half-read card still asks about the card', async () => {
       await renderScreen()
 
       expect(await scan([serial, damaged])).toBe(false)
-      advance(FRAME_MS)
-      expect(await failFor(STREAK_MS + FRAME_MS)).not.toContain(true)
+      expect(await failTimes(ATTEMPTS - 2)).not.toContain(true)
       expect(navigationMock().navigate).not.toHaveBeenCalled()
+
+      expect(await scan([damaged])).toBe(true)
+      expect(navigationMock().navigate).toHaveBeenCalledWith(BCSCScreens.CardScanningError)
+      expect(mockHandleScanComboCard).not.toHaveBeenCalled()
+    })
+
+    it('completes a half-read card when the other half decodes before the attempts run out', async () => {
+      await renderScreen()
+
+      expect(await scan([serial, damaged])).toBe(false)
+      expect(await failTimes(ATTEMPTS - 2)).not.toContain(true)
 
       expect(await scan([licence])).toBe(true)
       expect(mockHandleScanComboCard).toHaveBeenCalledTimes(1)
       expect(mockHandleScanComboCard).toHaveBeenCalledWith('K12345678', { birthDate: SERIAL_BIRTH_DATE })
+      expect(navigationMock().navigate).not.toHaveBeenCalled()
+    })
+
+    it('does not count an attempt in which nothing failed to decode', async () => {
+      await renderScreen()
+
+      expect(await failTimes(ATTEMPTS + 1, [serial])).not.toContain(true)
+      expect(await failTimes(ATTEMPTS + 1, [])).not.toContain(true)
+      expect(navigationMock().navigate).not.toHaveBeenCalled()
     })
 
     it('ignores an unreadable code between the licence and the serial', async () => {
@@ -396,7 +385,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     it('skips an unknown code with no hook call and does not count it as a failure', async () => {
       await renderScreen()
 
-      expect(await failFor(STREAK_MS + FRAME_MS, [unknown])).not.toContain(true)
+      expect(await failTimes(ATTEMPTS + 1, [unknown])).not.toContain(true)
       expect(navigationMock().navigate).not.toHaveBeenCalled()
       expect(mockHandleScanComboCard).not.toHaveBeenCalled()
     })
@@ -404,10 +393,36 @@ describe('ScanSerialScreen onCodeScanned', () => {
     it('counts an unreadable code that follows an unknown one', async () => {
       await renderScreen()
 
-      expect(await failFor(STREAK_MS - FRAME_MS, [unknown, damaged])).not.toContain(true)
-      advance(FRAME_MS)
+      expect(await failTimes(ATTEMPTS - 1, [unknown, damaged])).not.toContain(true)
       expect(await scan([unknown, damaged])).toBe(true)
       expect(navigationMock().navigate).toHaveBeenCalledWith(BCSCScreens.CardScanningError)
+    })
+
+    it('logs the question with attempt counts and failure reasons only', async () => {
+      const infoSpy = jest.spyOn(bifoldLoggerInstance, 'info').mockImplementation(() => undefined)
+      try {
+        await renderScreen()
+
+        await scan([serial, damaged])
+        await failTimes(ATTEMPTS - 2, [code39('123456789')])
+        await scan([damaged, damaged])
+
+        expect(infoSpy).toHaveBeenCalledWith(
+          '[DecodeBarcodes] Repeated failed scans, asking whether the citizen has a BC Services Card',
+          {
+            failedAttempts: ATTEMPTS,
+            failureReasons: { damaged: 3, unsupported: ATTEMPTS - 2 },
+            hasSerial: true,
+            hasCard: false,
+          }
+        )
+        const logged = JSON.stringify(infoSpy.mock.calls)
+        for (const sensitive of ['K12345678', '123456789', 'S00023254']) {
+          expect(logged).not.toContain(sensitive)
+        }
+      } finally {
+        infoSpy.mockRestore()
+      }
     })
   })
 
@@ -482,11 +497,77 @@ describe('ScanSerialScreen onCodeScanned', () => {
     it('ignores every later batch after routing to the card scanning error', async () => {
       await renderScreen()
 
-      await failFor(STREAK_MS)
+      await failTimes(ATTEMPTS)
       expect(await scan([serial, licence])).toBe(true)
       expect(navigationMock().navigate).toHaveBeenCalledTimes(1)
       expect(mockHandleScanComboCard).not.toHaveBeenCalled()
     })
+  })
+
+  describe('when the card does not authorize in the non-BCSC flow', () => {
+    beforeEach(() => {
+      mockHandleScanComboCard.mockResolvedValue(false)
+    })
+
+    it('routes to the card scanning error instead of freezing', async () => {
+      await renderScreen()
+
+      expect(await scan([serial, licence])).toBe(true)
+      expect(navigationMock().navigate).toHaveBeenCalledWith(BCSCScreens.CardScanningError)
+    })
+
+    it('stays locked, so the same card is not authorized again on later frames', async () => {
+      await renderScreen()
+
+      await scan([serial, licence])
+      expect(await scan([serial, licence])).toBe(true)
+      expect(await scan([serial, licence])).toBe(true)
+
+      expect(mockHandleScanComboCard).toHaveBeenCalledTimes(1)
+      expect(navigationMock().navigate).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('when handling the scanned card fails', () => {
+    // The logger is the shared bifold instance; silence the expected error.
+    const errorSpy = jest.spyOn(bifoldLoggerInstance, 'error').mockImplementation(() => undefined)
+
+    beforeEach(() => {
+      mockHandleScanComboCard.mockRejectedValue(
+        new Error('handleScanComboCard: License birthdate is missing or invalid')
+      )
+    })
+
+    afterAll(() => {
+      errorSpy.mockRestore()
+    })
+
+    it('routes to the card scanning error', async () => {
+      await renderScreen()
+
+      expect(await scan([serial, licence])).toBe(true)
+      expect(navigationMock().navigate).toHaveBeenCalledWith(BCSCScreens.CardScanningError)
+    })
+
+    it('stays locked, so the same card is not retried and logged on every later frame', async () => {
+      await renderScreen()
+
+      await scan([serial, licence])
+      expect(await scan([serial, licence])).toBe(true)
+      expect(await scan([serial, licence])).toBe(true)
+
+      expect(mockHandleScanComboCard).toHaveBeenCalledTimes(1)
+      expect(errorSpy).toHaveBeenCalledTimes(1)
+      expect(navigationMock().navigate).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  it('does not route to the card scanning error when the card authorizes', async () => {
+    await renderScreen()
+
+    await scan([serial, licence])
+
+    expect(navigationMock().navigate).not.toHaveBeenCalled()
   })
 
   describe('starting over', () => {
@@ -509,15 +590,14 @@ describe('ScanSerialScreen onCodeScanned', () => {
       expect(mockHandleScanComboCard).not.toHaveBeenCalled()
     })
 
-    it('resets the failure streak on Try Again', async () => {
+    it('resets the failed attempts on Try Again', async () => {
       const screen = await renderScreen()
 
-      await failFor(STREAK_MS - FRAME_MS)
+      await failTimes(ATTEMPTS - 1)
       tryAgain(screen)
 
-      // Without the reset, the first of these would finish the streak.
-      advance(FRAME_MS)
-      await failFor(STREAK_MS - FRAME_MS)
+      // Without the reset, the first of these would ask about the card.
+      await failTimes(ATTEMPTS - 1)
       expect(navigationMock().navigate).not.toHaveBeenCalled()
     })
 
@@ -534,7 +614,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     it('scans again after routing to the card scanning error and Try Again', async () => {
       const screen = await renderScreen()
 
-      await failFor(STREAK_MS)
+      await failTimes(ATTEMPTS)
       tryAgain(screen)
 
       expect(await scan([serial, licence])).toBe(true)
@@ -582,17 +662,15 @@ describe('ScanSerialScreen onCodeScanned', () => {
         expect(mockHandleScanComboCard).not.toHaveBeenCalled()
       })
 
-      it('resets the failure streak, so returning from the error screen gives a fresh streak', async () => {
+      it('resets the failed attempts, so returning from the error screen starts the count again', async () => {
         await renderScreen()
 
-        await failFor(STREAK_MS)
+        await failTimes(ATTEMPTS)
         expect(navigationMock().navigate).toHaveBeenCalledTimes(1)
         refocusScreen()
 
-        advance(FRAME_MS)
-        expect(await failFor(STREAK_MS - FRAME_MS)).not.toContain(true)
+        expect(await failTimes(ATTEMPTS - 1)).not.toContain(true)
         expect(navigationMock().navigate).toHaveBeenCalledTimes(1)
-        advance(FRAME_MS)
         expect(await scan([damaged])).toBe(true)
         expect(navigationMock().navigate).toHaveBeenCalledTimes(2)
       })
