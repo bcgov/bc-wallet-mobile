@@ -119,6 +119,12 @@ describe('useAlerts', () => {
       AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE,
     ],
     [
+      'pairingCodeScannedDuringTransferAlert',
+      'Alerts.PairingCodeScannedDuringTransfer.Title',
+      'Alerts.PairingCodeScannedDuringTransfer.Description',
+      AppEventCode.PAIRING_CODE_SCANNED_DURING_TRANSFER,
+    ],
+    [
       'missingJwkAlert',
       'Alerts.SomethingWentWrong.Title',
       'Alerts.SomethingWentWrong.Description',
