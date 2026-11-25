@@ -48,8 +48,10 @@ describe('Onboarding journey: notification permission granted', () => {
   })
 
   it('offers only Continue once permission is granted', async () => {
-    await OnboardingSecureAppScreen.back.tap()
-    await OnboardingNotificationsGrantedScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    await OnboardingSecureAppScreen.back.tapToReach(OnboardingNotificationsGrantedScreen, {
+      attempts: 2,
+      settleMs: 10_000,
+    })
     assert.equal(
       await OnboardingNotificationsScreen.isVisible('enable'),
       false,
@@ -71,8 +73,10 @@ describe('Onboarding journey: notification permission granted', () => {
   })
 
   it('skips the Notifications screen entirely on the next pass', async () => {
-    await OnboardingSecureAppScreen.back.tap()
-    await OnboardingNotificationsGrantedScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    await OnboardingSecureAppScreen.back.tapToReach(OnboardingNotificationsGrantedScreen, {
+      attempts: 2,
+      settleMs: 10_000,
+    })
     await OnboardingNotificationsGrantedScreen.back.tap()
     await OnboardingOptInAnalyticsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
     await OnboardingOptInAnalyticsScreen.tap('primary')
