@@ -61,7 +61,7 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
     }
 
     void readPromptMarker()
-    // Re-read when the OS status changes: a grant is not recorded locally, but setup() has persisted the marker
+    // setup() persists the marker; re-reading on status change catches grants, which aren't recorded locally
   }, [status])
 
   const isGranted = status === PushNotifications.NotificationPermissionStatus.GRANTED
@@ -84,8 +84,8 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
     try {
       const result = await PushNotifications.setup()
       logger.info(`[NotificationsScreen] Push notification permission status: ${result}`)
-      // A refusal does not change the OS status value on Android, so this is what swaps in PermissionDisabled.
-      // Not set on a grant: Android still reads DENIED until the refresh lands, which would flash PermissionDisabled.
+      // Only a refusal is recorded here: Android's status doesn't change on one. After a grant the status can
+      // still read DENIED until the refresh lands, so recording it would flash PermissionDisabled.
       if (result !== PushNotifications.NotificationPermissionStatus.GRANTED) {
         setHasPrompted(true)
       }
@@ -104,7 +104,7 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
     dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [false] })
   }
 
-  // Re-assert the preference: it lags an OS grant made outside this screen, e.g. from OS Settings
+  // Re-asserted because the preference can lag an OS grant made elsewhere, e.g. in OS Settings
   const continueWithNotifications = () => {
     dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [true] })
     navigation.navigate(BCSCScreens.OnboardingSecureApp)

@@ -100,7 +100,6 @@ describe('Notifications', () => {
       renderScreen(false)
       fireEvent.press(await screen.findByTestId(tid(ids.enable)))
 
-      // The OS answer lands after the first read: status() and setup() are independent
       mockStatus.mockResolvedValue(NPStatus.GRANTED)
       await waitFor(() => expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.OnboardingSecureApp))
       expect(preference()).toBe('true')
@@ -116,7 +115,6 @@ describe('Notifications', () => {
     ])(
       'never flashes the disabled variant after Allow on a fresh Android 13+ install when %s',
       async (_label, followUpRead) => {
-        // Fresh Android 13+ reports denied before the first prompt
         mockStatus.mockResolvedValueOnce(NPStatus.DENIED)
         mockHasPrompted.mockResolvedValue(false)
         mockSetup.mockResolvedValue(NPStatus.GRANTED)
@@ -138,7 +136,6 @@ describe('Notifications', () => {
       renderScreen(false)
       const enable = await screen.findByTestId(tid(ids.enable))
 
-      // setup() persists the prompt marker, which the screen never saw locally because the answer was a grant
       mockHasPrompted.mockResolvedValue(true)
       mockStatus.mockResolvedValue(NPStatus.GRANTED)
       fireEvent.press(enable)
@@ -155,7 +152,6 @@ describe('Notifications', () => {
       mockStatus.mockResolvedValue(NPStatus.GRANTED)
       mockHasPrompted.mockResolvedValue(true)
 
-      // The stored preference lags the OS permission, e.g. allowed from OS Settings
       renderScreen(false)
       const continueButton = await screen.findByTestId(tid(ids.continue))
       expect(preference()).toBe('false')
@@ -216,7 +212,6 @@ describe('Notifications', () => {
 
     it('turns notifications off, goes to Secure App and shows the disabled variant when Enable is refused', async () => {
       mockSetup.mockResolvedValue(NPStatus.DENIED)
-      // Android keeps reporting denied, so only the local prompt record can swap the variant in
       mockStatus.mockResolvedValue(NPStatus.DENIED)
 
       renderScreen(true)

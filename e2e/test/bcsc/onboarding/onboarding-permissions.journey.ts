@@ -48,7 +48,6 @@ describe('Onboarding journey: notification permission granted', () => {
   })
 
   it('offers only Continue once permission is granted', async () => {
-    // The app cannot revoke an OS grant, so Continue replaces enable/skip; PermissionDisabled stays out.
     await OnboardingSecureAppScreen.back.tap()
     await OnboardingNotificationsGrantedScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
     assert.equal(
