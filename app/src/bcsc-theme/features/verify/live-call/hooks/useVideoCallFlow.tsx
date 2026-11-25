@@ -34,6 +34,8 @@ const AnalyticsErrorCodeMap: Record<VideoCallErrorType, string> = {
   [VideoCallErrorType.CALL_FAILED]: 'problem_with_connection',
   [VideoCallErrorType.NETWORK_ERROR]: 'no_internet',
   [VideoCallErrorType.PERMISSION_DENIED]: 'permission_denied',
+  // Added to keep the map exhaustive, analytics handled in AppError -> unknownErrorModal
+  [VideoCallErrorType.CALL_END_FAILED]: 'call_end_failed',
 }
 
 export interface VideoCallFlow {
@@ -49,6 +51,7 @@ export interface VideoCallFlow {
   cleanup: () => Promise<void>
   retryConnection: () => Promise<void>
   setCallEnded: () => void
+  leaveCallSafely: () => Promise<void>
 }
 
 const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
@@ -96,6 +99,19 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
   const setCallEnded = useCallback(() => {
     setFlowState(VideoCallFlowState.CALL_ENDED)
   }, [])
+
+  // Runs the post-call check. A failure parks the flow on CALL_END_FAILED so the screen can offer a retry
+  // instead of leaving the user on the "Call ended" spinner
+  const leaveCallSafely = useCallback(async () => {
+    setFlowState(VideoCallFlowState.CALL_ENDED)
+    try {
+      await leaveCall()
+    } catch (error) {
+      logger.error('Failed to leave the call after it ended', error as Error)
+      setVideoCallError(createVideoCallError(VideoCallErrorType.CALL_END_FAILED, String(error)))
+      setFlowState(VideoCallFlowState.ERROR)
+    }
+  }, [leaveCall, logger])
 
   // stops keep-alives
   // disconnects from pexip conference
@@ -191,11 +207,11 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     try {
       setCallEnded()
       await cleanup()
-      await leaveCall()
+      await leaveCallSafely()
     } catch (error) {
       logger.warn(`Error during remote disconnect: ${error}`)
     }
-  }, [setCallEnded, cleanup, leaveCall, logger])
+  }, [setCallEnded, cleanup, leaveCallSafely, logger])
   // The above memoized callback is needed in the connection request but
   // we still want it to use up-to-date values, so we're storing it in a ref
   // to prevent stale closures
@@ -442,7 +458,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
         logger.info('Performing full cleanup due to background transition...')
         setCallEnded()
         cleanup()
-          .then(() => leaveCall())
+          .then(() => leaveCallSafely())
           .catch((error) => {
             logger.error('Error during full cleanup background transition:', error)
           })
@@ -470,7 +486,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
 
       prevIsInBackgroundRef.current = isInBackground
     }
-  }, [isInBackground, backgroundMode, localStream, setCallEnded, cleanup, leaveCall, logger])
+  }, [isInBackground, backgroundMode, localStream, setCallEnded, cleanup, leaveCallSafely, logger])
 
   // start the API keep alive when the call is ready
   useEffect(() => {
@@ -491,6 +507,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     cleanup,
     retryConnection,
     setCallEnded,
+    leaveCallSafely,
   }
 }
 

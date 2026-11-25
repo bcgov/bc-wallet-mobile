@@ -12,6 +12,7 @@ type CancellableWaitingScreenProps = Omit<
 > & {
   onCancel: () => void | Promise<void>
   cancelTestID: string
+  cancelDelayMs?: number
   delayedMessage?: string
 }
 
@@ -19,6 +20,7 @@ export const CancellableWaitingScreen = ({
   onCancel,
   cancelTestID,
   delayedMessage,
+  cancelDelayMs = CANCEL_DELAY_MS,
   ...contentProps
 }: CancellableWaitingScreenProps) => {
   const { t } = useTranslation()
@@ -27,9 +29,9 @@ export const CancellableWaitingScreen = ({
   const [cancelled, setCancelled] = useState(false)
 
   useEffect(() => {
-    const timeout = setTimeout(() => setDelayReached(true), CANCEL_DELAY_MS)
+    const timeout = setTimeout(() => setDelayReached(true), cancelDelayMs)
     return () => clearTimeout(timeout)
-  }, [])
+  }, [cancelDelayMs])
 
   // Latches for good: cancel navigates away, and a second tap during the transition would run it twice.
   const handleCancel = useCallback(async () => {
