@@ -301,8 +301,9 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     const { serial, card } = cardScanRef.current
 
     // A driver's licence alone can't verify the user, so route it away before the combo card path.
-    // Its DCN comes from the PDF-417; a card with no DCN in its security field falls through.
-    if (card?.dcn && isDriversLicenceSerial(card.dcn)) {
+    // Its DCN comes from the PDF-417's security field, or from its 1D barcode when that field is
+    // blank on an older licence; either one is enough to tell it from a BC Services Card.
+    if (isDriversLicenceSerial(card?.dcn) || isDriversLicenceSerial(serial)) {
       isProcessingScan.current = true
       setScanState('locked')
       navigation.navigate(BCSCScreens.ScannedDriversLicence)

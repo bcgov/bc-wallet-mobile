@@ -475,12 +475,29 @@ describe('ScanSerialScreen onCodeScanned', () => {
       expect(navigationMock().navigate).not.toHaveBeenCalled()
     })
 
-    it('does not check a licence with no DCN in its security field, and completes with the 1D serial', async () => {
+    it('completes a card with no DCN in its security field when its 1D serial is not a licence', async () => {
       await renderScreen()
 
       expect(await scan([otherLicence, serial])).toBe(true)
-      expect(mockIsDriversLicenceSerial).not.toHaveBeenCalled()
       expect(mockHandleScanComboCard).toHaveBeenCalledWith('K12345678', { birthDate: OTHER_BIRTH_DATE })
+      expect(navigationMock().navigate).not.toHaveBeenCalled()
+    })
+
+    it('routes an older licence with no DCN in its security field by its 1D serial, without authorizing it', async () => {
+      await renderScreen()
+
+      expect(await scan([otherLicence, code39(LICENCE_DCN)])).toBe(true)
+      expect(mockIsDriversLicenceSerial).toHaveBeenCalledWith(LICENCE_DCN)
+      expect(navigationMock().navigate).toHaveBeenCalledWith(BCSCScreens.ScannedDriversLicence)
+      expect(mockHandleScanComboCard).not.toHaveBeenCalled()
+    })
+
+    it('routes as soon as a licence 1D serial is read, before any PDF-417', async () => {
+      await renderScreen()
+
+      expect(await scan([code39(LICENCE_DCN)])).toBe(true)
+      expect(navigationMock().navigate).toHaveBeenCalledWith(BCSCScreens.ScannedDriversLicence)
+      expect(mockHandleScanComboCard).not.toHaveBeenCalled()
     })
   })
 
