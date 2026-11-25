@@ -1,4 +1,5 @@
 import CameraInterruptedOverlay from '@/bcsc-theme/components/CameraInterruptedOverlay'
+import { CameraIssue } from '@/bcsc-theme/components/CameraIssue'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { getCameraMetadata } from '@/bcsc-theme/components/utils/camera'
 import {
@@ -58,7 +59,6 @@ import {
   useCameraPermission,
   useMicrophonePermission,
 } from 'react-native-vision-camera'
-import { CameraIssue } from '../components/CameraIssue'
 
 type TakeVideoScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.TakeVideo>
@@ -615,7 +615,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
 
   if (!device) {
     return (
-      <SafeAreaView style={[styles.pageContainer]}>
+      <SafeAreaView style={styles.pageContainer}>
         <CameraIssue
           title={t('BCSC.CameraDisclosure.NoCameraAvailable', { device: 'front' })}
           description={t('BCSC.CameraDisclosure.NoCameraAvailableDescription', { device: 'front' })}

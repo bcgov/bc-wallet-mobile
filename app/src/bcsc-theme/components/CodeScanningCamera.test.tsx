@@ -478,28 +478,6 @@ describe('CodeScanningCamera', () => {
     })
   })
 
-  describe('Camera Type', () => {
-    it('renders with front camera', () => {
-      const tree = render(
-        <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} cameraType="front" />
-        </BasicAppContext>
-      )
-
-      expect(tree).toMatchSnapshot()
-    })
-
-    it('renders with back camera (default)', () => {
-      const tree = render(
-        <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} cameraType="back" />
-        </BasicAppContext>
-      )
-
-      expect(tree).toMatchSnapshot()
-    })
-  })
-
   describe('Code Scanning Callback', () => {
     it('registers code scanner with correct callback', () => {
       render(

@@ -1,3 +1,4 @@
+import { CameraIssue } from '@/bcsc-theme/components/CameraIssue'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
@@ -27,7 +28,6 @@ import { useCameraDevice, useCameraPermission } from 'react-native-vision-camera
 import CodeScanningCamera from '../../components/CodeScanningCamera'
 import TorchButton from '../../components/TorchButton'
 import { BCSC_SN_SCAN_ZONES, ScanState } from '../../components/utils/camera'
-import { CameraIssue } from './components/CameraIssue'
 
 /**
  * How long the initial "Scan your card" guidance shows before falling back to
@@ -437,7 +437,6 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
             key={cameraKey}
             device={device}
             onCodeScanned={onCodeScanned}
-            cameraType={'back'}
             initialZoom={2}
             scanZones={BCSC_SN_SCAN_ZONES}
             showScanZoneOverlay={false}

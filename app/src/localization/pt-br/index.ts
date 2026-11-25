@@ -1108,7 +1108,6 @@ const translation = {
         "CameraError": "Camera Error (PT-BR)",
         "CameraErrorMessage": "There was an issue with the camera. Please try again. (PT-BR)",
         "CameraAndMicrophonePermissionsRequired": "Camera and microphone permissions required (PT-BR)",
-        "NoFrontCameraAvailable": "No front camera available (PT-BR)",
         "RecordingWillStartIn": "Recording will start in (PT-BR)",
         "ShowNextPrompt": "Show Next Prompt (PT-BR)",
         "Done": "Done (PT-BR)",

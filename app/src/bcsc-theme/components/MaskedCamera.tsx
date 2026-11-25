@@ -19,11 +19,11 @@ import { useBCSCActivity } from '../contexts/BCSCActivityContext'
 //   throwIfSimulatingNotReadyCapture,
 //   useSimulatedMediaServicesResets,
 // } from '../hooks/useCameraEventSimulation'
-import { CameraIssue } from '../features/verify/components/CameraIssue'
 import { useCameraInterruption, useCameraNotReadyTimeout, useRecoverableCameraError } from '../hooks/useCameraRecovery'
 import { isCameraControlCanceledError, useVisionCamera } from '../hooks/useVisionCamera'
 import { isBackgroundedAppState } from '../utils/app-state'
 import CameraInterruptedOverlay from './CameraInterruptedOverlay'
+import { CameraIssue } from './CameraIssue'
 import { getCameraMetadata, isCameraNotReadyCaptureError } from './utils/camera'
 import { OUTPUT_ORIENTATION_SOURCE, PREVIEW_IMPLEMENTATION_MODE } from './utils/camera-output'
 

@@ -64,12 +64,6 @@ export interface CodeScanningCameraProps {
   style?: ViewStyle
 
   /**
-   * Which camera to use
-   * @default 'back'
-   */
-  cameraType?: 'front' | 'back'
-
-  /**
    * Enable scan zone tracking and saving (dev/debug feature).
    * When enabled and locked, shows Save Scan Zones + Continue Scanning buttons.
    * When disabled and locked, shows a Confirm button that calls onCodeScanned.
