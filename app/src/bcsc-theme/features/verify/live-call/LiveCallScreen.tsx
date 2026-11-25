@@ -93,7 +93,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
         store.bcscSecure.userCode
       )
 
-      if (navigation.isFocused()) {
+      if (!navigation.isFocused()) {
         return
       }
 
