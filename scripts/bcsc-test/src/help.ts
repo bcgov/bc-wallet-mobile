@@ -62,7 +62,7 @@ export const renderRootHelp = (groups: GroupSpec[], topics: HelpTopic[]): string
       ['HELP TOPICS', topics.map((topic): Row => [topic.name, topic.summary])],
     ]),
     `FLAGS\n  --help      Show help for command\n  --version   Show bcsc-test version\n`,
-    `EXAMPLES\n  $ ${BIN} verification approve NCNF-ZNTB\n  $ ${BIN} mobile-app set-expiry NCNF-ZNTB 2026-11-01T00:00:00-08:00\n  $ ${BIN} auth status\n`,
+    `EXAMPLES\n  $ ${BIN} verification approve NCNF-ZNTB\n  $ ${BIN} mobile-app set-expiry NCNF-ZNTB 2026-11-01T00:00:00-08:00 --dry-run\n  $ ${BIN} auth status\n`,
     learnMore(),
   ].join('\n')
 

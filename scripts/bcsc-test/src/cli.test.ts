@@ -21,6 +21,7 @@ const SHIPPED = new Set([
   'auth logout',
   'verification approve',
   'verification decline',
+  'mobile-app set-expiry',
 ])
 const isShipped = (group: GroupSpec, command: CommandSpec): boolean => SHIPPED.has(`${group.name} ${command.name}`)
 

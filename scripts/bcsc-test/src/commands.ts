@@ -1,5 +1,6 @@
 import { logout, switchClient, token } from './auth.ts'
 import { login } from './login.ts'
+import { setExpiry } from './mobile-app.ts'
 import type { ArgSpec, FlagSpec, GroupSpec } from './spec.ts'
 import { status, STATUS_JSON_FIELDS } from './status.ts'
 import { approve, decline } from './verification.ts'
@@ -250,18 +251,32 @@ Needs the test-idv-accounts scope.`,
         summary: 'Set when a mobile app registration expires',
         description: `Set when a mobile app registration expires.
 
-The date is ISO-8601 and must include a UTC offset. Past dates are allowed and
-are how you force the expired state.`,
-        args: [usercode, { name: 'iso-date', description: 'The new expiry, e.g. 2026-12-01T00:00:00-08:00' }],
-        flags: [dryRun],
+The date is ISO-8601 with whole seconds and a UTC offset (Z is accepted), and is
+checked before anything is sent. Past dates are allowed and are how you force the
+expired state: any date at or before the IAS server's current time marks the
+mobile app Expired, and nothing in the test API reverses that. A future date only
+moves the expiry, until that date is reached.
+
+IAS accepts an expiry only while the mobile app is Activated, so a usercode that
+is unknown, not yet verified, already expired or suspended is rejected.`,
+        args: [
+          usercode,
+          { name: 'iso-date', description: 'The new expiry, with a UTC offset, e.g. 2099-12-01T00:00:00-08:00' },
+        ],
+        flags: [hostname, dryRun],
+        handler: setExpiry,
         examples: [
           {
             comment: 'Extend a registration',
-            command: 'bcsc-test mobile-app set-expiry NCNF-ZNTB 2026-12-01T00:00:00-08:00',
+            command: 'bcsc-test mobile-app set-expiry NCNF-ZNTB 2099-12-01T00:00:00-08:00',
           },
           {
-            comment: 'Force the expired state with a past date',
+            comment: 'Force the expired state with a past date (cannot be undone)',
             command: 'bcsc-test mobile-app set-expiry NCNF-ZNTB 2026-11-01T00:00:00-08:00',
+          },
+          {
+            comment: 'Print the request without sending it',
+            command: 'bcsc-test mobile-app set-expiry NCNF-ZNTB 2099-12-01T00:00:00-08:00 --dry-run',
           },
         ],
       },

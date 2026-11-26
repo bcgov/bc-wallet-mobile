@@ -39,6 +39,18 @@ bcsc-test verification approve NCNF-ZNTB --dry-run   # print the request without
 
 The server records an approval as a counter visit. Only the `counter` channel is implemented on the server.
 
+## Set the mobile app expiry
+
+The date needs whole seconds and a UTC offset (`Z` works too); a date without one is rejected before anything is sent.
+
+```sh
+bcsc-test mobile-app set-expiry NCNF-ZNTB 2099-12-01T00:00:00-08:00
+bcsc-test mobile-app set-expiry NCNF-ZNTB 2026-11-01T00:00:00-08:00   # a date already past forces the expired state
+bcsc-test mobile-app set-expiry NCNF-ZNTB 2099-12-01T00:00:00-08:00 --dry-run
+```
+
+IAS accepts an expiry only while the mobile app is Activated. A date at or before the IAS server's current time marks the mobile app Expired, and nothing in the test API reverses that, so use a disposable usercode.
+
 ## Help
 
 Every command has examples under `--help`. Commands marked `not implemented` are placeholders for later work.
