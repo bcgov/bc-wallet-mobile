@@ -283,6 +283,28 @@ describe('useEvidenceApi - upload log context', () => {
     expect(apiClient.put.mock.calls[1][2].timeout).toBe(EVIDENCE_UPLOAD_TIMEOUT_MS)
   })
 
+  // The server answers a rejected upload with a JSON error body; an Accept limited to the media type turns that
+  // into a bare 500 (#4763). Content-Type still names the media being sent.
+  it('accepts a JSON error reply on photo and video binary uploads and keeps the media Content-Type', async () => {
+    const result = renderApi()
+
+    await act(async () => {
+      await result.current.uploadPhotoEvidenceBinary('https://upload.test/photo', jpegBytes, 'image')
+      await result.current.uploadVideoEvidenceBinary('https://upload.test/video', mp4Bytes)
+    })
+
+    expect(apiClient.put.mock.calls[0][2].headers).toEqual({
+      Authorization: 'Bearer mock-pre-verification-jwt',
+      'Content-Type': 'image/jpeg',
+      Accept: 'application/json, */*',
+    })
+    expect(apiClient.put.mock.calls[1][2].headers).toEqual({
+      Authorization: 'Bearer mock-pre-verification-jwt',
+      'Content-Type': 'video/mp4',
+      Accept: 'application/json, */*',
+    })
+  })
+
   it('omits media_format (not a placeholder) when the binary is unrecognizable, keeping the other fields', async () => {
     const result = renderApi()
 
