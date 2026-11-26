@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { TestUsers, Timeouts } from '../../../src/constants.js'
+import { Timeouts } from '../../../src/constants.js'
 import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
   chooseAddAccount,
@@ -18,6 +18,7 @@ import {
   VerificationMethodSelectionScreen,
 } from '../../../src/screens/verify.js'
 import { getTestUser, setTestUser } from '../../../src/support/context.js'
+import { arrangeTestUser } from '../../../src/support/identity.js'
 
 /**
  * Verified journey: photo card — the lightest verified path (serial + dob only), so it is the first
@@ -26,14 +27,14 @@ import { getTestUser, setTestUser } from '../../../src/support/context.js'
  * One ordered session: onboard (same session — VerifyPrompt exists only here) → Continue → manual
  * serial → birthdate submit (`authorizeDevice` derives the photo card) → method selection. It browses
  * the send-video and live-call method detours WITHOUT entering the camera, then completes IN-PERSON —
- * the CI method, approved by the real IDcheck flow (`approveInPersonRequest`; needs
- * the `IDCHECK_*` credentials on an allowlisted runner) — reaching VerificationSuccess and verified Home.
+ * the CI method, approved by `approveInPersonRequest` (routed by src/support/approval-routes.ts) —
+ * reaching VerificationSuccess and verified Home.
  *
  * mocha bail makes the checkpoints fail-fast within this file only; every other journey still runs.
  */
 describe('Verified journey: photo card', () => {
-  before(() => {
-    setTestUser(TestUsers.photo)
+  before(async () => {
+    setTestUser(await arrangeTestUser('photo', 'counter'))
   })
 
   it('onboards to the verify prompt', async () => {

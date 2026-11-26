@@ -177,58 +177,11 @@ describe('AttestationMonitor', () => {
     mockedRequestAttestationDrpc.mockResolvedValue(jest.fn().mockResolvedValue({ result: { status: 'success' } }))
   })
 
-  const buildMonitor = (enabled: boolean) => new AttestationMonitor(new MockLogger(), { enabled })
-
-  describe('the enabled gate', () => {
-    it('ignores proof requests entirely when disabled', async () => {
-      const monitor = buildMonitor(false)
-      monitor.start(agent as any)
-
-      await agent.emit(DidCommProofEventTypes.ProofStateChanged, { proofRecord })
-
-      expect(agent.didcomm.proofs.getFormatData).not.toHaveBeenCalled()
-    })
-
-    it('inspects proof requests when enabled', async () => {
-      const monitor = buildMonitor(true)
-      agent.didcomm.proofs.getFormatData.mockResolvedValue(attestationProofFormat('issuer:3:CL:1:unknown'))
-      monitor.start(agent as any)
-
-      await agent.emit(DidCommProofEventTypes.ProofStateChanged, { proofRecord })
-
-      expect(agent.didcomm.proofs.getFormatData).toHaveBeenCalled()
-    })
-
-    it('honours the setter after construction, so the toggle applies without an agent restart', async () => {
-      const monitor = buildMonitor(true)
-      monitor.start(agent as any)
-      monitor.enabled = false
-
-      await agent.emit(DidCommProofEventTypes.ProofStateChanged, { proofRecord })
-
-      expect(monitor.enabled).toBe(false)
-      expect(agent.didcomm.proofs.getFormatData).not.toHaveBeenCalled()
-    })
-
-    it('declines to attempt attestation for a delegated proof when disabled', async () => {
-      const monitor = buildMonitor(false)
-      monitor.start(agent as any)
-      const started = jest.fn()
-      const subscription = DeviceEventEmitter.addListener(AttestationEventTypes.Started, started)
-
-      await expect(monitor.attemptAttestationForProof(proofRecord)).resolves.toBe(false)
-
-      // No workflow should begin, so AutoCredentialMonitor falls through to
-      // declining with a problem report rather than waiting on the timeout.
-      expect(started).not.toHaveBeenCalled()
-      expect(monitor.attestationWorkflowInProgress).toBe(false)
-      subscription.remove()
-    })
-  })
+  const buildMonitor = () => new AttestationMonitor(new MockLogger(), {})
 
   describe('start and stop', () => {
     it('does not leak subscriptions when started more than once', () => {
-      const monitor = buildMonitor(true)
+      const monitor = buildMonitor()
 
       // A workflow restarts the monitor, and overwriting a live handle would
       // leave a subscription that can never be unsubscribed.
@@ -240,7 +193,7 @@ describe('AttestationMonitor', () => {
     })
 
     it('handles a proof once, not once per start', async () => {
-      const monitor = buildMonitor(true)
+      const monitor = buildMonitor()
       agent.didcomm.proofs.getFormatData.mockResolvedValue(attestationProofFormat('issuer:3:CL:1:unknown'))
 
       monitor.start(agent as any)
@@ -251,7 +204,7 @@ describe('AttestationMonitor', () => {
     })
 
     it('unsubscribes everything on stop', async () => {
-      const monitor = buildMonitor(true)
+      const monitor = buildMonitor()
       agent.didcomm.proofs.getFormatData.mockResolvedValue(attestationProofFormat(TEST_CRED_DEF_ID))
       monitor.start(agent as any)
 
@@ -269,7 +222,7 @@ describe('AttestationMonitor', () => {
     })
 
     it('resolves true once the exchange completes', async () => {
-      const monitor = buildMonitor(true)
+      const monitor = buildMonitor()
       monitor.start(agent as any)
 
       const outcome = monitor.attemptAttestationForProof(proofRecord, 2000)
@@ -283,7 +236,7 @@ describe('AttestationMonitor', () => {
       AttestationEventTypes.FailedHandleOffer,
       AttestationEventTypes.FailedHandleProof,
     ])('resolves false on %s', async (eventType) => {
-      const monitor = buildMonitor(true)
+      const monitor = buildMonitor()
       monitor.start(agent as any)
 
       const outcome = monitor.attemptAttestationForProof(proofRecord, 2000)
@@ -293,7 +246,7 @@ describe('AttestationMonitor', () => {
     })
 
     it('resolves false when the credential never arrives, rather than hanging', async () => {
-      const monitor = buildMonitor(true)
+      const monitor = buildMonitor()
       monitor.start(agent as any)
 
       // The DRPC response is only halfway; without the timeout the caller would
@@ -303,7 +256,7 @@ describe('AttestationMonitor', () => {
     })
 
     it('omits credential_protocol so the controller picks its per-environment default', async () => {
-      const monitor = buildMonitor(true)
+      const monitor = buildMonitor()
       monitor.start(agent as any)
 
       await monitor.attemptAttestationForProof(proofRecord, 10)
@@ -315,7 +268,7 @@ describe('AttestationMonitor', () => {
     })
 
     it('connects to the attestation agent named by the proof restrictions', async () => {
-      const monitor = buildMonitor(true)
+      const monitor = buildMonitor()
       monitor.start(agent as any)
 
       await monitor.attemptAttestationForProof(proofRecord, 10)

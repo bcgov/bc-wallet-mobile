@@ -30,6 +30,8 @@ export interface SessionRecord {
   failures?: number
   /** The error that reported the session gone — Sauce terminated it mid-journey. */
   lost?: string
+  /** Test identities this session minted through the IAS test API. A count: who they are is never recorded. */
+  minted?: number
   tests: SessionTestRecord[]
 }
 
@@ -99,6 +101,13 @@ export function recordTestResult(test: { parent?: string; title: string }, resul
   const message = status === 'fail' ? (error ?? 'failed').split('\n')[0].trim().slice(0, MESSAGE_MAX) : undefined
   current.record.tests.push({ suite: test.parent ?? '', title: test.title, status, ...(message && { message }) })
   if (status === 'fail' && error && LOST_SESSION.test(error) && !current.record.lost) current.record.lost = message
+  save()
+}
+
+/** Count one identity minted for this session, so a run's mints can be totalled from its records. */
+export function recordMintedIdentity(): void {
+  if (!current) return
+  current.record.minted = (current.record.minted ?? 0) + 1
   save()
 }
 

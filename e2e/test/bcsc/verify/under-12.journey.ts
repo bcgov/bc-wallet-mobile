@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { TestUsers, Timeouts } from '../../../src/constants.js'
+import { Timeouts } from '../../../src/constants.js'
 import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
   chooseAddAccount,
@@ -12,6 +12,7 @@ import {
 import { HomeScreen, SettingsScreen, TransferAgeRestrictionScreen } from '../../../src/screens/main.js'
 import { VerificationMethodSelectionScreen } from '../../../src/screens/verify.js'
 import { getTestUser, setTestUser } from '../../../src/support/context.js'
+import { arrangeTestUser } from '../../../src/support/identity.js'
 
 /**
  * Verified journey: under-12 account. Same photo-card path as `verified-photo` (serial + dob, no camera),
@@ -24,12 +25,12 @@ import { getTestUser, setTestUser } from '../../../src/support/context.js'
  *    `account.birthdate` sends a minor to the transfer QR — so this also guards that date-format contract.
  *
  * One ordered session: onboard → Continue → manual serial → birthdate submit (`authorizeDevice`) → method
- * selection (restricted-set assert) → in-person completion via the real IDcheck approval
- * (the `IDCHECK_*` credentials on an allowlisted runner) → verified Home → Settings → Add device.
+ * selection (restricted-set assert) → in-person completion (`approveInPersonRequest`, routed by
+ * src/support/approval-routes.ts) → verified Home → Settings → Add device.
  */
 describe('Verified journey: under-12 account', () => {
-  before(() => {
-    setTestUser(TestUsers.u12)
+  before(async () => {
+    setTestUser(await arrangeTestUser('u12', 'counter'))
   })
 
   it('onboards to the verify prompt', async () => {

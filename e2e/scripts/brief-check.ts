@@ -269,7 +269,7 @@ function selfTest(): void {
   )
 
   const markdown = renderMarkdown(model)
-  for (const heading of ['### UAT checklist', '### Failures (5)', '<summary>Sessions (3 journeys · 5 attempts)</summary>', '🔌 session terminated', 'send-video ❌ (job ✅)', '### Accessibility', '### Legend']) {
+  for (const heading of ['### UAT checklist', '### Failures (5)', '<summary>Sessions (3 journeys · 5 attempts · 2 test identities minted)</summary>', '🔌 session terminated', 'send-video ❌ (job ✅)', '### Accessibility', '### Legend']) {
     assert.ok(markdown.includes(heading), `markdown has ${heading}`)
   }
   assert.ok(!markdown.includes('### Upgrades'), 'the nightly brief has no upgrade block')

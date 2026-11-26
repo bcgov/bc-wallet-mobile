@@ -2,7 +2,7 @@ import { testIdWithKey } from '@bifold/core'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Platform } from 'react-native'
-import { useCameraDevice } from 'react-native-vision-camera'
+import type { CameraDevice } from 'react-native-vision-camera'
 import { useBarcodeScannerOutput } from 'react-native-vision-camera-barcode-scanner'
 import { ReactTestInstance } from 'react-test-renderer'
 
@@ -60,7 +60,6 @@ jest.mock('react-native-vision-camera', () => {
 
   return {
     Camera: MockCamera,
-    useCameraDevice: jest.fn(() => mockDefaultDevice),
     useCameraPermission: jest.fn(() => ({
       hasPermission: mockHasPermission,
       requestPermission: mockRequestPermission,
@@ -145,7 +144,6 @@ jest.mock('react-native-gesture-handler', () => ({
 
 // Typed handles to the mocked hooks above, for use in test bodies
 const mockedUseBCSCActivity = useBCSCActivity as jest.Mock
-const mockedUseCameraDevice = useCameraDevice as jest.Mock
 const mockedUseBarcodeScannerOutput = useBarcodeScannerOutput as jest.Mock
 
 const originalPlatformOS = Platform.OS
@@ -157,7 +155,7 @@ const mockDefaultDevice = {
   maxZoom: 8,
   neutralZoom: 1,
   hasTorch: true,
-}
+} as unknown as CameraDevice
 
 type MockScannedCode = {
   type: string
@@ -195,6 +193,7 @@ describe('CodeScanningCamera', () => {
   const defaultProps = {
     onCodeScanned: mockOnCodeScanned,
     scanZones: BCSC_SN_SCAN_ZONES,
+    device: mockDefaultDevice,
   }
 
   beforeEach(() => {
@@ -209,7 +208,6 @@ describe('CodeScanningCamera', () => {
       pauseActivityTracking: mockPauseActivityTracking,
       resumeActivityTracking: mockResumeActivityTracking,
     })
-    mockedUseCameraDevice.mockReturnValue(mockDefaultDevice)
     mockEnsureAppError.mockImplementation(() => ({ name: 'AppError', message: 'mocked error' }))
     mockOnCodeScanned.mockReset()
   })
@@ -360,7 +358,7 @@ describe('CodeScanningCamera', () => {
         maxZoom: 8,
         neutralZoom: 1,
         hasTorch: false,
-      }
+      } as unknown as CameraDevice
 
       it('passes torch on to the camera when the device has a torch and torchActive is set', async () => {
         const { getByTestId } = render(
@@ -374,11 +372,9 @@ describe('CodeScanningCamera', () => {
       })
 
       it('never passes torch on to the camera when the device has no torch, even if torchActive is set', async () => {
-        mockedUseCameraDevice.mockReturnValue(noTorchDevice)
-
         const { getByTestId } = render(
           <BasicAppContext>
-            <CodeScanningCamera {...defaultProps} torchActive={true} />
+            <CodeScanningCamera {...defaultProps} device={noTorchDevice} torchActive={true} />
           </BasicAppContext>
         )
 
@@ -399,11 +395,9 @@ describe('CodeScanningCamera', () => {
       })
 
       it('hides the built-in torch button when the device has no torch', () => {
-        mockedUseCameraDevice.mockReturnValue(noTorchDevice)
-
         const { queryByTestId } = render(
           <BasicAppContext>
-            <CodeScanningCamera {...defaultProps} />
+            <CodeScanningCamera {...defaultProps} device={noTorchDevice} />
           </BasicAppContext>
         )
 
@@ -425,12 +419,12 @@ describe('CodeScanningCamera', () => {
         expect(onTorchAvailabilityChange).toHaveBeenLastCalledWith(true)
 
         onTorchAvailabilityChange.mockClear()
-        mockedUseCameraDevice.mockReturnValue(noTorchDevice)
 
         render(
           <BasicAppContext>
             <CodeScanningCamera
               {...defaultProps}
+              device={noTorchDevice}
               hideTorchButton
               onTorchAvailabilityChange={onTorchAvailabilityChange}
             />
@@ -477,28 +471,6 @@ describe('CodeScanningCamera', () => {
       const tree = render(
         <BasicAppContext>
           <CodeScanningCamera {...defaultProps} scanZones={customScanZones} enableScanZones={true} />
-        </BasicAppContext>
-      )
-
-      expect(tree).toMatchSnapshot()
-    })
-  })
-
-  describe('Camera Type', () => {
-    it('renders with front camera', () => {
-      const tree = render(
-        <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} cameraType="front" />
-        </BasicAppContext>
-      )
-
-      expect(tree).toMatchSnapshot()
-    })
-
-    it('renders with back camera (default)', () => {
-      const tree = render(
-        <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} cameraType="back" />
         </BasicAppContext>
       )
 
@@ -1040,17 +1012,17 @@ describe('CodeScanningCamera', () => {
 
   describe('Device without focus support', () => {
     it('does not start focus cycling when the device does not support focus metering', async () => {
-      mockedUseCameraDevice.mockReturnValue({
+      const noFocusDevice = {
         id: 'back',
         supportsFocusMetering: false,
         minZoom: 1,
         maxZoom: 4,
         hasTorch: false,
-      })
+      } as unknown as CameraDevice
 
       render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} />
+          <CodeScanningCamera {...defaultProps} device={noFocusDevice} />
         </BasicAppContext>
       )
       await layoutCameraContainer(400, 800)

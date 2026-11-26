@@ -132,6 +132,7 @@ export const NotificationSettingsScreen = (): React.ReactElement => {
     try {
       const result = await PushNotifications.setup()
       logger.info(`[NotificationSettingsScreen] Push notification permission status: ${result}`)
+      setHasPrompted(true)
       const granted = result === PushNotifications.NotificationPermissionStatus.GRANTED
       dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [granted] })
       // Agent setup already ran, so register the device token with the mediator now.
@@ -143,7 +144,6 @@ export const NotificationSettingsScreen = (): React.ReactElement => {
       logger.error(`[NotificationSettingsScreen] Failed to request push notification permission: ${message}`)
       dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [false] })
     } finally {
-      setHasPrompted(true)
       await refresh()
     }
   }, [agent, dispatch, logger, refresh])

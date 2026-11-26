@@ -1,6 +1,9 @@
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { describeError } from '../api/http.js'
+import { decideVerification, normalizeUsercode } from '../api/ias-test.js'
 import { TestUsers } from '../constants.js'
+import { approvalSourceFor } from '../support/approval-routes.js'
 import { clearQueuedSubmission } from '../support/send-video-queue.js'
 import { withDriverKeepalive } from './driver-keepalive.js'
 import { type PersonaLabel, personaLabel } from './redact.js'
@@ -167,32 +170,47 @@ function currentPlatform(): 'ios' | 'android' | undefined {
   return driver.isIOS ? 'ios' : 'android'
 }
 
+/** One call keyed by the code alone: no sign-in, no serial, no birthdate. */
+async function approveInPersonThroughApi(usercode: string, flow: ApproveInPersonInput['flow']): Promise<void> {
+  const startedAt = Date.now()
+  try {
+    // The token and the decision each retry a refused connection, which together can outlast Sauce's idle limit.
+    await withDriverKeepalive(() => decideVerification(usercode, 'COUNTER', 'APPROVE'))
+  } catch (error: unknown) {
+    const elapsedMs = Date.now() - startedAt
+    throw new Error(`In-person approval failed after ${elapsedMs}ms (flow=${flow}, source=api): ${describeError(error)}`, {
+      cause: error,
+    })
+  }
+  console.log(`[approval] The test API recorded the approval in ${Date.now() - startedAt}ms`)
+}
+
 /**
- * Approve an in-person verification request by driving the IDCheck portal in-process.
+ * Approve an in-person verification request: with one call to the IAS test API, or by driving the
+ * IDCheck portal in-process, whichever the route table names for the flow (src/support/approval-routes.ts).
  *
  * Strips dashes/spaces from the formatted code (e.g. "PEDD-RJUW" → "PEDDRJUW")
- * before passing it to the script. For card-tap flows ('photo', 'non-photo') the
+ * before passing it on. For card-tap flows ('photo', 'non-photo') the portal's
  * birthdate is normalized to YYYY-MM-DD on the way through.
  *
  * @param formattedCode - The confirmation code as displayed in the app (XXXX-XXXX)
- * @param input - Flow selector + per-flow inputs
- * @param timeoutMs - Budget for the WHOLE chain (a browser sign-in when no session is cached yet, then
- *   ~10 sequential SIT round trips), not per request — so a thin budget always expires on the last one,
- *   `approve`, whatever was actually slow. The per-step `[idcheck]` timings tell them apart. Sized for a
- *   cold sign-in that waits out a TOTP window (parity) and resubmits one code (up to ~75 s) plus the
- *   round trips.
+ * @param input - Flow selector + per-flow inputs. The API takes none of them: the code is its only key
+ * @param timeoutMs - The portal's budget for the WHOLE chain (a browser sign-in when no session is cached
+ *   yet, then ~10 sequential SIT round trips), not per request — so a thin budget always expires on the
+ *   last one, `approve`, whatever was actually slow. The per-step `[idcheck]` timings tell them apart.
+ *   Sized for a cold sign-in that waits out a TOTP window (parity) and resubmits one code (up to ~75 s)
+ *   plus the round trips.
  */
 export async function approveInPersonRequest(
   formattedCode: string,
   input: ApproveInPersonInput,
   timeoutMs = 120_000
 ): Promise<void> {
-  const code = formattedCode.replaceAll(/[\s-]/g, '')
-  if (!/^[A-Za-z0-9]{8}$/.test(code)) {
-    throw new Error('Invalid confirmation code: expected 8 alphanumeric characters (optionally formatted as XXXX-XXXX)')
-  }
-  // The code stays out of this log and the error below: it approves the request, and Sauce/CI logs are remote.
-  console.log(`[approval] Approving in-person request (flow=${input.flow})`)
+  const code = normalizeUsercode(formattedCode)
+  const source = approvalSourceFor('counter', input.flow)
+  // The code stays out of this log and the errors below: it approves the request, and Sauce/CI logs are remote.
+  console.log(`[approval] Approving in-person request (flow=${input.flow}, source=${source})`)
+  if (source === 'api') return approveInPersonThroughApi(code, input.flow)
 
   const loginInput: ApproveInPersonLoginInput =
     input.flow === 'non-bcsc'

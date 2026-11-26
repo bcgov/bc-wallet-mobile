@@ -843,6 +843,8 @@ const translation = {
       "ContinueScanning": "Continue Scanning (PT-BR)",
       "Confirm": "Confirm (PT-BR)",
       "TryAgain": "Try Again (PT-BR)",
+      "CameraMissingTitle": "Unable to access camera (PT-BR)",
+      "CameraMissingDescription": "Try again or enter the serial number of your BC Services Card manually (PT-BR)",
       "Connecting": "Connecting… (PT-BR)",
       "UnrecognizedQR": "QR code not recognized (PT-BR)",
       "InvalidConnectionInvitation": "This connection invitation could not be opened. (PT-BR)",
@@ -926,6 +928,7 @@ const translation = {
       "CameraPermissionRequiredMessage": "Please enable camera permission to take a photo. (PT-BR)",
       "CameraPermissionRequiredMessage2": "Please enable camera permission to scan a QR code. (PT-BR)",
       "NoCameraAvailable": "No {{device}} camera available (PT-BR)",
+      "NoCameraAvailableDescription": "Make sure your device has a working {{device}} camera and try again (PT-BR)",
       "Error": "Camera Error (PT-BR)",
       "ErrorMessage": "An error occurred while using the camera. Please try again. (PT-BR)",
       "ErrorTakingPhoto": "Failed to take photo. Please try again. (PT-BR)",
@@ -1105,7 +1108,6 @@ const translation = {
         "CameraError": "Camera Error (PT-BR)",
         "CameraErrorMessage": "There was an issue with the camera. Please try again. (PT-BR)",
         "CameraAndMicrophonePermissionsRequired": "Camera and microphone permissions required (PT-BR)",
-        "NoFrontCameraAvailable": "No front camera available (PT-BR)",
         "RecordingWillStartIn": "Recording will start in (PT-BR)",
         "ShowNextPrompt": "Show Next Prompt (PT-BR)",
         "Done": "Done (PT-BR)",
@@ -1299,6 +1301,8 @@ const translation = {
       "Errors": {
         "ConnectionError": "Connection Error (PT-BR)",
         "GenericError": "An error occurred (PT-BR)",
+        "CallEndFailedTitle": "Couldn't check verification (PT-BR)",
+        "CallEndFailedMessage": "Your call ended, but we couldn't check your verification status. Please try again. (PT-BR)",
         "TryAgain": "Try Again (PT-BR)",
         "GoBack": "Go Back (PT-BR)"
       },

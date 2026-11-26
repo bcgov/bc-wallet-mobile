@@ -843,6 +843,8 @@ const translation = {
       "ContinueScanning": "Continue Scanning (FR)",
       "Confirm": "Confirm (FR)",
       "TryAgain": "Try Again (FR)",
+      "CameraMissingTitle": "Unable to access camera (FR)",
+      "CameraMissingDescription": "Try again or enter the serial number of your BC Services Card manually (FR)",
       "Connecting": "Connecting… (FR)",
       "UnrecognizedQR": "QR code not recognized (FR)",
       "InvalidConnectionInvitation": "This connection invitation could not be opened. (FR)",
@@ -926,6 +928,7 @@ const translation = {
       "CameraPermissionRequiredMessage": "Please enable camera permission to take a photo. (FR)",
       "CameraPermissionRequiredMessage2": "Please enable camera permission to scan a QR code. (FR)",
       "NoCameraAvailable": "No {{device}} camera available (FR)",
+      "NoCameraAvailableDescription": "Make sure your device has a working {{device}} camera and try again (FR)",
       "Error": "Camera Error (FR)",
       "ErrorMessage": "An error occurred while using the camera. Please try again. (FR)",
       "ErrorTakingPhoto": "Failed to take photo. Please try again. (FR)",
@@ -1105,7 +1108,6 @@ const translation = {
         "CameraError": "Camera Error (FR)",
         "CameraErrorMessage": "There was an issue with the camera. Please try again. (FR)",
         "CameraAndMicrophonePermissionsRequired": "Camera and microphone permissions required (FR)",
-        "NoFrontCameraAvailable": "No front camera available (FR)",
         "RecordingWillStartIn": "Recording will start in (FR)",
         "ShowNextPrompt": "Show Next Prompt (FR)",
         "Done": "Done (FR)",
@@ -1299,6 +1301,8 @@ const translation = {
       "Errors": {
         "ConnectionError": "Connection Error (FR)",
         "GenericError": "An error occurred (FR)",
+        "CallEndFailedTitle": "Couldn't check verification (FR)",
+        "CallEndFailedMessage": "Your call ended, but we couldn't check your verification status. Please try again. (FR)",
         "TryAgain": "Try Again (FR)",
         "GoBack": "Go Back (FR)"
       },

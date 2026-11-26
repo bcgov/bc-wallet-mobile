@@ -39,6 +39,7 @@ jest.mock('../../components/CodeScanningCamera', () => ({
 }))
 
 jest.mock('react-native-vision-camera', () => ({
+  useCameraDevice: jest.fn(() => ({ id: 'back', hasTorch: true })),
   useCameraPermission: jest.fn(() => ({ hasPermission: true, requestPermission: jest.fn() })),
 }))
 

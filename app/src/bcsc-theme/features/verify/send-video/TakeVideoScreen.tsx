@@ -1,4 +1,5 @@
 import CameraInterruptedOverlay from '@/bcsc-theme/components/CameraInterruptedOverlay'
+import { CameraIssue } from '@/bcsc-theme/components/CameraIssue'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { getCameraMetadata } from '@/bcsc-theme/components/utils/camera'
 import {
@@ -201,6 +202,12 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
       safeAreaInsets.bottom,
     ]
   )
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerShown: !device,
+    })
+  }, [device, navigation])
 
   const getCameraError = useCallback(
     (error: unknown) => {
@@ -609,9 +616,10 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   if (!device) {
     return (
       <SafeAreaView style={styles.pageContainer}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ThemedText style={{ color: 'white' }}>{t('BCSC.SendVideo.TakeVideo.NoFrontCameraAvailable')}</ThemedText>
-        </View>
+        <CameraIssue
+          title={t('BCSC.CameraDisclosure.NoCameraAvailable', { device: 'front' })}
+          description={t('BCSC.CameraDisclosure.NoCameraAvailableDescription', { device: 'front' })}
+        />
       </SafeAreaView>
     )
   }

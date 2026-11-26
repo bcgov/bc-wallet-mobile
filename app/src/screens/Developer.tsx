@@ -195,7 +195,6 @@ const Developer: React.FC = () => {
   const [enableShareableLink, setEnableShareableLink] = useState(!!store.preferences.enableShareableLink)
   const [enableProxy, setEnableProxy] = useState(!!store.developer.enableProxy)
   const [enableAppToAppPersonFlow, setEnableAppToAppPersonFlow] = useState(!!store.developer.enableAppToAppPersonFlow)
-  const [enableAttestation, setEnableAttestation] = useState(!!store.developer.enableAttestation)
   const [tokensDeleted, setTokensDeleted] = useState<boolean>(false)
   const [personCredentialFetchStatus, setPersonCredentialFetchStatus] = useState<string>('idle')
   const remoteConfig = useRemoteConfig()
@@ -381,14 +380,6 @@ const Developer: React.FC = () => {
       payload: [!enableAppToAppPersonFlow],
     })
     setEnableAppToAppPersonFlow((previousState) => !previousState)
-  }
-
-  const toggleEnableAttestationSwitch = () => {
-    dispatch({
-      type: BCDispatchAction.TOGGLE_ATTESTATION,
-      payload: [!enableAttestation],
-    })
-    setEnableAttestation((previousState) => !previousState)
   }
 
   const toggleTheme = () => {
@@ -626,13 +617,6 @@ const Developer: React.FC = () => {
                 <RowDetail label={t('RemoteLogging.SessionID')} value={logger.sessionId.toString()} />
               ) : null
             }
-          />
-          <ToggleRow
-            title={t('Developer.EnableAttestation')}
-            value={enableAttestation}
-            onToggle={toggleEnableAttestationSwitch}
-            accessibilityLabel={t('Developer.EnableAttestation')}
-            testID={testIdWithKey(TestIds.developer.toggleEnableAttestation)}
           />
           <ToggleRow
             title={t('Developer.EnableProxy')}

@@ -220,6 +220,18 @@ box, so they need no change. The photo, video and barcode outputs are independen
 **Why:** overlays sized from the window covered the face oval, the card cutout and most of the preview at
 large OS font sizes (#4401).
 
+## Cameras: a missing camera is not a missing permission
+
+When `useCameraDevice` finds no camera, render `CameraIssue` (`app/src/bcsc-theme/components/CameraIssue.tsx`)
+in place of the preview, with a title and a description that say what is wrong. Keep `PermissionDisabled` for
+a denied permission only. The screen keeps its way out: the card scan screen keeps "Enter manually" (and adds
+Try again after a camera failure) in `ScanSerialScreenWrapper`, and the headerless photo and video screens turn
+the stack header on (`headerShown: !device`) so the user can go back. Runtime camera errors on the photo and
+video screens still go to the error modal (see above).
+
+**Why:** a phone without a usable rear camera showed "Camera permission required" with permission granted, or
+a generic error that took "Enter manually" with it (#5030).
+
 ## Recording: an inactive app is not a user who left
 
 During the video countdown, act on an `inactive` app state only if it lasts until the countdown ends.

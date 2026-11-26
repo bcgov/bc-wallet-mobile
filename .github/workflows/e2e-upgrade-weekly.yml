@@ -31,8 +31,8 @@
 #                       build under test
 #
 # The build under test resolves like the nightly's: the latest main run of the past
-# 7 days whose bcsc-dev builds and Sauce uploads all succeeded. The in-person approval
-# runs on the runner, so the e2e jobs stay on the allowlisted runner e2e.yml defaults to.
+# 7 days whose bcsc-dev builds and Sauce uploads all succeeded. The portal approvals
+# run on the runner, so the e2e jobs stay on the allowlisted runner e2e.yml defaults to.
 name: E2E Upgrade Weekly
 
 on:

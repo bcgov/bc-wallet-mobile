@@ -23,6 +23,7 @@ import { useCameraInterruption, useCameraNotReadyTimeout, useRecoverableCameraEr
 import { isCameraControlCanceledError, useVisionCamera } from '../hooks/useVisionCamera'
 import { isBackgroundedAppState } from '../utils/app-state'
 import CameraInterruptedOverlay from './CameraInterruptedOverlay'
+import { CameraIssue } from './CameraIssue'
 import { getCameraMetadata, isCameraNotReadyCaptureError } from './utils/camera'
 import { OUTPUT_ORIENTATION_SOURCE, PREVIEW_IMPLEMENTATION_MODE } from './utils/camera-output'
 
@@ -250,10 +251,11 @@ const MaskedCamera = ({
 
   if (!device) {
     return (
-      <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ThemedText>{t('BCSC.CameraDisclosure.NoCameraAvailable', { device: cameraFace })}</ThemedText>
-        </View>
+      <SafeAreaView style={[styles.container, { marginTop: -safeAreaInsets.top }]} edges={['bottom', 'left', 'right']}>
+        <CameraIssue
+          title={t('BCSC.CameraDisclosure.NoCameraAvailable', { device: cameraFace })}
+          description={t('BCSC.CameraDisclosure.NoCameraAvailableDescription', { device: cameraFace })}
+        />
       </SafeAreaView>
     )
   }

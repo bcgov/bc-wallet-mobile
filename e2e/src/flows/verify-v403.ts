@@ -151,7 +151,7 @@ export async function showInPersonCodeV403(): Promise<string> {
   return VerifyInPersonScreen.read('confirmationCode')
 }
 
-/** Approve the displayed code in IDCheck, Complete → `Ok` → 4.0.3's verified Home (tab bar; no scan FAB yet). */
+/** Have the displayed code approved, Complete → `Ok` → 4.0.3's verified Home (tab bar; no scan FAB yet). */
 export async function approveAndCompleteV403(user: TestUser, code: string): Promise<void> {
   await approveInPersonRequest(code, approvalInputForUser(user))
   await VerifyInPersonScreen.tapWhenEnabled('primary') // Complete
