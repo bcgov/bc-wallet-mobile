@@ -1,4 +1,3 @@
-import { TestUsers } from '../../../src/constants.js'
 import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
   chooseAddAccount,
@@ -13,8 +12,9 @@ import {
   submitSendVideoVerification,
   waitForSendVideoDecision,
 } from '../../../src/flows/verify.js'
-import { type ClaimedRequestSummary, reviewSendVideoRequest } from '../../../src/helpers/approval.js'
+import { reviewSendVideoRequest, type SendVideoReview } from '../../../src/helpers/approval.js'
 import { getTestUser, setTestUser } from '../../../src/support/context.js'
+import { arrangeTestUser } from '../../../src/support/identity.js'
 
 /**
  * Verified journey: send video, rejected — the same submission as the approved journey, decided the
@@ -34,11 +34,11 @@ import { getTestUser, setTestUser } from '../../../src/support/context.js'
 const AGENT_REASON = 'Automated e2e rejection'
 
 describe('Verified journey: send video, rejected', () => {
-  /** What the scripted review claimed — named by the decision wait's failure, should the app never see it. */
-  let reviewed: ClaimedRequestSummary | undefined
+  /** What the review decided — named by the decision wait's failure, should the app never see it. */
+  let reviewed: SendVideoReview | undefined
 
-  before(() => {
-    setTestUser(TestUsers.photo)
+  before(async () => {
+    setTestUser(await arrangeTestUser('photo', 'send-video'))
   })
 
   after(async () => {

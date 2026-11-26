@@ -10,7 +10,7 @@ import {
   waitForSendVideoDecision,
 } from '../../../../src/flows/verify.js'
 import { installCurrentBuildOverRunningApp, relaunchAfterInstall } from '../../../../src/helpers/app-install.js'
-import { type ClaimedRequestSummary, reviewSendVideoRequest } from '../../../../src/helpers/approval.js'
+import { reviewSendVideoRequest, type SendVideoReview } from '../../../../src/helpers/approval.js'
 import { annotate } from '../../../../src/helpers/sauce.js'
 import { HomeScreen } from '../../../../src/screens/main.js'
 import { PendingReviewScreen, VerificationSuccessScreen } from '../../../../src/screens/verify.js'
@@ -39,8 +39,8 @@ import { getTestUser, setTestUser } from '../../../../src/support/context.js'
  */
 export function defineSendVideoPendingUpgrade(prev: PrevBuild): void {
   let appId: string | undefined
-  /** What the scripted review claimed — named by the decision wait's failure, should the app never see it. */
-  let reviewed: ClaimedRequestSummary | undefined
+  /** What the review decided — named by the decision wait's failure, should the app never see it. */
+  let reviewed: SendVideoReview | undefined
 
   before(async () => {
     setTestUser(await arrangeBcscUser(prev, 'send-video'))

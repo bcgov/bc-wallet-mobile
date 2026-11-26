@@ -7,7 +7,7 @@ import {
   finishApprovedVerification,
 } from '../../../../src/flows/verify.js'
 import { closeRunningApp, installCurrentBuildOver, relaunchAfterInstall } from '../../../../src/helpers/app-install.js'
-import { reviewSendVideoRequest } from '../../../../src/helpers/approval.js'
+import { describeReview, reviewSendVideoRequest } from '../../../../src/helpers/approval.js'
 import { annotate } from '../../../../src/helpers/sauce.js'
 import { getTestUser, setTestUser } from '../../../../src/support/context.js'
 
@@ -62,7 +62,7 @@ export function defineSendVideoApprovedUpgrade(prev: PrevBuild): void {
       surname: user.lastName,
       firstName: user.firstName,
     })
-    console.log(`[upgrade-send-video] the scripted review approved ${reviewed.queue} request ${reviewed.requestIdentifier} (${reviewed.persona})`)
+    console.log(`[upgrade-send-video] approved: ${describeReview(reviewed)}`)
   })
 
   it('installs the current build over the closed previous build', async () => {
