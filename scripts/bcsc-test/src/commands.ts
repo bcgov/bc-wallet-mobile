@@ -1,6 +1,6 @@
 import { logout, switchClient, token } from './auth.ts'
 import { login } from './login.ts'
-import { setExpiry } from './mobile-app.ts'
+import { setExpiry, setStatus } from './mobile-app.ts'
 import type { ArgSpec, FlagSpec, GroupSpec } from './spec.ts'
 import { status, STATUS_JSON_FIELDS } from './status.ts'
 import { approve, decline } from './verification.ts'
@@ -282,12 +282,46 @@ is unknown, not yet verified, already expired or suspended is rejected.`,
       },
       {
         name: 'set-status',
-        summary: 'Change the status of a mobile app registration',
-        description: 'Change the status of a mobile app registration.',
+        summary: 'Suspend or unsuspend a mobile app registration',
+        description: `Suspend or unsuspend a mobile app registration.
+
+IAS picks the new status; you do not send one. An Activated mobile app becomes
+Suspended and a Suspended one becomes Activated, so running the command again
+reverses it. Any other status, such as not yet verified, Expired or Deactivated,
+is rejected. IAS returns nothing on success, so check the device to see which
+way it went.
+
+A Suspended mobile app keeps its device key and expiry. A fresh quick login is
+refused, and the app shows its Problem with Account message the next time it
+requests a person credential. Card tap with a newly generated pairing code shows
+"There is a problem with your account" while the registration is unexpired; an
+expired registration shows the expired message instead. No push notification is
+sent, so the app learns of the change only when it next calls IAS. An already
+open digital card or an earlier pairing code is not a reliable check. set-expiry
+is rejected until the mobile app is Activated again.
+
+--reason is a ticket reference of 1 to 25 letters or digits, with no spaces or
+punctuation. IAS stores it in the status comment; it does not choose the status.`,
         args: [usercode],
-        flags: [{ name: 'reason', value: 'string', description: 'Why the status changed (required)' }, dryRun],
+        flags: [
+          {
+            name: 'reason',
+            value: 'string',
+            description: 'A ticket reference stored with the change: 1 to 25 letters or digits (required)',
+          },
+          hostname,
+          dryRun,
+        ],
+        handler: setStatus,
         examples: [
-          { comment: 'Change the status', command: 'bcsc-test mobile-app set-status NCNF-ZNTB --reason "Test"' },
+          {
+            comment: 'Suspend an Activated mobile app, or unsuspend a Suspended one',
+            command: 'bcsc-test mobile-app set-status NCNF-ZNTB --reason E2E1',
+          },
+          {
+            comment: 'Print the request without sending it',
+            command: 'bcsc-test mobile-app set-status NCNF-ZNTB --reason E2E1 --dry-run',
+          },
         ],
       },
     ],

@@ -20,6 +20,13 @@ export interface ApiRequest {
   errors?: Partial<Record<number, string>>
   /** Shown before a write: `notice` on stderr, then `question` as a y/N prompt. */
   confirm?: { notice: string; question: string }
+  /**
+   * Opt-in for writes that are not safe to repeat. Redirects are not followed, so the body is never
+   * resent to another URL, and any redirect ends the command with `outcomeUnknown`.
+   */
+  redirect?: 'manual'
+  /** Replaces OUTCOME_UNKNOWN after a network failure that may have followed delivery, and after a redirect. */
+  outcomeUnknown?: string
 }
 
 // One builder for both the real request and --dry-run, so the preview cannot drift from what is sent.
@@ -53,7 +60,7 @@ const NOT_SENT_CODES = new Set([
 ])
 
 /** Anything that is not clearly pre-connection is treated as possibly delivered, so a write is never retried blindly. */
-export const networkFailure = (host: string, error: unknown): CliError => {
+export const networkFailure = (host: string, error: unknown, outcomeUnknown = OUTCOME_UNKNOWN): CliError => {
   const { codes, text } = failureReason(error)
   if (codes.some((code) => NOT_SENT_CODES.has(code))) {
     return new CliError(
@@ -63,7 +70,7 @@ export const networkFailure = (host: string, error: unknown): CliError => {
   const timedOut = (error as Error).name === 'TimeoutError'
   const reason = timedOut ? `no response within ${REQUEST_TIMEOUT_MS / 1000}s` : text
   return new CliError(
-    `The request to https://${host} failed after it may have been sent (${reason}). ${OUTCOME_UNKNOWN}`
+    `The request to https://${host} failed after it may have been sent (${reason}). ${outcomeUnknown}`
   )
 }
 
@@ -93,6 +100,30 @@ const GATEWAY_ERRORS = Object.fromEntries(
   ])
 )
 
+// Node reports the real 3xx status for a manual redirect; browsers report an opaque response with status 0.
+const isRedirect = (response: Response): boolean =>
+  response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400)
+
+const dispatch = async (host: string, url: string, token: string, request: ApiRequest): Promise<Response> => {
+  const outcomeUnknown = request.outcomeUnknown ?? OUTCOME_UNKNOWN
+  let response: Response
+  try {
+    response = await fetch(url, {
+      method: request.method,
+      headers: buildHeaders(token, request.body !== undefined),
+      body: request.body === undefined ? undefined : JSON.stringify(request.body),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      ...(request.redirect && { redirect: request.redirect }),
+    })
+  } catch (error) {
+    throw networkFailure(host, error, outcomeUnknown)
+  }
+  if (request.redirect === 'manual' && isRedirect(response)) {
+    throw new CliError(`IAS answered with a redirect (status ${response.status}). ${outcomeUnknown}`)
+  }
+  return response
+}
+
 /** Dry-run, token, confirmation, request, error mapping, in that order. Resolves undefined for --dry-run. */
 export const sendApiRequest = async (
   ctx: HandlerContext,
@@ -108,17 +139,7 @@ export const sendApiRequest = async (
   const token = await requireToken(host, ctx.env)
   if (request.confirm) await confirmWrite(ctx, request.confirm)
 
-  let response: Response
-  try {
-    response = await fetch(url, {
-      method: request.method,
-      headers: buildHeaders(token, request.body !== undefined),
-      body: request.body === undefined ? undefined : JSON.stringify(request.body),
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    })
-  } catch (error) {
-    throw networkFailure(host, error)
-  }
+  const response = await dispatch(host, url, token, request)
 
   if (!response.ok) {
     const { message, exitCode } = explainHttpFailure(

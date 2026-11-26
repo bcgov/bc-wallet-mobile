@@ -51,6 +51,15 @@ bcsc-test mobile-app set-expiry NCNF-ZNTB 2099-12-01T00:00:00-08:00 --dry-run
 
 IAS accepts an expiry only while the mobile app is Activated. A date at or before the IAS server's current time marks the mobile app Expired, and nothing in the test API reverses that, so use a disposable usercode.
 
+## Suspend or unsuspend the mobile app
+
+```sh
+bcsc-test mobile-app set-status NCNF-ZNTB --reason E2E1
+bcsc-test mobile-app set-status NCNF-ZNTB --reason E2E1 --dry-run
+```
+
+IAS decides the new status: an Activated mobile app becomes Suspended and a Suspended one becomes Activated, so running the command again reverses it. IAS reports nothing on success, so check the device to see which way it went. The reason is a ticket reference of 1 to 25 letters or digits, with no spaces or punctuation.
+
 ## Help
 
 Every command has examples under `--help`. Commands marked `not implemented` are placeholders for later work.
@@ -59,6 +68,6 @@ Every command has examples under `--help`. Commands marked `not implemented` are
 
 ```sh
 cd scripts/bcsc-test
-yarn test
-yarn typecheck
+node --test 'src/**/*.test.ts'
+../../node_modules/.bin/tsc -p .
 ```

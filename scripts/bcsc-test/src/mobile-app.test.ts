@@ -4,22 +4,29 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, it, mock } from 'node:test'
 import { run } from './cli.ts'
+import { writeCachedToken, writeHosts } from './config.ts'
 import type { Io } from './spec.ts'
 
 const HOST = 'iddev.gov.bc.ca'
 const URL = `https://${HOST}/test/idv/v1/accounts/mobile-app/NCNF-ZNTB/expiry`
+const STATUS_URL = `https://${HOST}/test/idv/v1/accounts/mobile-app/NCNF-ZNTB/status`
 const EXPIRY = '2099-12-01T00:00:00-08:00'
 const TOKEN = 'sentinel-token-value'
 
 const emptyConfigHome = (): string => mkdtempSync(join(tmpdir(), 'bcsc-test-'))
 
-const invoke = async (argv: string[], env: NodeJS.ProcessEnv = { BCSC_TEST_TOKEN: TOKEN }) => {
-  let stdout = ''
-  let stderr = ''
-  const io: Io = { stdout: (t) => (stdout += t), stderr: (t) => (stderr += t), isTTY: false }
-  const code = await run(['mobile-app', 'set-expiry', 'NCNF-ZNTB', ...argv, '--hostname', HOST], { io, env })
-  return { code, stdout, stderr }
-}
+const invokeCommand =
+  (command: string) =>
+  async (argv: string[], env: NodeJS.ProcessEnv = { BCSC_TEST_TOKEN: TOKEN }) => {
+    let stdout = ''
+    let stderr = ''
+    const io: Io = { stdout: (t) => (stdout += t), stderr: (t) => (stderr += t), isTTY: false }
+    const code = await run(['mobile-app', command, 'NCNF-ZNTB', ...argv, '--hostname', HOST], { io, env })
+    return { code, stdout, stderr }
+  }
+
+const invoke = invokeCommand('set-expiry')
+const invokeStatus = invokeCommand('set-status')
 
 const mockFetch = (respond: () => Response | Promise<Response>) =>
   mock.method(globalThis, 'fetch', async (_url: string, _init: RequestInit) => respond())
@@ -202,6 +209,285 @@ describe('mobile-app set-expiry', () => {
         assert.equal(code, 1)
         assert.equal(stdout, '')
         assert.match(stderr, /IAS answered unexpectedly\. The outcome is unknown/)
+      })
+    }
+  })
+})
+
+describe('mobile-app set-status', () => {
+  const emptyOk = () => new Response(null, { status: 200 })
+
+  it('posts the reason with the caller-supplied token and reports that the status was switched', async () => {
+    const fetchMock = mockFetch(emptyOk)
+    const { code, stdout, stderr } = await invokeStatus(['--reason', 'E2E1'])
+    assert.equal(code, 0, stderr)
+    assert.equal(fetchMock.mock.callCount(), 1)
+    const [url, init] = sentRequest(fetchMock, 0)
+    assert.equal(url, STATUS_URL)
+    assert.equal(init.method, 'POST')
+    assert.equal((init.headers as Record<string, string>).Authorization, `Bearer ${TOKEN}`)
+    assert.equal(init.body, JSON.stringify({ reason: 'E2E1' }))
+    assert.match(stdout, new RegExp(`Changed the status of NCNF-ZNTB on ${HOST}`))
+    assert.match(stdout, /Activated mobile app is now Suspended, and a Suspended one is now Activated/)
+    assert.match(stdout, /again to reverse it/)
+  })
+
+  it('sends a padded reason trimmed', async () => {
+    const fetchMock = mockFetch(emptyOk)
+    const { code } = await invokeStatus(['--reason', ' E2E1 '])
+    assert.equal(code, 0)
+    assert.equal(sentRequest(fetchMock, 0)[1].body, JSON.stringify({ reason: 'E2E1' }))
+  })
+
+  it('uses the host named by --hostname', async () => {
+    const fetchMock = mockFetch(emptyOk)
+    let stdout = ''
+    const io: Io = { stdout: (t) => (stdout += t), stderr: () => {}, isTTY: false }
+    const code = await run(
+      ['mobile-app', 'set-status', 'NCNF-ZNTB', '--reason', 'E2E1', '--hostname', 'idsit.gov.bc.ca'],
+      {
+        io,
+        env: { BCSC_TEST_TOKEN: TOKEN },
+      }
+    )
+    assert.equal(code, 0)
+    assert.equal(
+      sentRequest(fetchMock, 0)[0],
+      'https://idsit.gov.bc.ca/test/idv/v1/accounts/mobile-app/NCNF-ZNTB/status'
+    )
+    assert.match(stdout, /on idsit\.gov\.bc\.ca/)
+  })
+
+  it('uses the saved login when no token is supplied', async () => {
+    const env = { XDG_CONFIG_HOME: emptyConfigHome() }
+    writeHosts(env, { hosts: { [HOST]: { activeClient: 'tester', clients: { tester: { source: 'keychain' } } } } })
+    writeCachedToken(env, HOST, 'tester', {
+      accessToken: 'saved-token',
+      expiresAt: Math.floor(Date.now() / 1000) + 3600,
+    })
+    const fetchMock = mockFetch(emptyOk)
+    const { code, stderr } = await invokeStatus(['--reason', 'E2E1'], env)
+    assert.equal(code, 0, stderr)
+    assert.equal((sentRequest(fetchMock, 0)[1].headers as Record<string, string>).Authorization, 'Bearer saved-token')
+  })
+
+  it('asks for a login, and sends nothing, when there is no token', async () => {
+    const fetchMock = mockFetch(emptyOk)
+    const { code, stderr } = await invokeStatus(['--reason', 'E2E1'], { XDG_CONFIG_HOME: emptyConfigHome() })
+    assert.notEqual(code, 0)
+    assert.equal(fetchMock.mock.callCount(), 0)
+    assert.match(stderr, /Not logged in/)
+  })
+
+  describe('rejects reasons the CLI will not send', () => {
+    const invalid = [
+      ['a space', 'Flaky test'],
+      ['punctuation', 'INC-123'],
+      ['an underscore', 'E2E_1'],
+      ['a non-ASCII letter', 'Café1'],
+      ['26 characters', 'A'.repeat(26)],
+    ]
+    for (const [name, value] of invalid) {
+      it(name, async () => {
+        const fetchMock = mockFetch(emptyOk)
+        const { code, stdout, stderr } = await invokeStatus(['--reason', value])
+        assert.equal(code, 1)
+        assert.equal(fetchMock.mock.callCount(), 0)
+        assert.equal(stdout, '')
+        assert.match(stderr, /E2E1/)
+        assert.match(stderr, /Nothing was sent/)
+      })
+    }
+
+    it('rejects a bad reason under --dry-run too', async () => {
+      const fetchMock = mockFetch(emptyOk)
+      const { code, stdout, stderr } = await invokeStatus(['--reason', 'INC-123', '--dry-run'])
+      assert.equal(code, 1)
+      assert.equal(fetchMock.mock.callCount(), 0)
+      assert.equal(stdout, '')
+      assert.match(stderr, /E2E1/)
+    })
+
+    it('requires --reason', async () => {
+      const fetchMock = mockFetch(emptyOk)
+      const { code, stdout, stderr } = await invokeStatus([])
+      assert.equal(code, 1)
+      assert.equal(fetchMock.mock.callCount(), 0)
+      assert.equal(stdout, '')
+      assert.match(stderr, /--reason is required\./)
+    })
+
+    it('treats a blank --reason as missing', async () => {
+      const fetchMock = mockFetch(emptyOk)
+      const { code, stderr } = await invokeStatus(['--reason', ''])
+      assert.equal(code, 1)
+      assert.equal(fetchMock.mock.callCount(), 0)
+      assert.match(stderr, /--reason is required\./)
+    })
+  })
+
+  describe('accepts reasons at the edges of the rule', () => {
+    for (const [name, value] of [
+      ['1 character', 'A'],
+      ['25 characters', 'a1'.repeat(12) + 'Z'],
+    ]) {
+      it(name, async () => {
+        const fetchMock = mockFetch(emptyOk)
+        const { code, stdout, stderr } = await invokeStatus(['--reason', value, '--dry-run'])
+        assert.equal(code, 0, stderr)
+        assert.equal(fetchMock.mock.callCount(), 0)
+        assert.ok(stdout.includes(JSON.stringify({ reason: value }, null, 2)), stdout)
+      })
+    }
+  })
+
+  it('--dry-run prints the request with the token redacted and sends nothing', async () => {
+    const fetchMock = mockFetch(() => {
+      throw new Error('must not be called')
+    })
+    const { code, stdout, stderr } = await invokeStatus(['--reason', 'E2E1', '--dry-run'])
+    assert.equal(code, 0, stderr)
+    assert.equal(fetchMock.mock.callCount(), 0)
+    assert.ok(stdout.startsWith(`POST ${STATUS_URL}\n`), stdout)
+    assert.match(stdout, /Authorization: Bearer \[REDACTED\]/)
+    assert.ok(stdout.includes(JSON.stringify({ reason: 'E2E1' }, null, 2)), stdout)
+    assert.doesNotMatch(stdout, /Changed the status/)
+    assert.ok(!stdout.includes(TOKEN) && !stderr.includes(TOKEN))
+  })
+
+  it('--dry-run needs no token or login', async () => {
+    const fetchMock = mockFetch(emptyOk)
+    const { code } = await invokeStatus(['--reason', 'E2E1', '--dry-run'], { XDG_CONFIG_HOME: emptyConfigHome() })
+    assert.equal(code, 0)
+    assert.equal(fetchMock.mock.callCount(), 0)
+  })
+
+  it('--help says what the change does to the device and lists --hostname', async () => {
+    let stdout = ''
+    const io: Io = { stdout: (t) => (stdout += t), stderr: () => {}, isTTY: false }
+    const code = await run(['mobile-app', 'set-status', '--help'], { io, env: {} })
+    assert.equal(code, 0)
+    assert.match(stdout, /An Activated mobile app becomes\s+Suspended and a Suspended one becomes Activated/)
+    assert.match(stdout, /reverses\s+it/)
+    assert.match(stdout, /Problem with Account/)
+    assert.match(stdout, /There is a problem with your\s+account/)
+    assert.match(stdout, /while the registration is\s+unexpired/)
+    assert.match(stdout, /not a reliable check/)
+    assert.match(stdout, /--hostname/)
+  })
+
+  describe('failures', () => {
+    it('explains a 400 as an Activated-or-Suspended precondition', async () => {
+      mockFetch(() => new Response(null, { status: 400 }))
+      const { code, stderr } = await invokeStatus(['--reason', 'E2E1'])
+      assert.equal(code, 1)
+      assert.match(stderr, /Activated or Suspended/)
+    })
+
+    it('names the host on a 404', async () => {
+      mockFetch(() => new Response(null, { status: 404 }))
+      const { code, stderr } = await invokeStatus(['--reason', 'E2E1'])
+      assert.equal(code, 1)
+      assert.ok(stderr.includes(`on ${HOST}`), stderr)
+      assert.match(stderr, /--hostname/)
+    })
+
+    for (const status of [500, 502, 503, 504, 507, 524, 599]) {
+      it(`does not retry a ${status} and says to check before running it again`, async () => {
+        const fetchMock = mockFetch(() => new Response(null, { status }))
+        const { code, stdout, stderr } = await invokeStatus(['--reason', 'E2E1'])
+        assert.equal(code, 1)
+        assert.equal(fetchMock.mock.callCount(), 1)
+        assert.equal(stdout, '')
+        assert.match(stderr, /may or may not have changed the status/)
+        assert.match(stderr, /a second run switches it back/)
+        assert.doesNotMatch(stderr, /Retry/)
+      })
+    }
+
+    it('sends with manual redirects and never follows a 307', async () => {
+      const fetchMock = mockFetch(
+        () => new Response(null, { status: 307, headers: { Location: 'https://other.example/' } })
+      )
+      const { code, stdout, stderr } = await invokeStatus(['--reason', 'E2E1'])
+      assert.equal(code, 1)
+      assert.equal(fetchMock.mock.callCount(), 1)
+      assert.equal(sentRequest(fetchMock, 0)[1].redirect, 'manual')
+      assert.equal(stdout, '')
+      assert.match(stderr, /IAS answered with a redirect \(status 307\)\. The outcome is unknown; check the device/)
+      assert.match(stderr, /a second run switches the status back/)
+      assert.doesNotMatch(stderr, /endpoint was found|check the registration/)
+    })
+
+    it('treats an opaque redirect as an unknown outcome', async () => {
+      const opaque = new Response(null, { status: 200 })
+      Object.defineProperty(opaque, 'type', { value: 'opaqueredirect' })
+      mockFetch(() => opaque)
+      const { code, stdout, stderr } = await invokeStatus(['--reason', 'E2E1'])
+      assert.equal(code, 1)
+      assert.equal(stdout, '')
+      assert.match(stderr, /IAS answered with a redirect/)
+    })
+
+    for (const [name, cause] of [
+      ['a timeout', Object.assign(new Error('timed out'), { name: 'TimeoutError' })],
+      [
+        'a connection reset',
+        Object.assign(new TypeError('fetch failed'), { cause: { code: 'ECONNRESET', message: 'read ECONNRESET' } }),
+      ],
+    ] as const) {
+      it(`gives the device-check wording after ${name} once the request may have been sent`, async () => {
+        const fetchMock = mockFetch(() => Promise.reject(cause))
+        const { code, stdout, stderr } = await invokeStatus(['--reason', 'E2E1'])
+        assert.equal(code, 1)
+        assert.equal(fetchMock.mock.callCount(), 1)
+        assert.equal(stdout, '')
+        assert.match(stderr, /may have been sent/)
+        assert.match(stderr, /check the device before running the command again/)
+        assert.match(stderr, /a second run switches the status back/)
+        assert.doesNotMatch(stderr, /check the registration/)
+      })
+    }
+
+    it('keeps the plain wording when the connection was never made', async () => {
+      mockFetch(() =>
+        Promise.reject(
+          Object.assign(new TypeError('fetch failed'), {
+            cause: { code: 'ECONNREFUSED', message: 'connect ECONNREFUSED' },
+          })
+        )
+      )
+      const { code, stderr } = await invokeStatus(['--reason', 'E2E1'])
+      assert.equal(code, 1)
+      assert.match(stderr, /Nothing was sent/)
+    })
+
+    it('keeps the not-implemented message for a 501', async () => {
+      mockFetch(() => new Response(null, { status: 501 }))
+      const { code, stderr } = await invokeStatus(['--reason', 'E2E1'])
+      assert.equal(code, 1)
+      assert.match(stderr, /does not implement this operation/)
+      assert.doesNotMatch(stderr, /may or may not/)
+    })
+
+    const unreadable = () =>
+      new Response(new ReadableStream({ start: (controller) => controller.error(new Error('stream failed')) }), {
+        status: 200,
+      })
+    const unexpected = [
+      ['an empty 204', () => new Response(null, { status: 204 })],
+      ['a 200 with a body', () => new Response('{"status":"SUSPENDED"}', { status: 200 })],
+      ['a 200 whose body cannot be read', unreadable],
+    ] as const
+    for (const [name, respond] of unexpected) {
+      it(`reports an unknown outcome for ${name}`, async () => {
+        mockFetch(respond)
+        const { code, stdout, stderr } = await invokeStatus(['--reason', 'E2E1'])
+        assert.equal(code, 1)
+        assert.equal(stdout, '')
+        assert.match(stderr, /IAS answered unexpectedly\. The outcome is unknown; check the device/)
+        assert.match(stderr, /a second run switches the status back/)
+        assert.doesNotMatch(stderr, /check the registration/)
       })
     }
   })
