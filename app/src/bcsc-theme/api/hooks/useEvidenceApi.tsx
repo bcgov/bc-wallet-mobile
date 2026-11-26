@@ -11,6 +11,11 @@ import { createPreVerificationJWT, EvidenceType } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
 
+// The evidence server answers a rejected photo or video upload with a JSON error body. An Accept header naming
+// only the media type leaves it no way to send that body, so it answers a bare 500 and the real status and
+// message are lost (#4763). A successful upload returns no body, so this does not change it.
+const EVIDENCE_BINARY_UPLOAD_ACCEPT = 'application/json, */*'
+
 export interface VerificationPrompt {
   id: number
   prompt: string
@@ -391,7 +396,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'image/jpeg',
-            Accept: 'image/jpeg',
+            Accept: EVIDENCE_BINARY_UPLOAD_ACCEPT,
           },
           skipBearerAuth: true,
           timeout: EVIDENCE_UPLOAD_TIMEOUT_MS,
@@ -417,7 +422,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': VIDEO_MP4_MIME_TYPE,
-            Accept: VIDEO_MP4_MIME_TYPE,
+            Accept: EVIDENCE_BINARY_UPLOAD_ACCEPT,
           },
           skipBearerAuth: true,
           timeout: EVIDENCE_UPLOAD_TIMEOUT_MS,
