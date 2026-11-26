@@ -5,6 +5,7 @@ import {
   OnboardingCreatePINScreen,
   OnboardingIntroScreen,
   OnboardingNotificationsDisabledScreen,
+  OnboardingNotificationsGrantedScreen,
   OnboardingNotificationsScreen,
   OnboardingOptInAnalyticsScreen,
   OnboardingPrivacyPolicyScreen,
@@ -46,26 +47,43 @@ describe('Onboarding journey: notification permission granted', () => {
     await answerNotificationPermission('allow')
   })
 
-  it('keeps the normal Notifications body once permission is granted', async () => {
-    // Mirror of the detours journey's refusal branch: `PermissionDisabled` only swaps in for a
-    // denied/blocked status, so a granted user re-entering still sees the enable/skip pair.
-    await OnboardingSecureAppScreen.back.tap()
-    await OnboardingNotificationsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  it('offers only Continue once permission is granted', async () => {
+    await OnboardingSecureAppScreen.back.tapToReach(OnboardingNotificationsGrantedScreen, {
+      attempts: 2,
+      settleMs: 10_000,
+    })
+    assert.equal(
+      await OnboardingNotificationsScreen.isVisible('enable'),
+      false,
+      'Enable must not be offered once the permission is granted'
+    )
+    assert.equal(
+      await OnboardingNotificationsScreen.isVisible('skip'),
+      false,
+      'Skip must not be offered once the permission is granted'
+    )
     assert.equal(
       await OnboardingNotificationsDisabledScreen.isVisible('openSettings'),
       false,
       'PermissionDisabled must not render once the permission is granted'
     )
+
+    await OnboardingNotificationsGrantedScreen.tap('primary')
+    await OnboardingSecureAppScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 
   it('skips the Notifications screen entirely on the next pass', async () => {
-    await OnboardingNotificationsScreen.back.tap()
+    await OnboardingSecureAppScreen.back.tapToReach(OnboardingNotificationsGrantedScreen, {
+      attempts: 2,
+      settleMs: 10_000,
+    })
+    await OnboardingNotificationsGrantedScreen.back.tap()
     await OnboardingOptInAnalyticsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
     await OnboardingOptInAnalyticsScreen.tap('primary')
 
     // The branch under test. Absence first, so a regression fails here rather than in a scroll hunt.
     assert.equal(
-      await OnboardingNotificationsScreen.isPresent(Timeouts.ELEMENT_VISIBLE),
+      await OnboardingNotificationsGrantedScreen.isPresent(Timeouts.ELEMENT_VISIBLE),
       false,
       'Notifications must be skipped once push permission is already granted'
     )

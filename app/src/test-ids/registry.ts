@@ -194,6 +194,8 @@ export const TestIds = {
     notifications: {
       enable: 'EnableNotifications',
       skip: 'SkipNotifications',
+      // Not the generic 'Continue': Intro and Privacy Policy stay mounted lower in the stack with that id.
+      continue: 'ContinueWithNotifications',
       // The same route renders a `PermissionDisabled` variant INSTEAD of the enable/skip pair once the
       // user has been prompted and the live OS status is denied/blocked. Re-entering re-runs the check.
       openSettings: 'OpenSettings',

@@ -115,7 +115,7 @@ describe('Onboarding journey: detours', () => {
   })
 
   it('re-entering Notifications after the refusal shows the permission-disabled variant', async () => {
-    // The screen re-reads the live OS status on mount, so navigating BACK is what swaps the body.
+    // The screen re-reads the live OS status on focus, so navigating BACK is what reveals the swapped body.
     // OpenSettings hands off to the OS settings app — assert it, never tap it.
     //
     // `tapToReach`, not `tap`: SecureApp is freshly pushed and can still be swallowing taps, and both
