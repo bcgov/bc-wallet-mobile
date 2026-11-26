@@ -85,7 +85,7 @@ const QRScannerScreen: React.FC = () => {
   const accountTransferQRCodeStrategy = useAccountTransferQRCodeStrategy(onAccountTransferSuccess, onAlreadyVerified)
   const didCommOobQRCodeStrategy = useDidCommOobQRCodeStrategy(onConnectionFound, { onMediatorInvitation })
 
-  // THOUGHT (MD): If this list grows too large, we may want to consider moving these strategies into a seperate hook
+  // THOUGHT (MD): If this list grows too large, we may want to consider moving these strategies into a separate hook
   const strategies = useMemo(
     () => [pairingCodeQRCodeStrategy, accountTransferQRCodeStrategy, didCommOobQRCodeStrategy],
     [accountTransferQRCodeStrategy, didCommOobQRCodeStrategy, pairingCodeQRCodeStrategy]

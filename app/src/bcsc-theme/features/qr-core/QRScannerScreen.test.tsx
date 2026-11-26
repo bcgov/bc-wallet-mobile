@@ -23,12 +23,14 @@ jest.mock('@/contexts/ErrorAlertContext', () => {
   const emitErrorModal = jest.fn()
   return { useErrorAlert: () => ({ emitErrorModal, isErrorModalVisible: false }) }
 })
+// Stable across renders like the real navigation object, so callbacks only change when their other deps do
+const mockNavigation = {
+  navigate: mockNavigate,
+  getParent: () => ({ navigate: mockParentNavigate }),
+}
 jest.mock('@react-navigation/native', () => ({
   useFocusEffect: jest.fn(),
-  useNavigation: () => ({
-    navigate: mockNavigate,
-    getParent: () => ({ navigate: mockParentNavigate }),
-  }),
+  useNavigation: () => mockNavigation,
 }))
 // The real hook pulls in the navigation stack; a verified, unexpired card is the default for every test
 jest.mock('@/bcsc-theme/hooks/useCardStatus', () => ({
@@ -79,6 +81,7 @@ describe('QRScannerScreen', () => {
     render(<QRScannerScreen />)
     onPairingCodeFound('ABC123')
     expect(mockNavigate).toHaveBeenCalledWith(BCSCQRCoreScreens.PairingCode, { pairingCode: 'ABC123' })
+    expect(mockParentNavigate).not.toHaveBeenCalled()
   })
 
   it('sends an expired card to reverify instead of the pairing code tab', () => {
@@ -99,6 +102,29 @@ describe('QRScannerScreen', () => {
 
     expect(mockParentNavigate).toHaveBeenCalledWith(BCSCScreens.MainVerifyPrompt)
     expect(mockNavigate).not.toHaveBeenCalled()
+  })
+
+  it('sends a card that is both expired and unverified to reverify, not the verify prompt', () => {
+    mockUseCardStatus.mockReturnValueOnce({ isVerified: false, isExpired: true })
+
+    render(<QRScannerScreen />)
+    onPairingCodeFound('ABC123')
+
+    expect(mockParentNavigate).toHaveBeenCalledTimes(1)
+    expect(mockParentNavigate).toHaveBeenCalledWith(BCSCScreens.ReverifyAccount, { isExpired: true })
+    expect(mockNavigate).not.toHaveBeenCalled()
+  })
+
+  it('uses the current card status after it changes, not the status from the first render', () => {
+    mockUseCardStatus.mockReturnValueOnce({ isVerified: false, isExpired: false })
+
+    const { rerender } = render(<QRScannerScreen />)
+    // Falls back to the verified default, as when verification completes while the scanner is mounted
+    rerender(<QRScannerScreen />)
+    onPairingCodeFound('ABC123')
+
+    expect(mockNavigate).toHaveBeenCalledWith(BCSCQRCoreScreens.PairingCode, { pairingCode: 'ABC123' })
+    expect(mockParentNavigate).not.toHaveBeenCalled()
   })
 
   it('navigates the parent stack on account transfer success and already verified', () => {
