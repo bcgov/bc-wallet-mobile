@@ -1527,6 +1527,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/emscripten@npm:^1.41.6":
+  version: 1.41.6
+  resolution: "@types/emscripten@npm:1.41.6"
+  checksum: 10c0/b51a730b6cb2848ac5e3f0536707bf656b6887be21f20e96b01e74a59ed52319dd0942f49b1072b1ca6d38df19e2d633f540df54d6ba1f7216be14af7373a41f
+  languageName: node
+  linkType: hard
+
 "@types/gitconfiglocal@npm:^2.0.1":
   version: 2.0.3
   resolution: "@types/gitconfiglocal@npm:2.0.3"
@@ -4088,6 +4095,7 @@ __metadata:
     tsx: "npm:^4.0.0"
     typescript: "npm:~5.9.2"
     undici: "npm:^7.19.0"
+    zxing-wasm: "npm:^3.1.6"
   languageName: unknown
   linkType: soft
 
@@ -8623,6 +8631,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tagged-tag@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "tagged-tag@npm:1.0.0"
+  checksum: 10c0/91d25c9ffb86a91f20522cefb2cbec9b64caa1febe27ad0df52f08993ff60888022d771e868e6416cf2e72dab68449d2139e8709ba009b74c6c7ecd4000048d1
+  languageName: node
+  linkType: hard
+
 "tar-fs@npm:^3.1.1":
   version: 3.1.2
   resolution: "tar-fs@npm:3.1.2"
@@ -8938,6 +8953,15 @@ __metadata:
   version: 3.13.1
   resolution: "type-fest@npm:3.13.1"
   checksum: 10c0/547d22186f73a8c04590b70dcf63baff390078c75ea8acd366bbd510fd0646e348bd1970e47ecf795b7cff0b41d26e9c475c1fedd6ef5c45c82075fbf916b629
+  languageName: node
+  linkType: hard
+
+"type-fest@npm:^5.10.0":
+  version: 5.10.0
+  resolution: "type-fest@npm:5.10.0"
+  dependencies:
+    tagged-tag: "npm:^1.0.0"
+  checksum: 10c0/313c5d0e37a3f1cc82e942f3228f897623c8b54a63a8a95532d0c2c21ab200793caa70bd8904a83fd713eb28d87ba32468b09b345ef6efa25cecb345b467226f
   languageName: node
   linkType: hard
 
@@ -9630,5 +9654,17 @@ __metadata:
     compress-commons: "npm:^6.0.2"
     readable-stream: "npm:^4.0.0"
   checksum: 10c0/50f2fb30327fb9d09879abf7ae2493705313adf403e794b030151aaae00009162419d60d0519e807673ec04d442e140c8879ca14314df0a0192de3b233e8f28b
+  languageName: node
+  linkType: hard
+
+"zxing-wasm@npm:^3.1.6":
+  version: 3.1.6
+  resolution: "zxing-wasm@npm:3.1.6"
+  dependencies:
+    "@types/emscripten": "npm:^1.41.6"
+    type-fest: "npm:^5.10.0"
+  peerDependencies:
+    "@types/emscripten": ">=1.39.6"
+  checksum: 10c0/5df631ec1ca2ef53c6c22ffbc0cb4a27f28cf40d120eb64733bfa7c3070e844f46ad1c9c629f345e110c128db6a46afd3663c26f402d360b997f000ca7925387
   languageName: node
   linkType: hard

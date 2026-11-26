@@ -1,6 +1,6 @@
 # BC Services Card — E2E test accounts
 
-> **Legacy.** These are the hand-minted personas (`TestUsers` in `src/constants.ts`), shared by both platforms and every lane. A journey the test API decides mints a card of its own instead (see **Card holders and approvals** in `../README.md`). The personas remain the holders for the journeys the ID Check portal decides, the scan suite and the upgrade suites.
+> **Legacy.** These are the hand-minted personas (`TestUsers` in `src/constants.ts`), shared by both platforms and every lane. A journey the test API decides mints a card of its own instead (see **Card holders and approvals** in `../README.md`). The personas remain the holders for the journeys the ID Check portal decides and the upgrade suites.
 
 Test accounts created in the **SIT** environment. All values below (serials, PHNs, ICBC IDs) are fake. Card serial numbers match the barcodes embedded in the corresponding `dl_*.jpg` asset images.
 

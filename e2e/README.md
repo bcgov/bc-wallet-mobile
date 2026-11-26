@@ -513,7 +513,7 @@ A journey drives one card holder, a `TestUser`: the serial, birthdate, names and
 - A card minted on SIT comes with a verified email, as the personas' do. One minted on DEV does not: there the app shows the email step after the birthdate, and `reachVerificationMethod` skips it.
 - A minted holder's values are registered with the redaction (`src/helpers/redact.ts`) and read `<minted>` in failure text. Each mint logs one `[identity]` line and is counted in the session record, which the brief totals in its Sessions line.
 
-**The personas** are the five hand-minted SIT holders (`TestUsers` in `src/constants.ts`, listed in `assets/USERS.md`). Both platforms and every lane share them, and SIT keeps one active device per card, so two lanes verifying the same persona invalidate each other. Until a channel moves to the API every journey takes them; after that, the journeys the portal decides, the scan suite (its committed card backs carry the personas' serials) and the upgrade suites.
+**The personas** are the five hand-minted SIT holders (`TestUsers` in `src/constants.ts`, listed in `assets/USERS.md`). Both platforms and every lane share them, and SIT keeps one active device per card, so two lanes verifying the same persona invalidate each other. Until a channel moves to the API every journey takes them; after that, the journeys the portal decides and the upgrade suites. The scan suite photographs a card back rendered for its holder, minted or persona (see **[Authoring injected images](#authoring-injected-images)**).
 
 **Moving a channel to the API**, once IAS serves its decision on SIT:
 
@@ -628,19 +628,23 @@ so both platforms keep manual serial entry. See the app-behaviour note at the en
 
 #### _Injecting a scan target_
 
-_Use `injectScanTarget` for a committed asset and `injectQrCode` for a payload only known at runtime
-(a live pairing code). Both centre the code on a frame-aspect white canvas — which doubles as an
-oversized quiet zone — and both must run **before** the scanner opens: swapping the image into a live
-camera leaves transition frames carrying only part of it, which the scanner reads as a malformed code._
+_Use `injectScanTarget` for an image, committed or rendered (a card back), and `injectQrCode` for a
+payload only known at runtime (a live pairing code). Both centre the code on a frame-aspect white
+canvas — which doubles as an oversized quiet zone — and both must run **before** the scanner opens:
+swapping the image into a live camera leaves transition frames carrying only part of it, which the
+scanner reads as a malformed code._
 
 ```typescript
 import { injectQrCode, injectScanTarget } from '../../src/helpers/camera.js'
+import { cardBackOf, renderCardBack } from '../../src/helpers/card-back.js'
 import { fetchPairingCode, pairingQrUri } from '../../src/helpers/pairing-code.js'
 
 const session = await fetchPairingCode()
 await injectQrCode(pairingQrUri(session.pairingCode)) // rendered at runtime
-await injectScanTarget(getTestUser().cardScanTarget) // committed card back
+await injectScanTarget(await renderCardBack(cardBackOf(getTestUser()))) // the holder's card back
 ```
+
+<a id="authoring-injected-images"></a>
 
 #### _Authoring injected images_
 
@@ -656,16 +660,17 @@ _Two rules, both learned the hard way:_
    barcode with a smoothing kernel: a blurred bar merges, and code-39 has no checksum to catch it, so
    it decodes as a silently WRONG serial._
 
-_`scripts/generate-scan-assets.mjs` writes `assets/images/scan/card_<persona>.png` — one combo-card
-back per BCSC persona in `src/constants.ts`, reachable as that persona's `cardScanTarget`. The PDF-417
+_`renderCardBack` (`src/helpers/card-back.ts`) builds a combo-card back at run time for the holder a
+journey scans, a persona or a card minted for the session: nothing is committed. The PDF-417
 carries ICBC's 3-track layout exactly as the app's spec-based parser demands it — track 3 is a fixed
 82-character block whose security field zero-pads the serial — because the parser rejects the whole
 code when any track is malformed, and then the live scanner never reads the card and the reroute never
-fires. Rerun the script after changing a payload or size; it prints px-per-module and px-per-row for
-every code it writes._
+fires. The name comes from the holder, the serial is the card's, and the expiry is five years out.
+`yarn test:unit` reads both codes back off a rendered frame and checks the tracks against that
+parser's grammar (`scripts/card-back.test.mjs`)._
 
 _The cards are generated rather than photographed because the serial screen needs BOTH codes — the
-serial from the 1D code-39 and the birthdate from the PDF-417 — matching the same persona. The shared
+serial from the 1D code-39 and the birthdate from the PDF-417 — matching the same holder. The shared
 `dl_*.jpg` template's own 1D codes encode the design default `S00021029`, which would authorize a
 nonexistent card._
 
@@ -790,7 +795,6 @@ e2e/
 │   ├── brief-check.ts                       # coverage-map validator + fixture self-test (yarn brief:check)
 │   ├── a11y-baseline.ts                     # snapshots a11y findings as the baseline (yarn a11y:baseline)
 │   ├── fixtures/brief/                      # hand-written reports the self-test asserts against
-│   ├── generate-scan-assets.mjs             # combo-card backs for the scan suite
 │   ├── issuer-provision.ts                  # issuer tenant bootstrap / CI preflight (yarn issuer:provision)
 │   ├── issuer-smoke.ts                      # issuer API smoke, no device (yarn issuer:smoke)
 │   ├── test-api-check.ts                    # IAS test-API preflight: token, scopes, decision route (yarn test-api:check)
@@ -851,6 +855,7 @@ e2e/
 │   │   ├── approval.ts                      # in-person approval (as the route table says) + send-video review via the portal
 │   │   ├── biometrics.ts                    # biometric simulation (Sauce Labs RDC)
 │   │   ├── camera.ts                        # camera image injection + padding (photos, QR, video)
+│   │   ├── card-back.ts                     # a holder's card back, rendered to scan: Code 39 serial + ICBC 3-track PDF-417
 │   │   ├── deep-link.ts                     # dispatch <scheme>:// deep links (pairing / login)
 │   │   ├── email.ts                         # temp-inbox email verification helper
 │   │   ├── gestures.ts                      # swipe, scroll, tap-at-coordinate wrappers
