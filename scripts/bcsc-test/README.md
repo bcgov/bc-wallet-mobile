@@ -27,6 +27,18 @@ bcsc-test auth status                  # client, scopes and token expiry for eac
 
 The client secret is never written to a file. Tokens are cached until they expire and refresh automatically. Setting `BCSC_TEST_TOKEN` overrides the stored login, and setting `BCSC_TEST_HOST` picks the host. For more, see `bcsc-test help environment`.
 
+## Verify a device
+
+Use the usercode the app shows while it waits for verification.
+
+```sh
+bcsc-test verification approve NCNF-ZNTB
+bcsc-test verification decline NCNF-ZNTB --user-message "Photo unclear" --internal-comment "Test decline"
+bcsc-test verification approve NCNF-ZNTB --dry-run   # print the request without sending it
+```
+
+The server records an approval as a counter visit. Only the `counter` channel is implemented on the server.
+
 ## Help
 
 Every command has examples under `--help`. Commands marked `not implemented` are placeholders for later work.
