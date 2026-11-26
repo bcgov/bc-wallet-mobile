@@ -6,7 +6,6 @@ import {
   readConfirmationCode,
   selectInPerson,
   V3_PIN,
-  V3_USER,
 } from '../onboarding-v3.js'
 import { approvalInputForUser } from '../verify.js'
 import type { PrevBuild } from './types.js'
@@ -22,7 +21,8 @@ import type { PrevBuild } from './types.js'
 export const v3PrevBuild: PrevBuild = {
   label: 'v3',
   pin: V3_PIN,
-  bcscUser: V3_USER,
+  // The v3 walk selects the combined card type.
+  bcscKind: 'combined',
 
   onboard: (pin, user) => onboardOnV3(pin, user.username),
   authorize: (user) => authorizeOnV3(user),

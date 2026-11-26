@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { Timeouts } from '../../../src/constants.js'
 import { unlockWithPin } from '../../../src/flows/auth.js'
 import { prevBuildFromEnv } from '../../../src/flows/prev-build/index.js'
+import { arrangeBcscUser } from '../../../src/flows/prev-build/types.js'
 import { chooseAddAccount, resumeVerification } from '../../../src/flows/verify.js'
 import { installCurrentBuildOverRunningApp, relaunchAfterInstall } from '../../../src/helpers/app-install.js'
 import { annotate } from '../../../src/helpers/sauce.js'
@@ -24,7 +25,7 @@ describe('Upgrade with an unverified account from the v3 lineage: the account su
 
   it('onboards on v3 without verifying', async () => {
     await annotate(`Upgrade (unverified, from ${prev.label}): onboarding on the previous build`)
-    await prev.onboard(prev.pin, prev.bcscUser)
+    await prev.onboard(prev.pin, await arrangeBcscUser(prev))
   })
 
   it('installs the current build over v3', async () => {

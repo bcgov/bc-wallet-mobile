@@ -1,4 +1,4 @@
-import { TEST_PIN, TestUsers } from '../../constants.js'
+import { TEST_PIN } from '../../constants.js'
 import { onboardOnV403 } from '../onboarding-v403.js'
 import {
   approveAndCompleteV403,
@@ -18,8 +18,7 @@ import type { PrevBuild } from './types.js'
 export const v403PrevBuild: PrevBuild = {
   label: '4.0.3',
   pin: TEST_PIN,
-  bcscUser: TestUsers.photo,
-  nonBcscUser: TestUsers.na,
+  bcscKind: 'photo',
   // 4.0.3 keyed the rows by display label (today: by type code), so the BCDL row reads differently here.
   nonBcscDocs: { first: "B.C. driver's licence", second: 'Canadian Passport' },
 

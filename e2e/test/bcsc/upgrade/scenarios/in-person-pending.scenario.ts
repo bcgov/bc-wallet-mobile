@@ -1,7 +1,7 @@
 import { Timeouts } from '../../../../src/constants.js'
 import { unlockWithPin } from '../../../../src/flows/auth.js'
 import { expectVerifiedInSettings } from '../../../../src/flows/main.js'
-import type { PrevBuild } from '../../../../src/flows/prev-build/types.js'
+import { arrangeBcscUser, type PrevBuild } from '../../../../src/flows/prev-build/types.js'
 import {
   approveInPersonAndComplete,
   reachInPersonConfirmationCode,
@@ -38,8 +38,8 @@ export function defineInPersonPendingUpgrade(prev: PrevBuild): void {
   let appId: string | undefined
   let codeBeforeUpgrade: string | undefined
 
-  before(() => {
-    setTestUser(prev.bcscUser)
+  before(async () => {
+    setTestUser(await arrangeBcscUser(prev, 'counter'))
   })
 
   it('onboards on the previous build', async () => {

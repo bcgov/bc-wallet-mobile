@@ -1,4 +1,4 @@
-import { TestUsers, Timeouts } from '../constants.js'
+import { Timeouts } from '../constants.js'
 import { acceptSystemAlert } from '../helpers/alerts.js'
 import { V3 } from '../v3TestIDs.js'
 
@@ -11,8 +11,6 @@ import { V3 } from '../v3TestIDs.js'
 
 /** The PIN created on v3 and reused to unlock v4 after the swap. */
 export const V3_PIN = '123456'
-/** The persona the v3 walk is proven with (it selects the combined card type). */
-export const V3_USER = TestUsers.combined
 
 /** Format DOB from "YYYYMMDD" to individual components for date picker. */
 function parseDob(dob: string) {

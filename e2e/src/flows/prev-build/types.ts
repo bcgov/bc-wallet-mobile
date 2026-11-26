@@ -1,6 +1,8 @@
 import type { TestUser } from '../../constants.js'
+import type { DecisionChannel } from '../../support/approval-routes.js'
+import { arrangeTestUser, type IdentityKind } from '../../support/identity.js'
 
-/** The persona shape the non-BCSC arranges need (document numbers, no card). */
+/** The holder shape the non-BCSC arranges need (document numbers, no card). */
 export type NonBcscTestUser = Extract<TestUser, { flow: 'non-bcsc' }>
 
 /**
@@ -15,10 +17,12 @@ export interface PrevBuild {
   readonly label: string
   /** The PIN created on this build and used to unlock the current one after the swap. */
   readonly pin: string
-  /** The BCSC-card persona this build's driver is proven with. */
-  readonly bcscUser: TestUser
-  readonly nonBcscUser?: NonBcscTestUser
-  /** Row-id substrings for the two non-BCSC documents (4.0.3 keys the rows by label, today by type). */
+  /** The card this build's driver is proven with, as `arrangeTestUser` names it. */
+  readonly bcscKind: Exclude<IdentityKind, 'na'>
+  /**
+   * Row-id substrings for the two non-BCSC documents (4.0.3 keys the rows by label, today by type).
+   * A build without them drives no holder without a card.
+   */
   readonly nonBcscDocs?: { readonly first: string; readonly second: string }
 
   /** Cold start → this build's unverified resting state, with `pin` created. */
@@ -51,12 +55,19 @@ export function capability<K extends OptionalArrange>(prev: PrevBuild, name: K):
   return arrange.bind(prev) as NonNullable<PrevBuild[K]>
 }
 
-/** The non-BCSC persona a driver carries, or a named error for a lineage without one. */
-export function nonBcscUserOf(prev: PrevBuild): NonBcscTestUser {
-  if (!prev.nonBcscUser) {
-    throw new Error(`The ${prev.label} build has no non-BCSC persona`)
+/** The card holder for a scenario on this build: minted, unless the portal decides `channel`. */
+export function arrangeBcscUser(prev: PrevBuild, channel?: DecisionChannel): Promise<TestUser> {
+  return arrangeTestUser(prev.bcscKind, channel)
+}
+
+/** A holder without a card for a scenario on this build, or a named error for a lineage that drives none. */
+export async function arrangeNonBcscUser(prev: PrevBuild): Promise<NonBcscTestUser> {
+  if (!prev.nonBcscDocs) {
+    throw new Error(`The ${prev.label} build has no non-BCSC driver`)
   }
-  return prev.nonBcscUser
+  const user = await arrangeTestUser('na')
+  if (user.flow !== 'non-bcsc') throw new Error('The holder without a card came back with a card')
+  return user
 }
 
 /** The two non-BCSC document row matches a driver carries, or a named error. */

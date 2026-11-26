@@ -1,7 +1,7 @@
 import { Timeouts } from '../../../../src/constants.js'
 import { unlockWithPin } from '../../../../src/flows/auth.js'
 import { expectVerifiedInSettings } from '../../../../src/flows/main.js'
-import { capability, type PrevBuild } from '../../../../src/flows/prev-build/types.js'
+import { arrangeBcscUser, capability, type PrevBuild } from '../../../../src/flows/prev-build/types.js'
 import {
   cleanUpQueuedSubmission,
   clearReviewQueueBeforeSubmit,
@@ -42,8 +42,8 @@ export function defineSendVideoPendingUpgrade(prev: PrevBuild): void {
   /** What the scripted review claimed — named by the decision wait's failure, should the app never see it. */
   let reviewed: ClaimedRequestSummary | undefined
 
-  before(() => {
-    setTestUser(prev.bcscUser)
+  before(async () => {
+    setTestUser(await arrangeBcscUser(prev, 'send-video'))
   })
 
   after(async () => {
