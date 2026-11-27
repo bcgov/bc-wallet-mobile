@@ -56,6 +56,12 @@ const mockDeleteRegistration = jest.fn().mockResolvedValue({ success: true })
 const mockCreateRegistration = jest.fn().mockResolvedValue({})
 
 const account = { clientID: 'client-id', securityMethod: 'device_authentication' }
+const clearCredentialMetadata = { type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA, payload: [undefined] }
+const clearAccountSetupType = { type: BCDispatchAction.ACCOUNT_SETUP_TYPE, payload: [] }
+// When the reset dispatched the given action, relative to the other mocks' calls
+const dispatchOrder = ({ type }: { type: string }) =>
+  mockDispatch.mock.invocationCallOrder[mockDispatch.mock.calls.findIndex(([dispatched]) => dispatched.type === type)]
+
 const storedRegistration = {
   clientId: 'client-id',
   issuer: 'https://idsit.gov.bc.ca/device/',
@@ -134,12 +140,8 @@ describe('useVerificationReset', () => {
       await result.current()
     })
 
-    expect(mockDispatch).toHaveBeenCalledTimes(1)
-    expect(mockDispatch).toHaveBeenCalledWith({
-      type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA,
-      payload: [undefined],
-    })
-    const [clearOrder] = mockDispatch.mock.invocationCallOrder
+    expect(mockDispatch).toHaveBeenCalledWith(clearCredentialMetadata)
+    const clearOrder = dispatchOrder(clearCredentialMetadata)
     expect(clearOrder).toBeGreaterThan(mockDeleteVerificationData.mock.invocationCallOrder[0])
     expect(clearOrder).toBeGreaterThan(Math.max(...jest.mocked(deleteToken).mock.invocationCallOrder))
     expect(clearOrder).toBeGreaterThan(mockClearRegistration.mock.invocationCallOrder[0])
@@ -155,7 +157,7 @@ describe('useVerificationReset', () => {
       await result.current()
     })
 
-    expect(mockDispatch).not.toHaveBeenCalled()
+    expect(mockDispatch).not.toHaveBeenCalledWith(clearCredentialMetadata)
   })
 
   it('keeps the saved account details when a token delete fails', async () => {
@@ -167,7 +169,7 @@ describe('useVerificationReset', () => {
       await result.current()
     })
 
-    expect(mockDispatch).not.toHaveBeenCalled()
+    expect(mockDispatch).not.toHaveBeenCalledWith(clearCredentialMetadata)
   })
 
   it('has already cleared the saved account details when re-registration fails, since the session they described is gone', async () => {
@@ -183,6 +185,34 @@ describe('useVerificationReset', () => {
       type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA,
       payload: [undefined],
     })
+  })
+
+  it('clears the saved setup choice with the secure state, so the verify flow restarts at the setup question', async () => {
+    const { result } = renderHook(() => useVerificationReset())
+
+    await act(async () => {
+      await result.current()
+    })
+
+    // An account first set up by transfer must be offered card/ID setup again, not sent back to the QR scan
+    expect(mockDispatch).toHaveBeenCalledWith(clearAccountSetupType)
+    const clearOrder = dispatchOrder(clearAccountSetupType)
+    expect(clearOrder).toBeGreaterThan(mockClearSecureState.mock.invocationCallOrder[0])
+    expect(clearOrder).toBeLessThan(mockDeleteRegistration.mock.invocationCallOrder[0])
+  })
+
+  it('has already cleared the saved setup choice when a native delete fails', async () => {
+    mockDeleteVerificationData.mockRejectedValueOnce(new Error('delete failed'))
+
+    const { result } = renderHook(() => useVerificationReset())
+
+    await act(async () => {
+      await result.current()
+    })
+
+    // The device is already unverified in memory, so the setup question is where it resumes
+    expect(mockDispatch).toHaveBeenCalledWith(clearAccountSetupType)
+    expect(mockFactoryResetAlert).toHaveBeenCalledTimes(1)
   })
 
   it('clears the old registration after the other tokens and before the new one is created', async () => {
@@ -253,6 +283,7 @@ describe('useVerificationReset', () => {
 
     expect(completed).toBe(false)
     expect(mockClearSecureState).not.toHaveBeenCalled()
+    expect(mockDispatch).not.toHaveBeenCalled()
     expect(mockDeleteRegistration).not.toHaveBeenCalled()
     expect(mockDeleteVerificationData).not.toHaveBeenCalled()
     expect(mockClearRegistration).not.toHaveBeenCalled()
@@ -298,6 +329,7 @@ describe('useVerificationReset', () => {
     })
 
     expect(mockClearSecureState).not.toHaveBeenCalled()
+    expect(mockDispatch).not.toHaveBeenCalled()
     expect(mockDeleteRegistration).not.toHaveBeenCalled()
     expect(mockCreateRegistration).not.toHaveBeenCalled()
     expect(mockFactoryResetAlert).toHaveBeenCalledTimes(1)
