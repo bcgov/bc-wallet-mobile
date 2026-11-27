@@ -1,5 +1,5 @@
+import ScannableQRCode from '@/bcsc-theme/components/ScannableQRCode'
 import { useBCSCAgent } from '@/bcsc-theme/features/agent'
-import * as Bifold from '@bifold/core'
 import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -15,8 +15,12 @@ jest.mock('@/bcsc-theme/features/agent', () => ({
 
 jest.mock('@bifold/core', () => ({
   ...jest.requireActual('@bifold/core'),
-  QRRenderer: jest.fn().mockReturnValue(null),
   useConnectionByOutOfBandId: jest.fn().mockReturnValue(undefined),
+}))
+
+jest.mock('@/bcsc-theme/components/ScannableQRCode', () => ({
+  __esModule: true,
+  default: jest.fn().mockReturnValue(null),
 }))
 
 jest.mock('./WalletNameDisplay', () => ({
@@ -93,14 +97,14 @@ describe('QRDisplay', () => {
     expect(agentHandle.createInvitation).not.toHaveBeenCalled()
   })
 
-  it('passes the real invitation URL to QRRenderer once the agent is ready', async () => {
+  it('passes the real invitation URL to the QR code once the agent is ready', async () => {
     setReadyAgent()
 
     renderComponent()
 
     await waitFor(() => {
       expect(agentHandle.createInvitation).toHaveBeenCalled()
-      const calls = jest.mocked(Bifold.QRRenderer).mock.calls
+      const calls = jest.mocked(ScannableQRCode).mock.calls
       expect(calls.at(-1)![0]).toMatchObject({ value: realInvitationUrl })
     })
   })
@@ -118,7 +122,7 @@ describe('QRDisplay', () => {
 
     await waitFor(() => {
       expect(agentHandle.createInvitation).toHaveBeenCalledTimes(2)
-      const calls = jest.mocked(Bifold.QRRenderer).mock.calls
+      const calls = jest.mocked(ScannableQRCode).mock.calls
       expect(calls.at(-1)![0]).toMatchObject({ value: realInvitationUrl })
     })
   })

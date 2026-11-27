@@ -585,3 +585,23 @@ its first frame sizes itself from `useSafeAreaInsets()`, which the root provider
 render (`initialWindowMetrics`); `SafeAreaView` remains fine for content that slides in from off-screen.
 Bifold's `ScreenWrapper` wraps every screen in the same native view, so a stack's first screen shows the
 jump on a root slide too; that change belongs in Bifold and is tracked there.
+
+## QR codes: draw them with `ScannableQRCode`
+
+Show a QR code with `ScannableQRCode` (`app/src/bcsc-theme/components/ScannableQRCode.tsx`), not Bifold's
+`QRRenderer` or `react-native-qrcode-svg` directly. It draws black modules on a white card with a quiet zone, and
+keeps them that way under the phone's colour inversion settings:
+
+- iOS Smart Invert skips a view marked `accessibilityIgnoresInvertColors`, so the card is marked. It also sets
+  `collapsable={false}`: the renderer flattens a view whose only special prop is that flag out of the native tree,
+  and the flag goes with it.
+- Android colour inversion applies to the whole display and no view can opt out, so while it is on the card is drawn
+  inverted (white on black) and the display turns it back. React Native re-reads the setting each time the app comes
+  to the foreground, so a change made from Quick Settings while the app stays open shows once the app is reopened.
+- Don't redraw from `AccessibilityInfo.isInvertColorsEnabled()` on iOS. Apple documents it as Classic Invert, but it
+  has been reported to follow Smart Invert, where the card already opts out, so a redrawn code would show inverted.
+- iOS Classic Invert inverts the whole display, with no opt-out and no reliable way to detect it; a QR code shown under
+  it stays inverted.
+
+**Why:** with colour inversion on, the Add device QR code showed light on dark and the other phone could not scan it
+(#4768).

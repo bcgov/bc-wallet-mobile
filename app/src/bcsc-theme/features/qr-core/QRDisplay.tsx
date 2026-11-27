@@ -1,3 +1,4 @@
+import ScannableQRCode from '@/bcsc-theme/components/ScannableQRCode'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
@@ -6,7 +7,6 @@ import {
   IconButton,
   InfoBox,
   InfoBoxType,
-  QRRenderer,
   testIdWithKey,
   ThemedText,
   TOKENS,
@@ -50,7 +50,7 @@ const QRDisplay: React.FC = () => {
 
   const vm = useQRDisplayViewModel({ agent, logger, label, onConnectionAccepted })
 
-  const qrSize = width - Spacing.lg * 2
+  const qrCardSize = width - Spacing.lg * 2
 
   const headerRight = useCallback(() => {
     if (vm.status !== QRDisplayStatus.READY) {
@@ -120,7 +120,7 @@ const QRDisplay: React.FC = () => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.qrFrame}>
-        <QRRenderer value={vm.invitation ?? ''} size={qrSize} />
+        <ScannableQRCode value={vm.invitation ?? ''} size={qrCardSize} />
       </View>
       <View style={styles.descriptionBlock}>
         <WalletNameDisplay />
