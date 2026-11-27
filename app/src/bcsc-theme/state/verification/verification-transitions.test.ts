@@ -45,7 +45,7 @@ const unlock =
       payload: [
         {
           refreshToken: withToken ? UNEXPIRED_JWT : undefined,
-          verified: Boolean(record),
+          hasCredentialRecord: Boolean(record),
           credentialDeactivated: isCredentialDeactivated(record),
           inVerifyFlow: false,
         },
@@ -58,6 +58,36 @@ const expire: Step = (state) =>
     type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA,
     payload: [{ bcscEvent: BCSCEvent.Expire, bcscReason: BCSCReason.ExpiredBySystem }],
   })
+
+const cancel: Step = (state) =>
+  apply(state, {
+    type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA,
+    payload: [{ bcscEvent: BCSCEvent.Cancel, bcscReason: BCSCReason.Cancel }],
+  })
+
+// A new registration's tokens arrive before the finish step, which does not write them
+const receiveToken: Step = (state) =>
+  apply(state, { type: BCDispatchAction.UPDATE_SECURE_REFRESH_TOKEN, payload: [UNEXPIRED_JWT] })
+
+// Mirrors the finish step: the record is written, the saved account details are dropped, and the
+// verify prompt counts as answered
+const finish: Step = (state) =>
+  apply(
+    state,
+    { type: BCDispatchAction.CREDENTIAL_RECORD_SAVED },
+    { type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA, payload: [undefined] },
+    { type: BCDispatchAction.SET_VERIFICATION_STARTED, payload: [false] },
+    { type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [true] }
+  )
+
+// A video and review request the registration submitted before it was cancelled or expired
+const submittedReview: Step = (state) =>
+  apply(
+    state,
+    { type: BCDispatchAction.UPDATE_SECURE_USER_SUBMITTED_VERIFICATION_VIDEO, payload: [true] },
+    { type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID, payload: ['req-1'] },
+    { type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: ['pending'] }
+  )
 
 const enterFlow: Step = (state) =>
   apply(
@@ -82,7 +112,6 @@ const reset =
           {
             isHydrated: true,
             registrationAccessToken: state.bcscSecure.registrationAccessToken,
-            verified: false,
             inVerifyFlow: stayInFlow,
           },
         ],
@@ -163,6 +192,60 @@ const scenarios: { name: string; start: Step; unlockAgain: Step; steps?: [string
     unlockAgain: unlock(credential(BCSCEvent.Authorization)),
     steps: restartTransitions,
   },
+  {
+    name: 'token-only account finishes verification',
+    start: unlock(null),
+    unlockAgain: unlock(credential(BCSCEvent.Authorization)),
+    steps: [['finish', finish]],
+  },
+  {
+    name: 'finished account, then the card is cancelled',
+    start: (state) => finish(unlock(null)(state)),
+    unlockAgain: unlock(credential(BCSCEvent.Authorization)),
+    steps: [['cancel', cancel]],
+  },
+  {
+    name: 'token-only account, then the card is cancelled',
+    start: unlock(null),
+    unlockAgain: unlock(null),
+    steps: [['cancel', cancel]],
+  },
+  {
+    name: 'token-only account with a submitted review, then the card is cancelled',
+    start: (state) => submittedReview(unlock(null)(state)),
+    unlockAgain: unlock(null),
+    steps: [
+      ['cancel', cancel],
+      ['enter the flow', enterFlow],
+    ],
+  },
+  {
+    name: 'token-only account with a submitted review, then the card expires',
+    start: (state) => submittedReview(unlock(null)(state)),
+    unlockAgain: unlock(null),
+    steps: [
+      ['expire', expire],
+      ['enter the flow', enterFlow],
+    ],
+  },
+  {
+    name: 'finished account, expires, then renews',
+    start: unlock(credential(BCSCEvent.Authorization)),
+    unlockAgain: unlock(credential(BCSCEvent.Authorization)),
+    steps: [
+      ['expire', expire],
+      ['reset, leaving the flow', reset(false)],
+      ['enter the flow', enterFlow],
+      ['receive the new token', receiveToken],
+      ['finish', finish],
+    ],
+  },
+  {
+    name: 'finished account, then verification is reset',
+    start: (state) => finish(unlock(null)(state)),
+    unlockAgain: unlock(null, { withToken: false }),
+    steps: [['reset, leaving the flow', reset(false)]],
+  },
 ]
 
 const row = (
@@ -231,6 +314,51 @@ const expected: Record<string, Observation[]> = {
     row(false, true, HomeNoticeType.AccountExpired, null),
     row(false, true, HomeNoticeType.AccountExpired, null),
     row(false, true, HomeNoticeType.AccountExpired, null),
+  ],
+  'token-only account finishes verification': [
+    row(false, true, HomeNoticeType.BCSCVerified, null),
+    row(false, true, HomeNoticeType.None, null),
+    row(false, true, HomeNoticeType.None, null),
+  ],
+  // A saved Cancel marks the card inactive. The device-invalidated screen sits above Home, so these
+  // rows are what is beneath it, and what a launch shows when the account-change check cannot run.
+  'finished account, then the card is cancelled': [
+    row(false, true, HomeNoticeType.None, null),
+    row(false, true, HomeNoticeType.AccountExpired, null),
+    row(false, true, HomeNoticeType.AccountExpired, null),
+  ],
+  'token-only account, then the card is cancelled': [
+    row(false, true, HomeNoticeType.BCSCVerified, null),
+    row(false, false, HomeNoticeType.BCSCStartVerification, null),
+    row(false, false, HomeNoticeType.BCSCStartVerification, null),
+  ],
+  // The submitted review belongs to a registration IAS no longer honours: Home offers Start, and the
+  // verify stack opens on the setup question instead of the pending review
+  'token-only account with a submitted review, then the card is cancelled': [
+    row(false, true, HomeNoticeType.BCSCVerified, null),
+    row(false, false, HomeNoticeType.BCSCStartVerification, null),
+    row(true, false, HomeNoticeType.BCSCStartVerification, BCSCScreens.AccountSetup),
+    row(false, false, HomeNoticeType.BCSCStartVerification, null),
+  ],
+  'token-only account with a submitted review, then the card expires': [
+    row(false, true, HomeNoticeType.BCSCVerified, null),
+    row(false, false, HomeNoticeType.BCSCStartVerification, null),
+    row(true, false, HomeNoticeType.BCSCStartVerification, BCSCScreens.AccountSetup),
+    row(false, false, HomeNoticeType.BCSCStartVerification, null),
+  ],
+  'finished account, expires, then renews': [
+    row(false, true, HomeNoticeType.None, null),
+    row(false, true, HomeNoticeType.AccountExpired, null),
+    row(false, false, HomeNoticeType.BCSCStartVerification, null),
+    row(true, false, HomeNoticeType.BCSCStartVerification, BCSCScreens.AccountSetup),
+    row(true, true, HomeNoticeType.BCSCVerified, BCSCScreens.VerificationSuccess),
+    row(false, true, HomeNoticeType.None, null),
+    row(false, true, HomeNoticeType.None, null),
+  ],
+  'finished account, then verification is reset': [
+    row(false, true, HomeNoticeType.None, null),
+    row(false, false, HomeNoticeType.BCSCStartVerification, null),
+    row(false, false, HomeNoticeType.BCSCStartVerification, null),
   ],
 }
 

@@ -24,14 +24,14 @@ jest.mock('react-native-bcsc-core', () => ({
   },
 }))
 
-const mockUpdateVerified = jest.fn().mockResolvedValue(undefined)
+const mockCompleteVerification = jest.fn().mockResolvedValue(undefined)
 const mockUpdateUserMetadata = jest.fn().mockResolvedValue(undefined)
 const mockClearAuthorizationRequest = jest.fn().mockResolvedValue(undefined)
 
 jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   __esModule: true,
   default: jest.fn(() => ({
-    updateVerified: mockUpdateVerified,
+    completeVerification: mockCompleteVerification,
     updateUserMetadata: mockUpdateUserMetadata,
     clearAuthorizationRequest: mockClearAuthorizationRequest,
   })),
@@ -65,7 +65,7 @@ describe('useVerificationResponseViewModel', () => {
     jest.restoreAllMocks()
 
     // Reset mock implementations
-    mockUpdateVerified.mockResolvedValue(undefined)
+    mockCompleteVerification.mockResolvedValue(undefined)
     mockUpdateUserMetadata.mockResolvedValue(undefined)
     mockClearAuthorizationRequest.mockResolvedValue(undefined)
     mockGetCachedIdTokenMetadata.mockResolvedValue({ given_name: 'TestNickname' })
@@ -107,7 +107,7 @@ describe('useVerificationResponseViewModel', () => {
         payload: ['TestNickname'],
       })
       expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('TestNickname')
-      expect(mockUpdateVerified).toHaveBeenCalledWith(true)
+      expect(mockCompleteVerification).toHaveBeenCalledWith()
       expect(mockDispatch).toHaveBeenCalledWith({
         type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT,
         payload: [undefined],
@@ -205,8 +205,8 @@ describe('useVerificationResponseViewModel', () => {
       expect(mockLogger.error).toHaveBeenCalled()
     })
 
-    it('logs and stops loading instead of surfacing an updateVerified failure', async () => {
-      mockUpdateVerified.mockRejectedValue(new Error('Update verified failed'))
+    it('logs and stops loading instead of surfacing a completeVerification failure', async () => {
+      mockCompleteVerification.mockRejectedValue(new Error('Complete verification failed'))
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
 
@@ -215,7 +215,7 @@ describe('useVerificationResponseViewModel', () => {
       })
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to clean up verification process: Update verified failed')
+        expect.stringContaining('Failed to clean up verification process: Complete verification failed')
       )
       expect(mockDispatch).not.toHaveBeenCalledWith(
         expect.objectContaining({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT })
@@ -248,7 +248,7 @@ describe('useVerificationResponseViewModel', () => {
       })
 
       expect(mockClearAuthorizationRequest).toHaveBeenCalled()
-      expect(mockUpdateVerified.mock.invocationCallOrder[0]).toBeLessThan(
+      expect(mockCompleteVerification.mock.invocationCallOrder[0]).toBeLessThan(
         mockClearAuthorizationRequest.mock.invocationCallOrder[0]
       )
     })
@@ -263,7 +263,7 @@ describe('useVerificationResponseViewModel', () => {
         await result.current.handleAccountSetup()
       })
 
-      expect(mockUpdateVerified).toHaveBeenCalledWith(true)
+      expect(mockCompleteVerification).toHaveBeenCalledWith()
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to clean up verification process: Native delete failed')
       )
@@ -273,8 +273,8 @@ describe('useVerificationResponseViewModel', () => {
       expect(result.current.isSettingUpAccount).toBe(false)
     })
 
-    it('does not clear the authorization request when updateVerified never succeeds', async () => {
-      mockUpdateVerified.mockRejectedValue(new Error('Update verified failed'))
+    it('does not clear the authorization request when completeVerification never succeeds', async () => {
+      mockCompleteVerification.mockRejectedValue(new Error('Complete verification failed'))
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
 
@@ -288,7 +288,7 @@ describe('useVerificationResponseViewModel', () => {
 
   describe('Complex scenarios', () => {
     it('should complete full account setup flow successfully', async () => {
-      mockUpdateVerified.mockResolvedValue(undefined)
+      mockCompleteVerification.mockResolvedValue(undefined)
       mockUpdateUserMetadata.mockResolvedValue(undefined)
       mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
 
@@ -299,12 +299,12 @@ describe('useVerificationResponseViewModel', () => {
       })
 
       // Verify all operations were called in order:
-      // updateUserMetadata → token refresh → updateRegistration → updateVerified → clearAuthorizationRequest
+      // updateUserMetadata → token refresh → updateRegistration → completeVerification → clearAuthorizationRequest
       const calls = [
         mockUpdateUserMetadata.mock.invocationCallOrder[0],
         mockGetCachedIdTokenMetadata.mock.invocationCallOrder[0],
         mockRegistrationService.updateRegistration.mock.invocationCallOrder[0],
-        mockUpdateVerified.mock.invocationCallOrder[0],
+        mockCompleteVerification.mock.invocationCallOrder[0],
         mockClearAuthorizationRequest.mock.invocationCallOrder[0],
       ]
 
@@ -313,7 +313,7 @@ describe('useVerificationResponseViewModel', () => {
       }
     })
 
-    it('should not call updateVerified when token refresh fails', async () => {
+    it('should not call completeVerification when token refresh fails', async () => {
       mockUpdateUserMetadata.mockResolvedValue(undefined)
       mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
       mockGetCachedIdTokenMetadata.mockRejectedValue(new Error('Token refresh failed'))
@@ -326,7 +326,7 @@ describe('useVerificationResponseViewModel', () => {
 
       expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to clean up verification process'))
       expect(mockDispatch).not.toHaveBeenCalled()
-      expect(mockUpdateVerified).not.toHaveBeenCalled()
+      expect(mockCompleteVerification).not.toHaveBeenCalled()
       expect(result.current.isSettingUpAccount).toBe(false)
     })
 
@@ -354,7 +354,7 @@ describe('useVerificationResponseViewModel', () => {
       // Should still proceed with other operations even without device code
       expect(mockUpdateUserMetadata).toHaveBeenCalledWith(null)
       expect(mockGetCachedIdTokenMetadata).toHaveBeenCalledWith({ refreshCache: true })
-      expect(mockUpdateVerified).toHaveBeenCalledWith(true)
+      expect(mockCompleteVerification).toHaveBeenCalledWith()
     })
   })
 

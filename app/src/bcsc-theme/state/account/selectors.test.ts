@@ -9,11 +9,16 @@ const NOW = new Date('2026-10-19T12:00:00.000Z')
 const FUTURE = new Date('2027-10-19T00:00:00.000Z')
 
 const buildState = (
-  opts: { verified?: boolean; bcscReason?: BCSCReason; refreshToken?: string; credentialDeactivated?: boolean } = {}
+  opts: {
+    hasCredentialRecord?: boolean
+    bcscReason?: BCSCReason
+    refreshToken?: string
+    credentialDeactivated?: boolean
+  } = {}
 ) =>
   ({
     bcscSecure: {
-      verified: opts.verified ?? true,
+      hasCredentialRecord: opts.hasCredentialRecord ?? true,
       refreshToken: opts.refreshToken,
       credentialDeactivated: opts.credentialDeactivated ?? false,
     },
@@ -23,11 +28,11 @@ const buildState = (
 const buildAccount = (date: Date) => ({ account_expiration_date: date }) as unknown as BCSCAccount
 
 describe('selectAccountPhase', () => {
-  it('reads verified from secure state', () => {
-    expect(selectAccountPhase(buildState({ verified: false }), buildAccount(FUTURE), NOW).phase).toBe(
+  it('reads the credential record fact from secure state', () => {
+    expect(selectAccountPhase(buildState({ hasCredentialRecord: false }), buildAccount(FUTURE), NOW).phase).toBe(
       AccountPhaseType.None
     )
-    expect(selectAccountPhase(buildState({ verified: true }), buildAccount(FUTURE), NOW).phase).toBe(
+    expect(selectAccountPhase(buildState({ hasCredentialRecord: true }), buildAccount(FUTURE), NOW).phase).toBe(
       AccountPhaseType.Active
     )
   })
@@ -45,7 +50,7 @@ describe('selectAccountPhase', () => {
   })
 
   it('has no card to judge for an unfinished device, even with an inactive card', () => {
-    const state = buildState({ verified: false, bcscReason: BCSCReason.ExpiredBySystem })
+    const state = buildState({ hasCredentialRecord: false, bcscReason: BCSCReason.ExpiredBySystem })
 
     expect(selectAccountPhase(state, buildAccount(FUTURE), NOW).phase).toBe(AccountPhaseType.None)
   })
@@ -72,7 +77,7 @@ describe('selectAccountPhase', () => {
   })
 
   it('tolerates missing credential metadata', () => {
-    const state = { bcscSecure: { verified: true }, bcsc: {} } as unknown as BCState
+    const state = { bcscSecure: { hasCredentialRecord: true }, bcsc: {} } as unknown as BCState
 
     expect(selectAccountPhase(state, buildAccount(FUTURE), NOW).phase).toBe(AccountPhaseType.Active)
   })

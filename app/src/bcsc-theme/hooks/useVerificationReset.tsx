@@ -94,7 +94,6 @@ export const useVerificationReset = () => {
             securityMethod: store.bcscSecure.securityMethod,
             // the registration is still on the device until it is cleared below, which also drops this token
             registrationAccessToken: registration.registrationAccessToken,
-            verified: false, // device is no longer verified
             inVerifyFlow, // whether the verify flow stays mounted is the caller's call
           })
           // Restarting returns the user to the first step of the verify journey: the setup question

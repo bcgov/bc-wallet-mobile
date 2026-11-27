@@ -1,5 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import ScannableQRCode from '@/bcsc-theme/components/ScannableQRCode'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
@@ -7,7 +8,6 @@ import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
-  QRRenderer,
   ScreenWrapper,
   testIdWithKey,
   ThemedText,
@@ -21,7 +21,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { jwtDecode } from 'jwt-decode'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, useWindowDimensions } from 'react-native'
 import { createDeviceSignedJWT, getAccount, isAccountRegistered } from 'react-native-bcsc-core'
 import uuid from 'react-native-uuid'
 
@@ -32,7 +32,8 @@ const attestationPollInterval = 3000 // 3 seconds
 const TransferQRDisplayScreen: React.FC = () => {
   const jtiRef = useRef(uuid.v4().toString())
   const { deviceAttestation } = useApi()
-  const { ColorPalette, Spacing } = useTheme()
+  const { Spacing } = useTheme()
+  const { width } = useWindowDimensions()
   const [qrValue, setQRValue] = useState<string | null>(null)
   const [store] = useStore<BCState>()
   const { t } = useTranslation()
@@ -55,17 +56,6 @@ const TransferQRDisplayScreen: React.FC = () => {
       attestationIntervalRef.current = null
     }
   }, [])
-
-  const styles = StyleSheet.create({
-    qrCodeContainer: {
-      backgroundColor: ColorPalette.grayscale.white,
-      flexShrink: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: Spacing.sm,
-      borderRadius: Spacing.sm,
-    },
-  })
 
   const createToken = useCallback(async (): Promise<boolean> => {
     if (completedRef.current || !isMountedRef.current) {
@@ -228,11 +218,7 @@ const TransferQRDisplayScreen: React.FC = () => {
       <ThemedText style={{ marginBottom: Spacing.xxl }} variant={'headingThree'}>
         {t('BCSC.TransferQRDisplay.Instructions')}
       </ThemedText>
-      {qrValue && (
-        <View style={styles.qrCodeContainer}>
-          <QRRenderer value={qrValue} />
-        </View>
-      )}
+      {qrValue && <ScannableQRCode value={qrValue} size={width - Spacing.lg * 2} />}
     </ScreenWrapper>
   )
 }

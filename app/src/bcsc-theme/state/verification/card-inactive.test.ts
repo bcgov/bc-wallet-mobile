@@ -1,4 +1,4 @@
-import { BCSCReason } from '@/bcsc-theme/utils/id-token'
+import { BCSCEvent, BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { CardInactiveFacts, isCardInactive } from './card-inactive'
 
 describe('isCardInactive', () => {
@@ -35,6 +35,52 @@ describe('isCardInactive', () => {
       { recordDeactivated: false, savedReason: BCSCReason.ApprovedByAgent, hasRegistration: true },
       false,
     ],
+    ...[BCSCEvent.Expire, BCSCEvent.Cancel].flatMap((event): [string, CardInactiveFacts, boolean][] => [
+      [
+        `the saved event is ${event}, whatever the reason`,
+        { recordDeactivated: false, savedEvent: event, savedReason: BCSCReason.ApprovedByAgent, hasRegistration: true },
+        true,
+      ],
+      [
+        `the saved event is ${event} but no record or token remains (a reset registration)`,
+        { recordDeactivated: false, savedEvent: event, savedReason: BCSCReason.Cancel, hasRegistration: false },
+        false,
+      ],
+    ]),
+    ...[BCSCEvent.Authorization, BCSCEvent.Renewal, BCSCEvent.Replace].map(
+      (event): [string, CardInactiveFacts, boolean] => [
+        `the saved event is ${event}, even with an expiry reason (the event wins over the reason)`,
+        { recordDeactivated: false, savedEvent: event, savedReason: BCSCReason.ExpiredBySystem, hasRegistration: true },
+        false,
+      ]
+    ),
+    [
+      // A renewal clears recordDeactivated by writing a new record (CREDENTIAL_RECORD_SAVED), so the two
+      // only meet until that write lands
+      'the record says deactivated and a newer Renewal event is saved',
+      { recordDeactivated: true, savedEvent: BCSCEvent.Renewal, savedReason: BCSCReason.Renew, hasRegistration: true },
+      true,
+    ],
+    [
+      'the record says deactivated and a newer Authorization event is saved',
+      {
+        recordDeactivated: true,
+        savedEvent: BCSCEvent.Authorization,
+        savedReason: BCSCReason.ApprovedByAgent,
+        hasRegistration: true,
+      },
+      true,
+    ],
+    [
+      'details saved before the event was kept say Expired by System',
+      {
+        recordDeactivated: false,
+        savedEvent: undefined,
+        savedReason: BCSCReason.ExpiredBySystem,
+        hasRegistration: true,
+      },
+      true,
+    ],
     ...[
       BCSCReason.Cancel,
       BCSCReason.CanceledByAgent,
@@ -44,7 +90,7 @@ describe('isCardInactive', () => {
       BCSCReason.CanceledDueToInactivity,
       BCSCReason.CanceledByCardExpire,
     ].map((reason): [string, CardInactiveFacts, boolean] => [
-      `the saved reason is ${reason}, which goes to the device-invalidated screen`,
+      `details saved before the event was kept say ${reason}`,
       { recordDeactivated: false, savedReason: reason, hasRegistration: true },
       false,
     ]),

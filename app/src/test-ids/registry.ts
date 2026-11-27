@@ -155,6 +155,11 @@ export const TestIds = {
     },
     /** Title-derived row ids; `CardButton` does not strip whitespace from the title. */
     cardButtonPrefix: 'CardButton-',
+    /** `ScannableQRCode` — the card around a displayed QR code (Add device, My QR code). Absent while
+     *  the code fails to generate; the error text shows instead. */
+    scannableQRCode: {
+      card: 'ScannableQRCode',
+    },
   },
 
   /**

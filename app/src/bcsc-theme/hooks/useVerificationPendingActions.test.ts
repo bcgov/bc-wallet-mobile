@@ -69,7 +69,7 @@ describe('useVerificationPendingActions', () => {
       jest
         .mocked(Bifold)
         .useStore.mockReturnValue([
-          { bcsc: {}, bcscSecure: { ...pendingRequest, verified: true } } as any,
+          { bcsc: {}, bcscSecure: { ...pendingRequest, hasCredentialRecord: true } } as any,
           dispatchMock,
         ])
       const { result } = renderHook(() => useVerificationPendingActions(navigation))

@@ -412,11 +412,15 @@ flag that something has to remember to set and clear. The three live together in
   only maps its result to a component.
 - `getVerificationState` (`bcsc-theme/state/verification/`) is the only definition of "verified", "device verified by
   IAS" and "needs verification". Screens, navigators, Home and system checks read it through `useVerificationState`
-  or `selectVerificationState`, never from `bcscSecure.verified`, `credentialDeactivated`, `inVerifyFlow` or the tokens directly.
+  or `selectVerificationState`, never from `bcscSecure.hasCredentialRecord`, `credentialDeactivated`, `inVerifyFlow` or the tokens directly.
 - `isCardInactive` (`bcsc-theme/state/verification/card-inactive.ts`) is the only definition of "card not active": the
-  credential record read at unlock says cancelled or expired, or the saved account details say "Expired by System".
-  Card expiry and the verification rule both take it from `selectVerificationState`. A saved cancel reason is not part
-  of it: the account-change check sends that card to the device-invalidated screen.
+  credential record read at unlock says cancelled or expired, or the server's event saved with the account details
+  (`bcscEvent`) is Expire or Cancel. Details saved before the event was kept fall back to the "Expired by System" reason.
+  Card expiry and the verification rule both take it from `selectVerificationState`. A cancelled card is inactive and
+  still goes to the device-invalidated screen: the account-change check sends it there.
+- `needsFreshStart` (from `getVerificationState`) marks a registration cancelled or expired before setup finished. Home
+  shows Start verification for it, the verify stack opens on the setup question, and pressing Start runs the same restart
+  a renewal does (`useRestartVerificationAction`), so a stale review request or video is never resumed.
 
 The `unknown` phase (verified, but no usable date and no server signal) shows nothing; a notice is never built
 from data that did not load. Expiry is not refreshed at midnight or on foreground; it re-derives on the next
@@ -585,3 +589,23 @@ its first frame sizes itself from `useSafeAreaInsets()`, which the root provider
 render (`initialWindowMetrics`); `SafeAreaView` remains fine for content that slides in from off-screen.
 Bifold's `ScreenWrapper` wraps every screen in the same native view, so a stack's first screen shows the
 jump on a root slide too; that change belongs in Bifold and is tracked there.
+
+## QR codes: draw them with `ScannableQRCode`
+
+Show a QR code with `ScannableQRCode` (`app/src/bcsc-theme/components/ScannableQRCode.tsx`), not Bifold's
+`QRRenderer` or `react-native-qrcode-svg` directly. It draws black modules on a white card with a quiet zone, and
+keeps them that way under the phone's colour inversion settings:
+
+- iOS Smart Invert skips a view marked `accessibilityIgnoresInvertColors`, so the card is marked. It also sets
+  `collapsable={false}`: the renderer flattens a view whose only special prop is that flag out of the native tree,
+  and the flag goes with it.
+- Android colour inversion applies to the whole display and no view can opt out, so while it is on the card is drawn
+  inverted (white on black) and the display turns it back. React Native re-reads the setting each time the app comes
+  to the foreground, so a change made from Quick Settings while the app stays open shows once the app is reopened.
+- Don't redraw from `AccessibilityInfo.isInvertColorsEnabled()` on iOS. Apple documents it as Classic Invert, but it
+  has been reported to follow Smart Invert, where the card already opts out, so a redrawn code would show inverted.
+- iOS Classic Invert inverts the whole display, with no opt-out and no reliable way to detect it; a QR code shown under
+  it stays inverted.
+
+**Why:** with colour inversion on, the Add device QR code showed light on dark and the other phone could not scan it
+(#4768).

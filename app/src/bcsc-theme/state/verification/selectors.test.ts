@@ -1,11 +1,18 @@
-import { BCSCReason } from '@/bcsc-theme/utils/id-token'
+import { BCSCEvent, BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { BCState, initialState } from '@/store'
 import { selectVerificationRequestCheck, selectVerificationState } from './selectors'
 import { VerificationRequestCheckType } from './verification-request-check'
 
-const buildState = (secure: Partial<BCState['bcscSecure']> = {}, bcscReason?: BCSCReason): BCState => ({
+const buildState = (
+  secure: Partial<BCState['bcscSecure']> = {},
+  bcscReason?: BCSCReason,
+  bcscEvent?: BCSCEvent
+): BCState => ({
   ...initialState,
-  bcsc: { ...initialState.bcsc, credentialMetadata: bcscReason ? { bcscReason } : undefined } as BCState['bcsc'],
+  bcsc: {
+    ...initialState.bcsc,
+    credentialMetadata: bcscReason || bcscEvent ? { bcscReason, bcscEvent } : undefined,
+  } as BCState['bcsc'],
   bcscSecure: { ...initialState.bcscSecure, ...secure },
 })
 
@@ -14,8 +21,8 @@ describe('selectVerificationState', () => {
     expect(selectVerificationState(initialState)).toMatchObject({ isVerified: false, needsVerification: true })
   })
 
-  it('reads the verified flag as the credential', () => {
-    expect(selectVerificationState(buildState({ verified: true }))).toMatchObject({
+  it('reads the credential record fact as the credential', () => {
+    expect(selectVerificationState(buildState({ hasCredentialRecord: true }))).toMatchObject({
       isVerified: true,
       needsVerification: false,
     })
@@ -38,9 +45,23 @@ describe('selectVerificationState', () => {
     expect(selectVerificationState(buildState({ refreshToken: 'token' }, BCSCReason.ExpiredBySystem))).toMatchObject({
       isCardInactive: true,
     })
-    expect(selectVerificationState(buildState({ verified: true }, BCSCReason.ExpiredBySystem))).toMatchObject({
+    expect(
+      selectVerificationState(buildState({ hasCredentialRecord: true }, BCSCReason.ExpiredBySystem))
+    ).toMatchObject({
       isCardInactive: true,
     })
+  })
+
+  it.each([BCSCEvent.Expire, BCSCEvent.Cancel])('reads the saved %s event as an inactive card', (event) => {
+    expect(
+      selectVerificationState(buildState({ hasCredentialRecord: true }, BCSCReason.ApprovedByAgent, event))
+    ).toMatchObject({ isVerified: true, isCardInactive: true })
+  })
+
+  it('lets a saved event decide over the saved reason', () => {
+    expect(
+      selectVerificationState(buildState({ hasCredentialRecord: true }, BCSCReason.ExpiredBySystem, BCSCEvent.Renewal))
+    ).toMatchObject({ isCardInactive: false })
   })
 
   it('ignores a saved Expired by System reason when no record or token remains (a reset registration)', () => {
@@ -57,7 +78,9 @@ describe('selectVerificationState', () => {
   )
 
   it('keeps a credential record verified when the saved reason says the card expired', () => {
-    expect(selectVerificationState(buildState({ verified: true }, BCSCReason.ExpiredBySystem))).toMatchObject({
+    expect(
+      selectVerificationState(buildState({ hasCredentialRecord: true }, BCSCReason.ExpiredBySystem))
+    ).toMatchObject({
       isVerified: true,
       isDeviceVerifiedByIas: true,
       isCardInactive: true,
@@ -103,9 +126,11 @@ describe('selectVerificationRequestCheck', () => {
     })
   })
 
-  it('reads the verified flag, which leaves nothing to check', () => {
+  it('reads the credential record fact, which leaves nothing to check', () => {
     expect(
-      selectVerificationRequestCheck(buildState({ verified: true, verificationRequestId: 'req-1', ...deviceCodes }))
+      selectVerificationRequestCheck(
+        buildState({ hasCredentialRecord: true, verificationRequestId: 'req-1', ...deviceCodes })
+      )
     ).toEqual({ type: VerificationRequestCheckType.None })
   })
 })

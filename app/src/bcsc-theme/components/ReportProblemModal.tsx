@@ -90,7 +90,7 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
     // Add context to the error for debugging purposes
     appError.addContext({
       state_ias_environment: store.developer.environment.name,
-      state_verified: store.bcscSecure.verified,
+      state_verified: store.bcscSecure.hasCredentialRecord,
       state_credential_deactivated: store.bcscSecure.credentialDeactivated,
       state_card_inactive: isCardInactive,
       state_in_verify_flow: store.bcscSecure.inVerifyFlow,
@@ -117,7 +117,7 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
     store.developer.remoteDebugging.sessionId,
     store.bcsc.appBuildHistory,
     store.bcsc.installId,
-    store.bcscSecure.verified,
+    store.bcscSecure.hasCredentialRecord,
     store.bcscSecure.credentialDeactivated,
     isCardInactive,
     store.bcscSecure.inVerifyFlow,

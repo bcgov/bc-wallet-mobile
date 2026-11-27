@@ -1,4 +1,5 @@
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { BCSCEvent } from '@/bcsc-theme/utils/id-token'
 import { AccountSetupType, initialState } from '@/store'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { getResumeStepRoute } from './resume-step-route'
@@ -25,7 +26,7 @@ describe('getResumeStepRoute', () => {
   it('routes a verified user to the success screen regardless of setup type', () => {
     const store = structuredClone(initialState)
     store.bcsc.accountSetupType = AccountSetupType.TransferAccount
-    store.bcscSecure.verified = true
+    store.bcscSecure.hasCredentialRecord = true
     expect(getResumeStepRoute(store).name).toBe(BCSCScreens.VerificationSuccess)
   })
 
@@ -40,6 +41,31 @@ describe('getResumeStepRoute', () => {
     store.bcscSecure.refreshToken = 'token'
     store.bcscSecure.credentialDeactivated = true
     expect(getResumeStepRoute(store).name).not.toBe(BCSCScreens.VerificationSuccess)
+  })
+
+  it.each([
+    ['a deactivated record', { credentialDeactivated: true }],
+    ['a saved cancel', { savedEvent: BCSCEvent.Cancel }],
+    ['a saved expiry', { savedEvent: BCSCEvent.Expire }],
+  ])('starts over from the setup question for a registration that never finished setup, with %s', (_name, inactive) => {
+    const store = structuredClone(initialState)
+    store.bcscSecure.refreshToken = 'token'
+    store.bcscSecure.userSubmittedVerificationVideo = true
+    store.bcscSecure.verificationRequestId = 'req-1'
+    store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
+    store.bcscSecure.serial = '123456789'
+    store.bcsc.accountSetupType = AccountSetupType.AddAccount
+    store.bcscSecure.credentialDeactivated = 'credentialDeactivated' in inactive
+    store.bcsc.credentialMetadata = 'savedEvent' in inactive ? ({ bcscEvent: inactive.savedEvent } as any) : undefined
+
+    expect(getResumeStepRoute(store).name).toBe(BCSCScreens.AccountSetup)
+  })
+
+  it('still resumes the submitted video for an active registration that never finished setup', () => {
+    const store = structuredClone(initialState)
+    store.bcscSecure.userSubmittedVerificationVideo = true
+
+    expect(getResumeStepRoute(store).name).toBe(BCSCScreens.PendingReview)
   })
 
   it('resumes a user with verification progress but no recorded setup type instead of bouncing to the setup question', () => {

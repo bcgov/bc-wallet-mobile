@@ -55,7 +55,7 @@ const userData = (daysUntilExpiry: number) => ({
 
 const verified = {
   ...initialBCSCSecureState,
-  verified: true,
+  hasCredentialRecord: true,
   refreshToken: 'stored-refresh',
 }
 

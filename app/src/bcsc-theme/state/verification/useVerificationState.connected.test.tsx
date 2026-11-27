@@ -18,7 +18,7 @@ describe('useVerificationState with the real store', () => {
     expect(result.current.state).toMatchObject({ isVerified: false, needsVerification: true })
 
     act(() => {
-      result.current.dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFIED, payload: [true] })
+      result.current.dispatch({ type: BCDispatchAction.CREDENTIAL_RECORD_SAVED })
     })
 
     expect(result.current.state).toMatchObject({ isVerified: true, needsVerification: false })

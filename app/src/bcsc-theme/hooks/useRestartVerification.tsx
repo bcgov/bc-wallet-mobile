@@ -13,20 +13,18 @@ import { useSecureActions } from './useSecureActions'
 import { useVerificationReset } from './useVerificationReset'
 
 /**
- * Returns a callback that asks the user to confirm restarting the identity verification process.
+ * Returns a callback that restarts the identity verification process at once, with no confirmation.
  *
- * On confirmation, any pending verification request is first cancelled with IAS (best effort: a
+ * Any pending verification request is first cancelled with IAS (best effort: a
  * failed cancel is logged and the restart carries on), then all verification progress is reset
  * (see {@link useVerificationReset}) behind a loading screen, then the user re-enters the verify
  * flow so the RootStack remounts the VerifyStack at the first verification step.
  *
- * @returns {(onConfirm?: () => void) => void} Callback that shows the confirmation alert. The
- * optional `onConfirm` is invoked when the user confirms, before the reset starts (e.g. to
- * close the menu the restart was triggered from).
+ * @returns {() => Promise<void>} Callback that runs the restart. It does not throw: a failed reset
+ * already shows the factory reset alert, and a failed cancel is logged.
  */
-export const useRestartVerification = () => {
+export const useRestartVerificationAction = () => {
   const { t } = useTranslation()
-  const { emitAlert } = useErrorAlert()
   const loadingScreen = useLoadingScreen()
   const verificationReset = useVerificationReset()
   const { continueVerificationProcess } = useSecureActions()
@@ -72,6 +70,22 @@ export const useRestartVerification = () => {
       stopLoading()
     }
   }, [loadingScreen, t, cancelPendingVerificationRequest, verificationReset, continueVerificationProcess])
+
+  return restartVerification
+}
+
+/**
+ * Returns a callback that asks the user to confirm restarting the identity verification process, and
+ * on confirmation runs {@link useRestartVerificationAction}.
+ *
+ * @returns {(onConfirm?: () => void) => void} Callback that shows the confirmation alert. The
+ * optional `onConfirm` is invoked when the user confirms, before the reset starts (e.g. to
+ * close the menu the restart was triggered from).
+ */
+export const useRestartVerification = () => {
+  const { t } = useTranslation()
+  const { emitAlert } = useErrorAlert()
+  const restartVerification = useRestartVerificationAction()
 
   const promptRestartVerification = useCallback(
     (onConfirm?: () => void) => {

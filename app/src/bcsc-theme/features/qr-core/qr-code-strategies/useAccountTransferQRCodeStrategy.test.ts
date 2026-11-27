@@ -234,7 +234,9 @@ describe('useAccountTransferQRCodeStrategy', () => {
 
   describe('already verified', () => {
     beforeEach(() => {
-      jest.mocked(Bifold).useStore.mockReturnValue([{ bcsc: {}, bcscSecure: { verified: true } } as any, jest.fn()])
+      jest
+        .mocked(Bifold)
+        .useStore.mockReturnValue([{ bcsc: {}, bcscSecure: { hasCredentialRecord: true } } as any, jest.fn()])
     })
 
     it('calls onAlreadyVerified and leaves the wallet untouched', async () => {

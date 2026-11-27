@@ -10,7 +10,7 @@ import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './
  * Checks token metadata and renders a modal or alert
  * Reasons:
  * Cancel
- *  - displays a modal instructing user to reset their app
+ *  - displays a modal instructing user to reset their app; the saved event also marks the card inactive
  *
  * Expire:
  *  - saved with the account details, which is what marks the card inactive; no alert (see IASP-12489)
@@ -20,6 +20,8 @@ import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './
  *
  * Replace:
  *  - emits an alert informing the user their card type has changed
+ *
+ * Details saved before the event was kept, or whose event alone changed, are saved again without an alert.
  *
  * @export
  * @class EventReasonAlertsSystemCheck
@@ -61,9 +63,7 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
     }
 
     // Compare new and stored credential metadata
-    const isMetadataTheSame = compareCredentialMetadata(this.tokenMetadata, this.credentialMetadata)
-
-    return isMetadataTheSame
+    return compareCredentialMetadata(this.tokenMetadata, this.credentialMetadata)
   }
 
   onFail() {
@@ -71,8 +71,7 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
       return
     }
 
-    // update the credential metadata
-    this.utils.dispatch({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA, payload: [this.tokenMetadata] })
+    this.saveIfUnchanged()
 
     switch (this.event) {
       case BCSCEvent.Cancel:
@@ -93,7 +92,19 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
   }
 
   onSuccess() {
-    // nothing to alert
+    // No alert, but backfill a missing or changed saved event: isCardInactive reads it
+    if (this.tokenMetadata && this.credentialMetadata?.bcscEvent !== this.tokenMetadata.bcscEvent) {
+      this.saveIfUnchanged()
+    }
+  }
+
+  // The batch resolves after its slowest check, so a reset or a newer check can change the saved details
+  // first; the save then applies only if they are still the ones this check compared against
+  private saveIfUnchanged() {
+    this.utils.dispatch({
+      type: BCDispatchAction.REPLACE_CREDENTIAL_METADATA_IF_UNCHANGED,
+      payload: [this.credentialMetadata, this.tokenMetadata],
+    })
   }
 
   // helper function for building the alert to emit

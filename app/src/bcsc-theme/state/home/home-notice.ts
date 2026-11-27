@@ -5,6 +5,8 @@ export interface HomeNoticeFacts {
   isVerified: boolean
   /** Cancelled or expired: an inactive card is never offered finish setup */
   cardInactive: boolean
+  /** Cancelled or expired before setup finished: any progress it holds is stale, so Start begins again */
+  needsFreshStart: boolean
   /** IAS has issued this device tokens (a transfer, or a finish step whose credential write failed) */
   deviceVerifiedByIas: boolean
   refreshTokenExpired: boolean
@@ -39,6 +41,7 @@ export const getHomeNotice = (facts: HomeNoticeFacts): HomeNotice => {
   const {
     isVerified,
     cardInactive,
+    needsFreshStart,
     deviceVerifiedByIas,
     refreshTokenExpired,
     requestStatus,
@@ -55,6 +58,11 @@ export const getHomeNotice = (facts: HomeNoticeFacts): HomeNotice => {
     (requestStatus === VerificationRequestStatus.VERIFIED || (deviceVerifiedByIas && !refreshTokenExpired))
   ) {
     return { type: HomeNoticeType.BCSCVerified }
+  }
+
+  // Before any review or resume notice: those describe a request on a registration IAS no longer honours
+  if (needsFreshStart) {
+    return { type: HomeNoticeType.BCSCStartVerification }
   }
 
   if (requestStatus === VerificationRequestStatus.CANCELLED) {

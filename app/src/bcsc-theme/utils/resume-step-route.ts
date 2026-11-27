@@ -74,8 +74,15 @@ export const getResumeStepRoute = (store: BCState): ResumeStepRoute => {
     return { name: BCSCScreens.SessionRecovery }
   }
 
-  if (selectVerificationState(store).isDeviceVerifiedByIas) {
+  const { isDeviceVerifiedByIas, needsFreshStart } = selectVerificationState(store)
+
+  if (isDeviceVerifiedByIas) {
     return { name: BCSCScreens.VerificationSuccess }
+  }
+
+  // The progress this registration holds (a submitted video, evidence) is not resumed: Start begins again
+  if (needsFreshStart) {
+    return { name: BCSCScreens.AccountSetup }
   }
 
   if (store.bcscSecure.userSubmittedVerificationVideo) {

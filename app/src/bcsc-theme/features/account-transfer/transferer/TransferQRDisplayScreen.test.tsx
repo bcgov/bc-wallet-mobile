@@ -1,9 +1,12 @@
+import { TestIds } from '@/test-ids/registry'
+import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, render, waitFor } from '@testing-library/react-native'
 import { jwtDecode } from 'jwt-decode'
 import React from 'react'
 import { AccountSecurityMethod, createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
+import QRCode from 'react-native-qrcode-svg'
 import { BCSCScreens } from '../../../types/navigators'
 import TransferQRDisplayScreen from './TransferQRDisplayScreen'
 
@@ -120,7 +123,7 @@ describe('TransferQRDisplayScreen', () => {
     it('creates a signed JWT and displays a QR code when account is found', async () => {
       jest.mocked(getAccount).mockResolvedValueOnce(mockAccount)
 
-      render(
+      const { findByTestId, UNSAFE_getByType } = render(
         <BasicAppContext>
           <TransferQRDisplayScreen />
         </BasicAppContext>
@@ -135,6 +138,8 @@ describe('TransferQRDisplayScreen', () => {
           })
         )
       })
+      expect(await findByTestId(testIdWithKey(TestIds.shared.scannableQRCode.card))).toBeTruthy()
+      expect(UNSAFE_getByType(QRCode).props.value).toMatch(/\/static\/selfsetup\.html\?mock-jwt$/)
     })
 
     it('decodes the signed JWT to extract the actual jti', async () => {

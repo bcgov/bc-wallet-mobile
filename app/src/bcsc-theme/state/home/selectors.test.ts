@@ -16,7 +16,7 @@ const buildState = (secure: Partial<BCSCSecureState> = {}, bcscReason?: BCSCReas
   bcscSecure: { ...initialBCSCSecureState, ...secure },
 })
 
-const verifiedSecure: Partial<BCSCSecureState> = { verified: true }
+const verifiedSecure: Partial<BCSCSecureState> = { hasCredentialRecord: true }
 
 const buildAccount = (date: Date) => ({ account_expiration_date: date }) as unknown as BCSCAccount
 
@@ -72,7 +72,7 @@ describe('selectHomeNotice', () => {
 
   it('shows the expired notice, not Finish, for a verified account whose record says deactivated', () => {
     const state = buildState({
-      verified: true,
+      hasCredentialRecord: true,
       credentialDeactivated: true,
       refreshToken: 'token',
     })

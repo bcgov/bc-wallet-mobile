@@ -1,5 +1,7 @@
 import { BCSCAccountProvider } from '@/bcsc-theme/contexts/BCSCAccountContext'
+import { tokenToCredentialMetadata } from '@/bcsc-theme/contexts/BCSCIdTokenContext'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
+import { useVerificationReset } from '@/bcsc-theme/hooks/useVerificationReset'
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { UNEXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import { BCSCEvent, BCSCReason, IdToken } from '@/bcsc-theme/utils/id-token'
@@ -20,7 +22,19 @@ import { act, renderHook, waitFor } from '@testing-library/react-native'
 import moment from 'moment'
 import React from 'react'
 import { AppState } from 'react-native'
-import { getAccount, setCredential } from 'react-native-bcsc-core'
+import {
+  clearRegistration,
+  CredentialInfo,
+  deleteCredential,
+  deleteToken,
+  getAccount,
+  getCredential,
+  getToken,
+  setCredential,
+  TokenType,
+} from 'react-native-bcsc-core'
+import { AccountPhaseType } from '../account/account-phase'
+import { useAccountPhase } from '../account/useAccountPhase'
 import { HomeNoticeType } from '../home/home-notice'
 import { useHomeNotice } from '../home/useHomeNotice'
 import { useVerificationState } from './useVerificationState'
@@ -34,6 +48,25 @@ jest.mock('@/bcsc-theme/services/hooks/useUserService', () => ({
   useUserService: jest.fn(() => ({
     getUserMetadata: mockGetUserMetadata,
   })),
+}))
+
+// The reset's IAS calls and its failure alert are the only parts faked; its native deletes are real
+const mockCreateRegistration = jest.fn().mockResolvedValue({})
+jest.mock('@/bcsc-theme/services/hooks/useRegistrationService', () => ({
+  useRegistrationService: () => ({
+    deleteRegistration: jest.fn().mockResolvedValue({ success: true }),
+    createRegistration: (...args: unknown[]) => mockCreateRegistration(...args),
+  }),
+}))
+
+const mockFactoryResetAlert = jest.fn()
+jest.mock('@/hooks/useAlerts', () => ({
+  useAlerts: () => ({ factoryResetAlert: (...args: unknown[]) => mockFactoryResetAlert(...args) }),
+}))
+
+jest.mock('@react-navigation/core', () => ({
+  ...jest.requireActual('@react-navigation/core'),
+  useNavigation: () => ({}),
 }))
 
 jest.mock('@/services/notifications/verificationReminders', () => ({
@@ -95,7 +128,9 @@ const renderDevice = async (secure: Partial<BCSCSecureState>, bcsc: Partial<BCSC
         dispatch,
         notice: useHomeNotice(),
         verification: useVerificationState(),
+        phase: useAccountPhase(),
         secure: useSecureActions(),
+        reset: useVerificationReset(),
       }
     },
     { wrapper }
@@ -112,8 +147,8 @@ const dispatchOn = (device: Device, type: BCDispatchAction, payload: unknown[]) 
     device.current.dispatch({ type, payload } as Parameters<typeof device.current.dispatch>[0])
   })
 
-/** Runs the real account-change check against the device's own store, as the main stack does. */
-const runAccountChangeCheck = async (device: Device, token: IdToken, navigate = jest.fn()) => {
+/** The real account-change check, built from the device's saved details as they are now. */
+const buildAccountChangeCheck = (device: Device, token: IdToken, navigate = jest.fn()) => {
   const { store, dispatch } = device.current
   const check = new EventReasonAlertsSystemCheck(
     async () => token,
@@ -122,6 +157,13 @@ const runAccountChangeCheck = async (device: Device, token: IdToken, navigate = 
     { dispatch, translation: ((key: string) => key) as never, logger: logger as never },
     { navigate } as never
   )
+
+  return { check, navigate }
+}
+
+/** Runs the real account-change check against the device's own store, as the main stack does. */
+const runAccountChangeCheck = async (device: Device, token: IdToken, navigate = jest.fn()) => {
+  const { check } = buildAccountChangeCheck(device, token, navigate)
 
   await act(async () => {
     await runSystemChecks([check], logger as never)
@@ -180,7 +222,7 @@ describe('"card not active", from the real check through the store to Home', () 
       expect(device.current.verification.isCardInactive).toBe(true)
 
       await act(async () => {
-        await device.current.secure.updateVerified(true)
+        await device.current.secure.completeVerification()
       })
 
       expect(setCredential).toHaveBeenCalledTimes(1)
@@ -191,7 +233,7 @@ describe('"card not active", from the real check through the store to Home', () 
   })
 
   describe('a credential record that says cancelled or expired, with a usable token', () => {
-    const upgraded = { verified: true, credentialDeactivated: true, refreshToken: UNEXPIRED_JWT }
+    const upgraded = { hasCredentialRecord: true, credentialDeactivated: true, refreshToken: UNEXPIRED_JWT }
 
     it('shows the expired notice, and stays on it when the server says expired', async () => {
       const device = await renderDevice(upgraded)
@@ -209,6 +251,165 @@ describe('"card not active", from the real check through the store to Home', () 
       const navigate = await runAccountChangeCheck(device, CANCEL_TOKEN)
 
       expect(navigate).toHaveBeenCalledWith(BCSCModals.DeviceInvalidated, { invalidationReason: BCSCReason.Cancel })
+    })
+  })
+
+  // Native storage is faked statefully, so a restart runs the real hydrateSecureState on what earlier steps
+  // wrote, and the real reset's native deletes act on the same fake.
+  describe('the credential record fact through finish, cancel, reset and restarts', () => {
+    const account = { issuer: 'https://issuer.example.com', clientID: 'client-1' }
+    const native: { credential: CredentialInfo | null; refreshToken?: string; registrationToken?: string } = {
+      credential: null,
+    }
+
+    beforeEach(() => {
+      native.credential = null
+      native.refreshToken = UNEXPIRED_JWT
+      native.registrationToken = 'registration-token'
+      jest.mocked(getAccount).mockResolvedValue(account as never)
+      jest.mocked(getCredential).mockImplementation(async () => native.credential)
+      jest.mocked(setCredential).mockImplementation(async (credential) => {
+        native.credential = credential
+      })
+      jest.mocked(getToken).mockImplementation(async (type) => {
+        const token = type === TokenType.Refresh ? native.refreshToken : native.registrationToken
+        return (token ? { id: `${type}`, type, token, created: 0 } : null) as never
+      })
+      // The reset's native deletes act on the fake, so a reset that skips one leaves its data behind
+      jest.mocked(deleteCredential).mockImplementation(async () => {
+        native.credential = null
+      })
+      jest.mocked(deleteToken).mockImplementation(async (type) => {
+        if (type === TokenType.Refresh) {
+          native.refreshToken = undefined
+        }
+        return true
+      })
+      jest.mocked(clearRegistration).mockImplementation(async () => {
+        native.registrationToken = undefined
+      })
+    })
+
+    afterEach(() => {
+      jest.mocked(getAccount).mockResolvedValue(null as never)
+      jest.mocked(getCredential).mockResolvedValue(null)
+      jest.mocked(setCredential).mockResolvedValue(undefined)
+      jest.mocked(getToken).mockResolvedValue(null as never)
+      jest.mocked(deleteCredential).mockResolvedValue(undefined)
+      jest.mocked(deleteToken).mockResolvedValue(true)
+      jest.mocked(clearRegistration).mockResolvedValue(undefined)
+    })
+
+    const restart = async () => {
+      const device = await renderDevice({ isHydrated: false }, persistedBcsc())
+      await act(async () => {
+        await device.current.secure.hydrateSecureState()
+      })
+      return device
+    }
+
+    const finishVerification = async () => {
+      const device = await renderDevice({ refreshToken: UNEXPIRED_JWT }, { verificationStarted: true })
+      await act(async () => {
+        await device.current.secure.completeVerification()
+      })
+      return device
+    }
+
+    it('is a verified, active card after finishing and restarting', async () => {
+      const device = await finishVerification()
+      expect(device.current.store.bcscSecure.hasCredentialRecord).toBe(true)
+
+      const restarted = await restart()
+
+      expect(restarted.current.store.bcscSecure.hasCredentialRecord).toBe(true)
+      expect(restarted.current.verification).toMatchObject({ isVerified: true, isCardInactive: false })
+      await waitFor(() => expect(restarted.current.phase.phase).toBe(AccountPhaseType.Active))
+    })
+
+    it('keeps the record, and reads the card as not active, after a cancel is saved and the app restarts', async () => {
+      const device = await finishVerification()
+
+      const navigate = await runAccountChangeCheck(device, CANCEL_TOKEN)
+
+      expect(navigate).toHaveBeenCalledWith(BCSCModals.DeviceInvalidated, { invalidationReason: BCSCReason.Cancel })
+      expect(device.current.verification).toMatchObject({ isVerified: true, isCardInactive: true })
+
+      const restarted = await restart()
+
+      expect(restarted.current.store.bcscSecure.hasCredentialRecord).toBe(true)
+      expect(restarted.current.verification).toMatchObject({ isVerified: true, isCardInactive: true })
+      await waitFor(() => expect(restarted.current.phase.phase).toBe(AccountPhaseType.Expired))
+    })
+
+    // The batch resolves after its slowest check, so the handlers can run after a reset or a newer check
+    describe('a check whose result is applied after the saved details changed', () => {
+      const olderToken = idToken(BCSCEvent.Authorization, BCSCReason.ApprovedByAgent)
+
+      const finishedDeviceWithSavedDetails = async () => {
+        const device = await finishVerification()
+        await dispatchOn(device, BCDispatchAction.UPDATE_CREDENTIAL_METADATA, [tokenToCredentialMetadata(olderToken)])
+        return device
+      }
+
+      it('leaves the details cleared when a reset cleared them between the check and its handler', async () => {
+        const device = await finishedDeviceWithSavedDetails()
+        const { check } = buildAccountChangeCheck(device, EXPIRE_TOKEN)
+        await expect(check.runCheck()).resolves.toBe(false)
+
+        await act(async () => {
+          await device.current.reset()
+        })
+        expect(device.current.store.bcsc.credentialMetadata).toBeUndefined()
+
+        await act(async () => {
+          await check.onFail()
+        })
+
+        expect(device.current.store.bcsc.credentialMetadata).toBeUndefined()
+        expect(device.current.verification.isCardInactive).toBe(false)
+      })
+
+      it('does not overwrite a newer saved cancel with the result of an older check', async () => {
+        const device = await finishedDeviceWithSavedDetails()
+        const older = buildAccountChangeCheck(device, EXPIRE_TOKEN)
+        await expect(older.check.runCheck()).resolves.toBe(false)
+
+        await runAccountChangeCheck(device, CANCEL_TOKEN)
+        expect(device.current.store.bcsc.credentialMetadata?.bcscEvent).toBe(BCSCEvent.Cancel)
+
+        await act(async () => {
+          await older.check.onFail()
+        })
+
+        expect(device.current.store.bcsc.credentialMetadata).toMatchObject({
+          bcscEvent: BCSCEvent.Cancel,
+          bcscReason: BCSCReason.Cancel,
+        })
+        expect(persistedBcsc().credentialMetadata).toMatchObject({ bcscEvent: BCSCEvent.Cancel })
+        expect(device.current.verification.isCardInactive).toBe(true)
+      })
+    })
+
+    it('has no record, and no card to judge, after the reset clears memory and storage and the app restarts', async () => {
+      const device = await finishVerification()
+      await runAccountChangeCheck(device, CANCEL_TOKEN)
+
+      let completed: boolean | undefined
+      await act(async () => {
+        completed = await device.current.reset()
+      })
+
+      expect(completed).toBe(true)
+      expect(mockFactoryResetAlert).not.toHaveBeenCalled()
+      expect(device.current.store.bcscSecure.hasCredentialRecord).toBe(false)
+      expect(device.current.store.bcsc.credentialMetadata).toBeUndefined()
+
+      const restarted = await restart()
+
+      expect(restarted.current.store.bcscSecure.hasCredentialRecord).toBe(false)
+      expect(restarted.current.verification).toMatchObject({ isVerified: false, isCardInactive: false })
+      expect(restarted.current.phase.phase).toBe(AccountPhaseType.None)
     })
   })
 })

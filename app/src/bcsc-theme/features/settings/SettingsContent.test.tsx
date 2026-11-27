@@ -67,7 +67,7 @@ describe('SettingsContent', () => {
   })
 
   it('renders authenticated rows when authenticated', async () => {
-    renderWithState({ authentication: { didAuthenticate: true }, bcscSecure: { verified: true } })
+    renderWithState({ authentication: { didAuthenticate: true }, bcscSecure: { hasCredentialRecord: true } })
     expect(await screen.findByTestId(tid('AppSecurity'))).toBeTruthy()
     expect(screen.getByTestId(tid('AutoLock'))).toBeTruthy()
     expect(screen.getByTestId(tid('ForgetPairings'))).toBeTruthy()
@@ -288,7 +288,7 @@ describe('SettingsContent', () => {
   })
 
   it('gives the edit pencil no left or bottom hitSlop, so it cannot take taps from the account name or the chevron below', async () => {
-    renderWithState({ authentication: { didAuthenticate: true }, bcscSecure: { verified: true } })
+    renderWithState({ authentication: { didAuthenticate: true }, bcscSecure: { hasCredentialRecord: true } })
 
     expect(screen.getByTestId(tid('EditProfile')).props.hitSlop).toMatchObject({ left: 0, bottom: 0 })
     await waitForNotificationStatus()
