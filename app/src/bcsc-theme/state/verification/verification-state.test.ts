@@ -13,6 +13,7 @@ const verified = (isCardInactive = false): VerificationState => ({
   isDeviceVerifiedByIas: true,
   isVerificationInProgress: false,
   needsVerification: false,
+  needsFreshStart: false,
 })
 
 type Unverified = Extract<VerificationState, { isVerified: false }>
@@ -22,6 +23,7 @@ const unverified = (overrides: Partial<Omit<Unverified, 'isVerified'>> = {}): Ve
   isDeviceVerifiedByIas: false,
   isVerificationInProgress: false,
   needsVerification: false,
+  needsFreshStart: overrides.isCardInactive ?? false,
   ...overrides,
   isVerified: false,
 })

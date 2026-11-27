@@ -518,22 +518,22 @@ describe('useGetSystemChecks', () => {
       const deviceCodes = { deviceCode: 'device-code', userCode: 'user-code', deviceCodeExpiresAt: expiresAt }
 
       it('runs the main stack batch once per session, and once more when the user verifies', () => {
-        expect(mainStackKey({ verified: false })).toBe('MAIN_STACK:unverified')
-        expect(mainStackKey({ verified: true })).toBe('MAIN_STACK:verified')
+        expect(mainStackKey({ hasCredentialRecord: false })).toBe('MAIN_STACK:unverified')
+        expect(mainStackKey({ hasCredentialRecord: true })).toBe('MAIN_STACK:verified')
       })
 
       it('gives each submitted verification request a batch of its own', () => {
-        const first = mainStackKey({ verified: false, verificationRequestId: 'req-1', ...deviceCodes })
+        const first = mainStackKey({ hasCredentialRecord: false, verificationRequestId: 'req-1', ...deviceCodes })
         // "Verify a different way": a second request under the same device authorization
-        const second = mainStackKey({ verified: false, verificationRequestId: 'req-2', ...deviceCodes })
+        const second = mainStackKey({ hasCredentialRecord: false, verificationRequestId: 'req-2', ...deviceCodes })
 
         expect(first).toBe('MAIN_STACK:unverified:RequestStatus:req-1')
         expect(second).toBe('MAIN_STACK:unverified:RequestStatus:req-2')
       })
 
       it('gives each device authorization awaiting recovery a batch of its own, named by its expiry', () => {
-        const first = mainStackKey({ verified: false, ...deviceCodes })
-        const second = mainStackKey({ verified: false, ...deviceCodes, deviceCodeExpiresAt: laterExpiresAt })
+        const first = mainStackKey({ hasCredentialRecord: false, ...deviceCodes })
+        const second = mainStackKey({ hasCredentialRecord: false, ...deviceCodes, deviceCodeExpiresAt: laterExpiresAt })
 
         expect(first).toBe(`MAIN_STACK:unverified:PendingRecovery:${expiresAt.getTime()}`)
         expect(second).toBe(`MAIN_STACK:unverified:PendingRecovery:${laterExpiresAt.getTime()}`)
@@ -541,8 +541,8 @@ describe('useGetSystemChecks', () => {
 
       it('never puts the device or user code in the key', () => {
         const keys = [
-          mainStackKey({ verified: false, ...deviceCodes }),
-          mainStackKey({ verified: false, verificationRequestId: 'req-1', ...deviceCodes }),
+          mainStackKey({ hasCredentialRecord: false, ...deviceCodes }),
+          mainStackKey({ hasCredentialRecord: false, verificationRequestId: 'req-1', ...deviceCodes }),
         ]
 
         expect(keys.join()).not.toContain('device-code')
@@ -550,19 +550,19 @@ describe('useGetSystemChecks', () => {
       })
 
       it('still keys a device authorization whose expiry was never recorded apart from having nothing to check', () => {
-        expect(mainStackKey({ verified: false, deviceCode: 'device-code', userCode: 'user-code' })).toBe(
+        expect(mainStackKey({ hasCredentialRecord: false, deviceCode: 'device-code', userCode: 'user-code' })).toBe(
           'MAIN_STACK:unverified:PendingRecovery:'
         )
       })
 
       it('keeps the one verified key whatever request data is still held', () => {
-        expect(mainStackKey({ verified: true, verificationRequestId: 'req-1', ...deviceCodes })).toBe(
+        expect(mainStackKey({ hasCredentialRecord: true, verificationRequestId: 'req-1', ...deviceCodes })).toBe(
           'MAIN_STACK:verified'
         )
       })
 
       it('leaves the startup and verify scopes to run once per mount', () => {
-        const { result } = renderWithSecure({ verified: false })
+        const { result } = renderWithSecure({ hasCredentialRecord: false })
 
         expect(result.current[SystemCheckScope.STARTUP].sessionKey).toBeUndefined()
         expect(result.current[SystemCheckScope.VERIFY].sessionKey).toBeUndefined()
@@ -590,19 +590,19 @@ describe('useGetSystemChecks', () => {
       }
 
       it('is false for an unverified user with nothing submitted, whose batch is the Terms of Use fetch', () => {
-        expect(renderWithSecure({ verified: false })).toBe(false)
+        expect(renderWithSecure({ hasCredentialRecord: false })).toBe(false)
       })
 
       it('is true while a verification request can resolve', () => {
-        expect(renderWithSecure({ verified: false, verificationRequestId: 'req-1' })).toBe(true)
+        expect(renderWithSecure({ hasCredentialRecord: false, verificationRequestId: 'req-1' })).toBe(true)
       })
 
       it('is true while a pending verification can be recovered from its device codes', () => {
-        expect(renderWithSecure({ verified: false, deviceCode: 'device', userCode: 'user' })).toBe(true)
+        expect(renderWithSecure({ hasCredentialRecord: false, deviceCode: 'device', userCode: 'user' })).toBe(true)
       })
 
       it('is false for a verified user, who has no request left to check', () => {
-        expect(renderWithSecure({ verified: true, verificationRequestId: 'req-1' })).toBe(false)
+        expect(renderWithSecure({ hasCredentialRecord: true, verificationRequestId: 'req-1' })).toBe(false)
       })
     })
 
@@ -623,7 +623,7 @@ describe('useGetSystemChecks', () => {
             },
             bcscSecure: {
               isHydrated: true,
-              verified: true,
+              hasCredentialRecord: true,
               refreshToken: UNEXPIRED_JWT,
               registrationAccessToken: 'test-registration-token',
             },
@@ -674,7 +674,7 @@ describe('useGetSystemChecks', () => {
             },
             bcscSecure: {
               isHydrated: true,
-              verified: true,
+              hasCredentialRecord: true,
               refreshToken: EXPIRED_JWT,
               registrationAccessToken: 'test-registration-token',
             },
@@ -721,7 +721,7 @@ describe('useGetSystemChecks', () => {
             },
             bcscSecure: {
               isHydrated: true,
-              verified: false,
+              hasCredentialRecord: false,
             },
           },
           jest.fn(),
@@ -773,7 +773,7 @@ describe('useGetSystemChecks', () => {
               stateLoaded: true,
               developer: { environment: { analyticsAppId: 'test-app-id' } },
               bcsc: { analyticsOptIn: true, ...bcsc },
-              bcscSecure: { isHydrated: true, verified: false, ...bcscSecure },
+              bcscSecure: { isHydrated: true, hasCredentialRecord: false, ...bcscSecure },
             },
             jest.fn(),
           ])
@@ -837,7 +837,7 @@ describe('useGetSystemChecks', () => {
           mockMainStackStore({
             bundleId: 'ca.bc.gov.BCWallet',
             bcscSecure: {
-              verified: true,
+              hasCredentialRecord: true,
               refreshToken: UNEXPIRED_JWT,
               registrationAccessToken: 'test-registration-token',
             },
@@ -849,7 +849,7 @@ describe('useGetSystemChecks', () => {
 
         it('skips the registration update and key rotation without a registration token, even with a nickname', async () => {
           mockMainStackStore({
-            bcscSecure: { verified: true, refreshToken: UNEXPIRED_JWT },
+            bcscSecure: { hasCredentialRecord: true, refreshToken: UNEXPIRED_JWT },
             bcsc: { selectedNickname: 'Test Device' },
           })
 
@@ -872,8 +872,8 @@ describe('useGetSystemChecks', () => {
           })
 
           it.each([
-            ['an unfinished device', { verified: false }],
-            ['a finished account', { verified: true }],
+            ['an unfinished device', { hasCredentialRecord: false }],
+            ['a finished account', { hasCredentialRecord: true }],
           ])('does not run for %s whose token has expired', async (_name, secure) => {
             mockMainStackStore({ bcscSecure: { ...secure, refreshToken: EXPIRED_JWT } })
 
@@ -883,7 +883,7 @@ describe('useGetSystemChecks', () => {
 
         it('passes the nickname to the registration service, suppressing transient alerts', async () => {
           const updateRegistration = mockMainStackStore({
-            bcscSecure: { verified: true, registrationAccessToken: 'test-registration-token' },
+            bcscSecure: { hasCredentialRecord: true, registrationAccessToken: 'test-registration-token' },
             bcsc: { selectedNickname: 'Test Device' },
           })
 
@@ -929,7 +929,7 @@ describe('useGetSystemChecks', () => {
             },
             bcscSecure: {
               isHydrated: true,
-              verified: true,
+              hasCredentialRecord: true,
               registrationAccessToken: 'test-registration-token',
               ...bcscSecure,
             },
@@ -1216,7 +1216,7 @@ describe('useGetSystemChecks', () => {
             stateLoaded: true,
             developer: { environment: { analyticsAppId: 'test-app-id' } },
             bcsc: { analyticsOptIn: true },
-            bcscSecure: { isHydrated: true, verified: false, ...bcscSecureOverrides },
+            bcscSecure: { isHydrated: true, hasCredentialRecord: false, ...bcscSecureOverrides },
           },
           jest.fn(),
         ])
@@ -1241,7 +1241,7 @@ describe('useGetSystemChecks', () => {
       })
 
       it('is not added once the user is verified, even with a verificationRequestId', async () => {
-        mockStoreWith({ verified: true, verificationRequestId: 'req-1' })
+        mockStoreWith({ hasCredentialRecord: true, verificationRequestId: 'req-1' })
         mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn() })
         mockUseEvidenceService.mockReturnValue({ getVerificationRequestStatus: jest.fn() })
 
@@ -1336,7 +1336,7 @@ describe('useGetSystemChecks', () => {
             stateLoaded: true,
             developer: { environment: { analyticsAppId: 'test-app-id' } },
             bcsc: { analyticsOptIn: true },
-            bcscSecure: { isHydrated: true, verified: false, ...bcscSecureOverrides },
+            bcscSecure: { isHydrated: true, hasCredentialRecord: false, ...bcscSecureOverrides },
           },
           jest.fn(),
         ])
@@ -1361,7 +1361,7 @@ describe('useGetSystemChecks', () => {
       })
 
       it('is not added once the user is verified, even with deviceCode/userCode present', async () => {
-        mockStoreWith({ verified: true, deviceCode: 'device-1', userCode: 'user-1' })
+        mockStoreWith({ hasCredentialRecord: true, deviceCode: 'device-1', userCode: 'user-1' })
         mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn(), checkDeviceCodeStatus: jest.fn() })
 
         const { result } = renderHook(() => useCreateSystemChecks())

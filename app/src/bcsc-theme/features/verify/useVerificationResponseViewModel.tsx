@@ -11,7 +11,7 @@ const useVerificationResponseViewModel = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const registration = useRegistrationService()
   const { getCachedIdTokenMetadata } = useTokenService()
-  const { updateVerified, updateUserMetadata, clearAuthorizationRequest } = useSecureActions()
+  const { completeVerification, updateUserMetadata, clearAuthorizationRequest } = useSecureActions()
   const [isSettingUpAccount, setIsSettingUpAccount] = useState(false)
 
   const handleUpdateRegistration = useCallback(
@@ -46,8 +46,8 @@ const useVerificationResponseViewModel = () => {
       updateNicknameInLocalStorage(nickname)
       // this updates their registration status with their nickname and new access tokens
       await handleUpdateRegistration(nickname)
-      // this marks their account as verified, so we know to navigate them to the correct stack
-      await updateVerified(true)
+      // this writes the credential record, so we know to navigate them to the correct stack
+      await completeVerification()
       // account setup is complete, clear the authorization request record
       await clearAuthorizationRequest()
 
@@ -55,7 +55,7 @@ const useVerificationResponseViewModel = () => {
       dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
       dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [undefined] })
       setIsSettingUpAccount(false)
-      // No imperative navigate: the `verified` flip swaps VerifyStack for MainStack (#4368), and MainStack
+      // No imperative navigate: saving the record swaps VerifyStack for MainStack (#4368), and MainStack
       // stops registering this screen once verified, so neither host is left showing it (#4719)
     } catch (error) {
       const errMessage = error instanceof Error ? error.message : String(error)
@@ -63,7 +63,7 @@ const useVerificationResponseViewModel = () => {
       setIsSettingUpAccount(false)
     }
   }, [
-    updateVerified,
+    completeVerification,
     updateUserMetadata,
     clearAuthorizationRequest,
     handleUpdateRegistration,

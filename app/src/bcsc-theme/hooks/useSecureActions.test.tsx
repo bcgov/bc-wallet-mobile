@@ -15,7 +15,6 @@ import {
   BCSCCardType,
   clearRegistration,
   deleteAuthorizationRequest,
-  deleteCredential,
   deleteEvidence,
   deleteToken,
   EvidenceMetadata,
@@ -724,10 +723,14 @@ describe('useSecureActions', () => {
     })
 
     it.each([
-      ['no record', null, { verified: false, credentialDeactivated: false }],
-      ['an Authorization record', { bcscEvent: 'Authorization' }, { verified: true, credentialDeactivated: false }],
-      ['a Cancel record', { bcscEvent: 'Cancel' }, { verified: true, credentialDeactivated: true }],
-      ['an Expire record', { bcscEvent: 'Expire' }, { verified: true, credentialDeactivated: true }],
+      ['no record', null, { hasCredentialRecord: false, credentialDeactivated: false }],
+      [
+        'an Authorization record',
+        { bcscEvent: 'Authorization' },
+        { hasCredentialRecord: true, credentialDeactivated: false },
+      ],
+      ['a Cancel record', { bcscEvent: 'Cancel' }, { hasCredentialRecord: true, credentialDeactivated: true }],
+      ['an Expire record', { bcscEvent: 'Expire' }, { hasCredentialRecord: true, credentialDeactivated: true }],
     ])('hydrates the verification facts from %s', async (_label, record, facts) => {
       jest.mocked(getAccount).mockResolvedValue(baseAccount as any)
       jest.mocked(getAuthorizationRequest).mockResolvedValue(null as any)
@@ -738,7 +741,7 @@ describe('useSecureActions', () => {
         await result.current.hydrateSecureState()
       })
 
-      expect(captureHydrateField('verified')).toBe(facts.verified)
+      expect(captureHydrateField('hasCredentialRecord')).toBe(facts.hasCredentialRecord)
       expect(captureHydrateField('credentialDeactivated')).toBe(facts.credentialDeactivated)
       expect(captureHydrateField('inVerifyFlow')).toBe(false)
     })
@@ -756,7 +759,7 @@ describe('useSecureActions', () => {
         await result.current.hydrateSecureState()
       })
 
-      expect(captureHydrateField('verified')).toBe(true)
+      expect(captureHydrateField('hasCredentialRecord')).toBe(true)
       expect(captureSessionRecoveryRequired()).toBe(true)
     })
 
@@ -1605,7 +1608,7 @@ describe('useSecureActions', () => {
       expect(setCredential).toHaveBeenCalledWith(
         expect.objectContaining({ issuer: account.issuer, subject: account.clientID, bcscEvent: 'Authorization' })
       )
-      expect(captureHydrateField('verified')).toBe(true)
+      expect(captureHydrateField('hasCredentialRecord')).toBe(true)
       expect(captureHydrateField('credentialDeactivated')).toBe(false)
       expect(captureHydrateField('inVerifyFlow')).toBe(false)
       expect(captureHydrateField('sessionRecoveryRequired')).toBe(false)
@@ -1641,7 +1644,7 @@ describe('useSecureActions', () => {
       })
 
       expect(setCredential).not.toHaveBeenCalled()
-      expect(captureHydrateField('verified')).toBe(false)
+      expect(captureHydrateField('hasCredentialRecord')).toBe(false)
       expect(captureHydrateField('credentialDeactivated')).toBe(false)
       expect(captureHydrateField('inVerifyFlow')).toBe(false)
     })
@@ -1661,7 +1664,7 @@ describe('useSecureActions', () => {
 
       expect(mockGetTokensForRefreshToken).toHaveBeenCalled()
       expect(setCredential).not.toHaveBeenCalled()
-      expect(captureHydrateField('verified')).toBe(false)
+      expect(captureHydrateField('hasCredentialRecord')).toBe(false)
     })
 
     it('skips the restore for an expired refresh token, which only a renewal can fix', async () => {
@@ -1674,7 +1677,7 @@ describe('useSecureActions', () => {
 
       expect(mockGetTokensForRefreshToken).not.toHaveBeenCalled()
       expect(setCredential).not.toHaveBeenCalled()
-      expect(captureHydrateField('verified')).toBe(false)
+      expect(captureHydrateField('hasCredentialRecord')).toBe(false)
     })
 
     it('does not write when a credential record already exists', async () => {
@@ -1686,7 +1689,7 @@ describe('useSecureActions', () => {
       })
 
       expect(setCredential).not.toHaveBeenCalled()
-      expect(captureHydrateField('verified')).toBe(true)
+      expect(captureHydrateField('hasCredentialRecord')).toBe(true)
     })
 
     it('does not write when there is no refresh token to confirm', async () => {
@@ -1699,7 +1702,7 @@ describe('useSecureActions', () => {
 
       expect(mockGetTokensForRefreshToken).not.toHaveBeenCalled()
       expect(setCredential).not.toHaveBeenCalled()
-      expect(captureHydrateField('verified')).toBe(false)
+      expect(captureHydrateField('hasCredentialRecord')).toBe(false)
     })
 
     it('completes hydration as unverified when the record cannot be written', async () => {
@@ -1710,7 +1713,7 @@ describe('useSecureActions', () => {
         await result.current.hydrateSecureState()
       })
 
-      expect(captureHydrateField('verified')).toBe(false)
+      expect(captureHydrateField('hasCredentialRecord')).toBe(false)
       expect(captureHydrateField('isHydrated')).toBe(true)
       expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to restore'), expect.any(Error))
     })
@@ -1849,14 +1852,14 @@ describe('useSecureActions', () => {
     })
   })
 
-  describe('updateVerified', () => {
+  describe('completeVerification', () => {
     const account = { id: 'account-1', issuer: 'https://idsit.gov.bc.ca', clientID: 'client-1' }
 
     beforeEach(() => {
       jest.mocked(getAccount).mockResolvedValue(account as any)
     })
 
-    it('persists the credential record first, then dispatches UPDATE_SECURE_VERIFIED, ends the started verification and latches SET_VERIFICATION_SKIPPED=true', async () => {
+    it('persists the credential record first, then dispatches CREDENTIAL_RECORD_SAVED, ends the started verification and latches SET_VERIFICATION_SKIPPED=true', async () => {
       jest.mocked(Bifold.useStore).mockReturnValue([
         {
           bcsc: {},
@@ -1867,7 +1870,7 @@ describe('useSecureActions', () => {
       const { result } = renderHook(() => useSecureActions())
 
       await act(async () => {
-        await result.current.updateVerified(true)
+        await result.current.completeVerification()
       })
 
       expect(setCredential).toHaveBeenCalledWith(
@@ -1882,10 +1885,7 @@ describe('useSecureActions', () => {
       expect(jest.mocked(setCredential).mock.invocationCallOrder[0]).toBeLessThan(
         mockDispatch.mock.invocationCallOrder[0]
       )
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFIED,
-        payload: [true],
-      })
+      expect(mockDispatch).toHaveBeenCalledWith({ type: BCDispatchAction.CREDENTIAL_RECORD_SAVED })
       // Nothing is left to resume on launch: an expired card later is renewed from Home
       expect(mockDispatch).toHaveBeenCalledWith({
         type: BCDispatchAction.SET_VERIFICATION_STARTED,
@@ -1897,11 +1897,11 @@ describe('useSecureActions', () => {
       })
     })
 
-    it('clears the saved account details after the record is written, together with the verified flag', async () => {
+    it('clears the saved account details after the record is written, together with the record fact', async () => {
       const { result } = renderHook(() => useSecureActions())
 
       await act(async () => {
-        await result.current.updateVerified(true)
+        await result.current.completeVerification()
       })
 
       const clear = {
@@ -1914,11 +1914,11 @@ describe('useSecureActions', () => {
       )
     })
 
-    it('cancels pending verification reminders when marking verified', async () => {
+    it('cancels pending verification reminders when verification completes', async () => {
       const { result } = renderHook(() => useSecureActions())
 
       await act(async () => {
-        await result.current.updateVerified(true)
+        await result.current.completeVerification()
       })
 
       expect(cancelVerificationReminders).toHaveBeenCalledTimes(1)
@@ -1928,11 +1928,11 @@ describe('useSecureActions', () => {
       jest.mocked(setCredential).mockRejectedValueOnce(new Error('write failed'))
       const { result } = renderHook(() => useSecureActions())
 
-      await expect(result.current.updateVerified(true)).rejects.toThrow('write failed')
+      await expect(result.current.completeVerification()).rejects.toThrow('write failed')
 
       expect(cancelVerificationReminders).not.toHaveBeenCalled()
       expect(mockDispatch).not.toHaveBeenCalledWith(
-        expect.objectContaining({ type: BCDispatchAction.UPDATE_SECURE_VERIFIED })
+        expect.objectContaining({ type: BCDispatchAction.CREDENTIAL_RECORD_SAVED })
       )
       expect(mockDispatch).not.toHaveBeenCalledWith(
         expect.objectContaining({ type: BCDispatchAction.SET_VERIFICATION_STARTED })
@@ -1946,11 +1946,11 @@ describe('useSecureActions', () => {
       jest.mocked(getAccount).mockResolvedValue(null as any)
       const { result } = renderHook(() => useSecureActions())
 
-      await expect(result.current.updateVerified(true)).rejects.toThrow('no account found')
+      await expect(result.current.completeVerification()).rejects.toThrow('no account found')
 
       expect(setCredential).not.toHaveBeenCalled()
       expect(mockDispatch).not.toHaveBeenCalledWith(
-        expect.objectContaining({ type: BCDispatchAction.UPDATE_SECURE_VERIFIED })
+        expect.objectContaining({ type: BCDispatchAction.CREDENTIAL_RECORD_SAVED })
       )
     })
 
@@ -1958,36 +1958,11 @@ describe('useSecureActions', () => {
       jest.mocked(getAccount).mockResolvedValue({ id: 'account-1', issuer: 'https://idsit.gov.bc.ca' } as any)
       const { result } = renderHook(() => useSecureActions())
 
-      await expect(result.current.updateVerified(true)).rejects.toThrow('the account has no registration')
+      await expect(result.current.completeVerification()).rejects.toThrow('the account has no registration')
 
       expect(setCredential).not.toHaveBeenCalled()
       expect(mockDispatch).not.toHaveBeenCalledWith(
-        expect.objectContaining({ type: BCDispatchAction.UPDATE_SECURE_VERIFIED })
-      )
-    })
-
-    it('removes the record and leaves both verification flags alone when marking unverified', async () => {
-      const { result } = renderHook(() => useSecureActions())
-
-      await act(async () => {
-        await result.current.updateVerified(false)
-      })
-
-      expect(deleteCredential).toHaveBeenCalled()
-      expect(setCredential).not.toHaveBeenCalled()
-      expect(cancelVerificationReminders).not.toHaveBeenCalled()
-      expect(mockDispatch).not.toHaveBeenCalledWith(
-        expect.objectContaining({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA })
-      )
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFIED,
-        payload: [false],
-      })
-      expect(mockDispatch).not.toHaveBeenCalledWith(
-        expect.objectContaining({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED })
-      )
-      expect(mockDispatch).not.toHaveBeenCalledWith(
-        expect.objectContaining({ type: BCDispatchAction.SET_VERIFICATION_STARTED })
+        expect.objectContaining({ type: BCDispatchAction.CREDENTIAL_RECORD_SAVED })
       )
     })
   })

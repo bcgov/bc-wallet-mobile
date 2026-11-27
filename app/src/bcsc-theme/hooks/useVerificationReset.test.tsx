@@ -109,9 +109,10 @@ describe('useVerificationReset', () => {
       walletKey: 'wallet-key',
       securityMethod: 'device_authentication',
       registrationAccessToken: 'registration-token',
-      verified: false,
       inVerifyFlow: false,
     })
+    // The record fact is not carried: the initial state it is cleared to supplies false
+    expect(mockClearSecureState.mock.calls[0][0]).not.toHaveProperty('hasCredentialRecord')
     expect(getAccount).toHaveBeenCalledTimes(1)
     // The client ID and its token are the pair storage holds, read for the account the reset runs on
     expect(readDeviceRegistration).toHaveBeenCalledWith(account)
@@ -220,7 +221,7 @@ describe('useVerificationReset', () => {
     })
 
     // Backing out of identity selection pops to the setup question; the stack must stay mounted
-    expect(mockClearSecureState).toHaveBeenCalledWith(expect.objectContaining({ verified: false, inVerifyFlow: true }))
+    expect(mockClearSecureState).toHaveBeenCalledWith(expect.objectContaining({ inVerifyFlow: true }))
     expect(mockCreateRegistration).toHaveBeenCalledWith()
   })
 
@@ -235,7 +236,7 @@ describe('useVerificationReset', () => {
 
     // The surviving native record is read back at the next unlock
     expect(completed).toBe(false)
-    expect(mockClearSecureState).toHaveBeenCalledWith(expect.objectContaining({ verified: false, inVerifyFlow: false }))
+    expect(mockClearSecureState).toHaveBeenCalledWith(expect.objectContaining({ inVerifyFlow: false }))
     expect(mockFactoryResetAlert).toHaveBeenCalledTimes(1)
     expect(mockClearRegistration).not.toHaveBeenCalled()
     expect(mockCreateRegistration).not.toHaveBeenCalled()

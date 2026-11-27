@@ -5,15 +5,16 @@ import { getVerificationState, VerificationState } from './verification-state'
 
 /** Reads the verification rule's inputs from the store. */
 export const selectVerificationState = (state: BCState): VerificationState => {
-  const { verified, credentialDeactivated, inVerifyFlow, refreshToken } = state.bcscSecure
+  const { hasCredentialRecord, credentialDeactivated, inVerifyFlow, refreshToken } = state.bcscSecure
   const cardInactive = isCardInactive({
     recordDeactivated: credentialDeactivated,
+    savedEvent: state.bcsc.credentialMetadata?.bcscEvent,
     savedReason: state.bcsc.credentialMetadata?.bcscReason,
-    hasRegistration: Boolean(verified) || Boolean(refreshToken),
+    hasRegistration: hasCredentialRecord || Boolean(refreshToken),
   })
 
   return getVerificationState({
-    hasCredential: Boolean(verified),
+    hasCredential: hasCredentialRecord,
     cardInactive,
     inVerifyFlow,
     hasRefreshToken: Boolean(refreshToken),

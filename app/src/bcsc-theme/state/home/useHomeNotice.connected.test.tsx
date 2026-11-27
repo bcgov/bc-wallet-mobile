@@ -86,7 +86,7 @@ describe('the Home notice, from the store and account provider', () => {
     dispatch(BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, [VerificationRequestStatus.VERIFIED])
     expect(result.current.notice.type).toBe(HomeNoticeType.BCSCVerified)
 
-    dispatch(BCDispatchAction.UPDATE_SECURE_VERIFIED, [true])
+    dispatch(BCDispatchAction.CREDENTIAL_RECORD_SAVED, [])
     await waitFor(() => expect(mockGetUserMetadata).toHaveBeenCalled())
     expect(result.current.notice.type).toBe(HomeNoticeType.None)
 

@@ -49,6 +49,7 @@ describe('BCSCIdTokenContext', () => {
 
     it('maps the remaining token fields', () => {
       const token = createMockIdToken({
+        bcsc_event: BCSCEvent.Renewal,
         bcsc_reason: BCSCReason.Renew,
         bcsc_devices_count: 2,
         bcsc_max_devices: 6,
@@ -57,6 +58,7 @@ describe('BCSCIdTokenContext', () => {
       })
 
       expect(tokenToCredentialMetadata(token)).toMatchObject({
+        bcscEvent: BCSCEvent.Renewal,
         bcscReason: BCSCReason.Renew,
         deviceCount: 2,
         deviceLimit: 6,
@@ -79,6 +81,13 @@ describe('BCSCIdTokenContext', () => {
       const metadata = createMockMetadata()
 
       expect(compareCredentialMetadata(metadata, { ...metadata })).toBe(true)
+    })
+
+    it("treats saved details with no event as equal to a token's, so existing installs raise no alert", () => {
+      const token = createMockIdToken()
+      const savedBeforeTheEventWasKept = { ...tokenToCredentialMetadata(token), bcscEvent: undefined }
+
+      expect(compareCredentialMetadata(tokenToCredentialMetadata(token), savedBeforeTheEventWasKept)).toBe(true)
     })
 
     it('returns false when a non-fullName field differs', () => {

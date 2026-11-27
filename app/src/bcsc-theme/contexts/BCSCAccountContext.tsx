@@ -35,8 +35,8 @@ interface AccountLoadDiagnostics {
   navigationReady: boolean
   appState: AppStateStatus
   connectivity?: ReconnectEvent
-  /** The raw "verified" flag from secure state. With cardInactive and hasRefreshToken below, these
-   *  are all the inputs to the account-load guard, so together they reconstruct it. */
+  /** hasCredentialRecord under its old key name. With cardInactive and hasRefreshToken below, these are
+   *  all the account-load guard's inputs, so together they reconstruct it. */
   verified: boolean
   credentialDeactivated: boolean
   /** Cancelled or expired, from the credential record or the saved account details */
@@ -85,7 +85,7 @@ export const BCSCAccountProvider = ({ enabled = true, children }: BCSCAccountPro
         navigationReady: navigationRef.isReady(),
         appState: AppState.currentState,
         ...(connectivity ? { connectivity } : {}),
-        verified: Boolean(store.bcscSecure.verified),
+        verified: store.bcscSecure.hasCredentialRecord,
         credentialDeactivated: store.bcscSecure.credentialDeactivated,
         cardInactive: selectVerificationState(store).isCardInactive,
         hasRefreshToken: Boolean(store.bcscSecure.refreshToken),

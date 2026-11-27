@@ -274,7 +274,7 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
 }) => {
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
-  // Device transfer marks the user verified via a refresh token without setting the `verified` flag, and such
+  // Device transfer marks the user verified via a refresh token without a credential record, and such
   // users still need the device-management options (e.g. "Add another device"), so gate on IAS, not setup.
   const { isDeviceVerifiedByIas: isVerified } = useVerificationState()
 

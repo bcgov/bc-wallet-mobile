@@ -608,11 +608,11 @@ const MainStack = ({ enteredByCut = false }: MainStackProps) => {
               headerShown: true,
             })}
           />
-          {/* Registered only until the user is verified. Setting `verified` is this screen's whole job,
-              and on that flip this stack remounts under BCSCIdTokenProvider and inherits its own
+          {/* Registered only until the user is verified. Saving the credential record is this screen's whole job,
+              and on that change this stack remounts under BCSCIdTokenProvider and inherits its own
               navigation state, this screen focused. With the route gone, React Navigation drops it from
               that state (falling back to initialRouteName if nothing else is left) instead of stranding
-              the user on a Continue with nothing left to do. Keyed on `verified`, not isDeviceVerifiedByIas:
+              the user on a Continue with nothing left to do. Keyed on the record, not isDeviceVerifiedByIas:
               that turns true once tokens arrive, before the user can open this screen. */}
           {isVerified ? null : (
             <Stack.Screen

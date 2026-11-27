@@ -26,6 +26,7 @@ export const tokenToCredentialMetadata = (token: IdToken): CredentialMetadata =>
 
   return {
     fullName,
+    bcscEvent: token.bcsc_event,
     bcscReason: token.bcsc_reason,
     deviceCount: token.bcsc_devices_count,
     deviceLimit: token.bcsc_max_devices,
@@ -75,6 +76,9 @@ const normalizeLegacyFullName = (fullName: string | undefined): string => {
  *
  * fullName is compared after normalizing away the legacy mononym artifact (see {@link normalizeLegacyFullName})
  * so existing mononym users don't get a spurious "account updated" alert purely from the fullName bugfix.
+ *
+ * bcscEvent is not compared, so details saved before it was kept raise no "account updated" alert;
+ * EventReasonAlertsSystemCheck saves a missing or changed event silently.
  *
  * @param c1 Credential Metadata object to check
  * @param c2 Credential Metadata object to check

@@ -412,11 +412,15 @@ flag that something has to remember to set and clear. The three live together in
   only maps its result to a component.
 - `getVerificationState` (`bcsc-theme/state/verification/`) is the only definition of "verified", "device verified by
   IAS" and "needs verification". Screens, navigators, Home and system checks read it through `useVerificationState`
-  or `selectVerificationState`, never from `bcscSecure.verified`, `credentialDeactivated`, `inVerifyFlow` or the tokens directly.
+  or `selectVerificationState`, never from `bcscSecure.hasCredentialRecord`, `credentialDeactivated`, `inVerifyFlow` or the tokens directly.
 - `isCardInactive` (`bcsc-theme/state/verification/card-inactive.ts`) is the only definition of "card not active": the
-  credential record read at unlock says cancelled or expired, or the saved account details say "Expired by System".
-  Card expiry and the verification rule both take it from `selectVerificationState`. A saved cancel reason is not part
-  of it: the account-change check sends that card to the device-invalidated screen.
+  credential record read at unlock says cancelled or expired, or the server's event saved with the account details
+  (`bcscEvent`) is Expire or Cancel. Details saved before the event was kept fall back to the "Expired by System" reason.
+  Card expiry and the verification rule both take it from `selectVerificationState`. A cancelled card is inactive and
+  still goes to the device-invalidated screen: the account-change check sends it there.
+- `needsFreshStart` (from `getVerificationState`) marks a registration cancelled or expired before setup finished. Home
+  shows Start verification for it, the verify stack opens on the setup question, and pressing Start runs the same restart
+  a renewal does (`useRestartVerificationAction`), so a stale review request or video is never resumed.
 
 The `unknown` phase (verified, but no usable date and no server signal) shows nothing; a notice is never built
 from data that did not load. Expiry is not refreshed at midnight or on foreground; it re-derives on the next

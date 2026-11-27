@@ -192,11 +192,11 @@ describe('reducer', () => {
     )
   })
 
-  it('UPDATE_SECURE_VERIFIED only touches secure state, leaving verificationSkipped to its own action', () => {
+  it('CREDENTIAL_RECORD_SAVED only touches secure state, leaving verificationSkipped to its own action', () => {
     const state = { ...initialState, bcsc: { ...initialState.bcsc, verificationSkipped: false } }
-    const result = reducer(state, { type: BCDispatchAction.UPDATE_SECURE_VERIFIED, payload: [true] })
+    const result = reducer(state, { type: BCDispatchAction.CREDENTIAL_RECORD_SAVED })
 
-    expect(result.bcscSecure.verified).toBe(true)
+    expect(result.bcscSecure.hasCredentialRecord).toBe(true)
     expect(result.bcscSecure.inVerifyFlow).toBe(false)
     expect(result.bcscSecure.credentialDeactivated).toBe(false)
     expect(result.bcsc.verificationSkipped).toBe(false)
@@ -204,13 +204,21 @@ describe('reducer', () => {
   })
 
   describe('verification facts', () => {
-    const withFacts = (facts: { credentialDeactivated: boolean; inVerifyFlow: boolean }) => ({
+    const withFacts = (facts: {
+      credentialDeactivated: boolean
+      inVerifyFlow: boolean
+      hasCredentialRecord?: boolean
+    }) => ({
       ...initialState,
       bcscSecure: { ...initialState.bcscSecure, ...facts },
     })
 
-    it('starts with neither fact set', () => {
-      expect(initialState.bcscSecure).toMatchObject({ credentialDeactivated: false, inVerifyFlow: false })
+    it('starts with no fact set', () => {
+      expect(initialState.bcscSecure).toMatchObject({
+        hasCredentialRecord: false,
+        credentialDeactivated: false,
+        inVerifyFlow: false,
+      })
     })
 
     it.each([true, false])('UPDATE_SECURE_IN_VERIFY_FLOW writes %s and leaves deactivation alone', (inVerifyFlow) => {
@@ -220,18 +228,89 @@ describe('reducer', () => {
       expect(result.bcscSecure).toMatchObject({ inVerifyFlow, credentialDeactivated: true })
     })
 
-    it('UPDATE_SECURE_VERIFIED clears both', () => {
+    it('CREDENTIAL_RECORD_SAVED records the record and clears both of the others', () => {
       const state = withFacts({ credentialDeactivated: true, inVerifyFlow: true })
-      const result = reducer(state, { type: BCDispatchAction.UPDATE_SECURE_VERIFIED, payload: [false] })
+      const result = reducer(state, { type: BCDispatchAction.CREDENTIAL_RECORD_SAVED })
 
-      expect(result.bcscSecure).toMatchObject({ credentialDeactivated: false, inVerifyFlow: false })
+      expect(result.bcscSecure).toMatchObject({
+        hasCredentialRecord: true,
+        credentialDeactivated: false,
+        inVerifyFlow: false,
+      })
     })
 
-    it('CLEAR_SECURE_STATE keeps the flow when asked and clears deactivation', () => {
-      const state = withFacts({ credentialDeactivated: true, inVerifyFlow: false })
+    it('CLEAR_SECURE_STATE keeps the flow when asked and clears the record and deactivation', () => {
+      const state = withFacts({ credentialDeactivated: true, inVerifyFlow: false, hasCredentialRecord: true })
       const result = reducer(state, { type: BCDispatchAction.CLEAR_SECURE_STATE, payload: [{ inVerifyFlow: true }] })
 
-      expect(result.bcscSecure).toMatchObject({ credentialDeactivated: false, inVerifyFlow: true })
+      expect(result.bcscSecure).toMatchObject({
+        hasCredentialRecord: false,
+        credentialDeactivated: false,
+        inVerifyFlow: true,
+      })
+    })
+  })
+
+  describe('REPLACE_CREDENTIAL_METADATA_IF_UNCHANGED', () => {
+    const saved = {
+      fullName: 'Jamie Doe',
+      bcscReason: 'Approved by Agent',
+      deviceCount: 1,
+      deviceLimit: 5,
+      cardType: 'Combined',
+      lastUpdated: 1,
+    }
+    const next = { ...saved, bcscEvent: 'Cancel', bcscReason: 'Canceled by Card Cancel', lastUpdated: 2 }
+    const withSaved = (credentialMetadata?: typeof saved) => ({
+      ...initialState,
+      bcsc: { ...initialState.bcsc, credentialMetadata },
+    })
+    const replace = (state: typeof initialState, expected: unknown, replacement: unknown) =>
+      reducer(state, {
+        type: BCDispatchAction.REPLACE_CREDENTIAL_METADATA_IF_UNCHANGED,
+        payload: [expected, replacement],
+      })
+
+    it('applies the new details, and persists them, when the saved details are the expected ones', () => {
+      const result = replace(withSaved(saved), { ...saved }, next)
+
+      expect(result.bcsc.credentialMetadata).toEqual(next)
+      expect(mockedStoreValueForKey).toHaveBeenCalledWith(
+        BCLocalStorageKeys.BCSC,
+        expect.objectContaining({ credentialMetadata: next })
+      )
+    })
+
+    it('applies when none were saved and none were expected', () => {
+      expect(replace(withSaved(undefined), undefined, next).bcsc.credentialMetadata).toEqual(next)
+    })
+
+    it('treats a missing key as equal to one set to undefined', () => {
+      const result = replace(withSaved(saved), { ...saved, bcscEvent: undefined }, next)
+
+      expect(result.bcsc.credentialMetadata).toEqual(next)
+    })
+
+    it('leaves the state alone, and persists nothing, when the saved details were cleared', () => {
+      const state = withSaved(undefined)
+      const result = replace(state, saved, next)
+
+      expect(result).toBe(state)
+      expect(mockedStoreValueForKey).not.toHaveBeenCalled()
+    })
+
+    it('leaves the state alone when the saved details changed since the check', () => {
+      const state = withSaved({ ...saved, lastUpdated: 3 })
+      const result = replace(state, saved, next)
+
+      expect(result).toBe(state)
+      expect(mockedStoreValueForKey).not.toHaveBeenCalled()
+    })
+
+    it('leaves the state alone when details exist but none were expected', () => {
+      const state = withSaved(saved)
+
+      expect(replace(state, undefined, next)).toBe(state)
     })
   })
 

@@ -43,11 +43,23 @@ export interface DismissPersonCredentialOffer {
 // This is a misnomer, it's actually just account data that is used to determine if an account has been updated outside of the app (agent, websites, etc.)
 export interface CredentialMetadata {
   fullName: string
+  /** Absent in details saved before the field existed */
+  bcscEvent?: string
   bcscReason: string
   deviceCount: number
   deviceLimit: number
   cardType: string
   lastUpdated: number // THIS IS THE bcsc_status_date from the token response
+}
+
+// A key that is absent equals one set to undefined, as in details saved before bcscEvent existed
+const isSameCredentialMetadata = (a: CredentialMetadata | undefined, b: CredentialMetadata | undefined): boolean => {
+  if (!a || !b) {
+    return a === b
+  }
+
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]) as Set<keyof CredentialMetadata>
+  return [...keys].every((key) => a[key] === b[key])
 }
 
 export interface BCSCAlertEvent {
@@ -131,7 +143,7 @@ export interface BCSCState {
    *
    * Only the prompt answers it: starting verification later from Home leaves it alone, so it still tells
    * a first-time verifier from one who skipped. Whether a launch resumes verification is
-   * `verificationStarted`, not this. Set `true` when verification completes (see updateVerified) and
+   * `verificationStarted`, not this. Set `true` when verification completes (see completeVerification) and
    * reset to `undefined` by CLEAR_BCSC. Intentionally on plain (AsyncStorage) state, not secure state, so
    * an app uninstall clears it — iOS Keychain-backed secure state would survive a reinstall.
    */
@@ -140,7 +152,7 @@ export interface BCSCState {
    * Whether the user has entered identity verification (the prompt's Continue, a Home card, a renewal, a
    * restart) and not finished it, whether or not they skipped the prompt first. RootStack resumes a
    * started, unfinished verification at its last incomplete step on every launch. Cleared when
-   * verification completes (see updateVerified) and by CLEAR_BCSC. Plain state for the same reason as
+   * verification completes (see completeVerification) and by CLEAR_BCSC. Plain state for the same reason as
    * `verificationSkipped`.
    */
   verificationStarted?: boolean
@@ -164,8 +176,8 @@ export interface BCSCSecureState {
   /** Whether secure state has been loaded from native storage */
   isHydrated: boolean
 
-  /** A credential record exists, active or not */
-  verified?: boolean
+  /** The device holds a credential record, active or not */
+  hasCredentialRecord: boolean
   /** The record read at unlock says cancelled or expired; later expiry is saved with the account details */
   credentialDeactivated: boolean
   /** The user is in the verify flow this session */
@@ -252,6 +264,7 @@ export const initialBCSCSecureState: BCSCSecureState = {
   isHydrated: false,
   additionalEvidenceData: [], // initialized as an empty array to prevent ?.length usage
   savedServices: [],
+  hasCredentialRecord: false,
   credentialDeactivated: false,
   inVerifyFlow: false,
 }
@@ -297,6 +310,7 @@ enum BCSCDispatchAction {
   RESET_SEND_VIDEO = 'bcsc/clearPhotoAndVideo',
   UPDATE_ANALYTICS_OPT_IN = 'bcsc/updateAnalyticsOptIn',
   UPDATE_CREDENTIAL_METADATA = 'bcsc/updateCredentialMetadata',
+  REPLACE_CREDENTIAL_METADATA_IF_UNCHANGED = 'bcsc/replaceCredentialMetadataIfUnchanged',
   UPDATE_ACCEPTED_TERMS_OF_USE_VERSION = 'bcsc/updateAcceptedTermsOfUseVersion',
   // Secure state actions
   HYDRATE_SECURE_STATE = 'bcsc/hydrateSecureState',
@@ -327,7 +341,7 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE = 'bcsc/updateSecureVerificationRequestStatusMessage',
   VERIFICATION_STATUS_RECEIVED = 'bcsc/verificationStatusReceived',
   UPDATE_SECURE_VERIFICATION_OPTIONS = 'bcsc/updateSecureVerificationOptions',
-  UPDATE_SECURE_VERIFIED = 'bcsc/updateSecureVerified',
+  CREDENTIAL_RECORD_SAVED = 'bcsc/credentialRecordSaved',
   UPDATE_SECURE_IN_VERIFY_FLOW = 'bcsc/updateSecureInVerifyFlow', // controls whether the VerifyStack or the MainStack are displayed
   UPDATE_SECURE_WALLET_KEY = 'bcsc/updateSecureWalletKey',
   UPDATE_SECURE_SECURITY_METHOD = 'bcsc/updateSecureSecurityMethod',
@@ -505,6 +519,21 @@ export const initialState: BCState = {
   bcsc: initialBCSCState,
   bcscSecure: initialBCSCSecureState,
   mode: Config.BUILD_TARGET === Mode.BCSC ? Mode.BCSC : Mode.BCWallet,
+}
+
+/** Applies `next` only while the saved details are still `expected`; otherwise the state is returned as it was. */
+const replaceCredentialMetadataIfUnchanged = (
+  state: BCState,
+  expected: CredentialMetadata | undefined,
+  next: CredentialMetadata | undefined
+): BCState => {
+  if (!isSameCredentialMetadata(state.bcsc.credentialMetadata, expected)) {
+    return state
+  }
+
+  const bcsc = { ...state.bcsc, credentialMetadata: next }
+  void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+  return { ...state, bcsc }
 }
 
 const applyVerificationStatusReceived = (
@@ -847,13 +876,13 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const bcscSecure = { ...state.bcscSecure, verificationOptions }
       return { ...state, bcscSecure }
     }
-    case BCSCDispatchAction.UPDATE_SECURE_VERIFIED: {
-      const verified = (action?.payload || []).pop() ?? false
+    case BCSCDispatchAction.CREDENTIAL_RECORD_SAVED: {
+      // The record just written is new and active, and writing it ends the verify flow
       const bcscSecure = {
         ...state.bcscSecure,
-        verified,
-        inVerifyFlow: false,
+        hasCredentialRecord: true,
         credentialDeactivated: false,
+        inVerifyFlow: false,
       }
       return { ...state, bcscSecure }
     }
@@ -946,6 +975,11 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const newState = { ...state, bcsc }
       void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
+    }
+
+    case BCSCDispatchAction.REPLACE_CREDENTIAL_METADATA_IF_UNCHANGED: {
+      const [expected, next] = action?.payload ?? []
+      return replaceCredentialMetadataIfUnchanged(state, expected, next)
     }
 
     case BCSCDispatchAction.UPDATE_ACCEPTED_TERMS_OF_USE_VERSION: {

@@ -41,6 +41,7 @@ describe('useCancelledReviewViewModel', () => {
       isDeviceVerifiedByIas: false,
       isVerificationInProgress: true,
       isCardInactive: false,
+      needsFreshStart: false,
       needsVerification: false,
     })
   })
@@ -142,6 +143,7 @@ describe('useCancelledReviewViewModel', () => {
         isDeviceVerifiedByIas: false,
         isVerificationInProgress: false,
         isCardInactive: false,
+        needsFreshStart: false,
         needsVerification: true,
       })
 
