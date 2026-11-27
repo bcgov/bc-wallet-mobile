@@ -16,8 +16,9 @@ import { useSecureActions } from './useSecureActions'
  * The user will be placed passed the onboarding at Setup Step 2 and will be able to reverify
  *
  * Reset sequence:
- *   1. Clears the in-memory secure store, marking the device as unverified. This happens before the
- *      native deletes, so if one fails the surviving record is read back at the next unlock
+ *   1. Clears the in-memory secure store, marking the device as unverified, and the saved setup choice
+ *      (new account vs. transfer), so the verify flow restarts at the setup question. This happens
+ *      before the native deletes, so if one fails the surviving record is read back at the next unlock
  *   2. Deletes the existing IAS registration
  *   3. Deletes all verification data and the access and refresh tokens from native storage
  *   4. Clears the old registration from the device (client ID and registration access token together)
@@ -95,6 +96,9 @@ export const useVerificationReset = () => {
             registrationAccessToken: registration.registrationAccessToken,
             inVerifyFlow, // whether the verify flow stays mounted is the caller's call
           })
+
+          // Clear account setup so users can choose how to verify
+          dispatch({ type: BCDispatchAction.ACCOUNT_SETUP_TYPE, payload: [] })
 
           logger.info('[useVerificationReset] Secure state cleared. Deleting IAS registration...')
 

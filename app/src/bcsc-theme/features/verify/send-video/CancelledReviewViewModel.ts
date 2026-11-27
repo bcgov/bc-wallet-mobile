@@ -24,7 +24,7 @@ const useCancelledReviewViewModel = () => {
     void updateAccountFlags({ userSubmittedVerificationVideo: false })
   }, [dispatch, updateAccountFlags, updateVerificationRequest])
   // Not named for a screen: VerifyStack picks the landing step via getResumeStepRoute
-  // (IdentitySelection after a full reset).
+  // (AccountSetup after a full reset, which clears the saved setup choice).
   const resumeVerification = () => continueVerificationProcess()
 
   /**
