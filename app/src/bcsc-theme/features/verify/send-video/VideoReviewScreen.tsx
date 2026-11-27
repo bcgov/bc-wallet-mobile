@@ -167,6 +167,10 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
    */
   const onPressRetake = async () => {
     const prompts = await refreshPrompts()
+    if (prompts.discarded) {
+      return
+    }
+
     if (!prompts.ready) {
       // Recording against the current set would replay a challenge the server already issued, so hold the
       // user here rather than sending them back to the camera with stale prompts.

@@ -46,10 +46,18 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
 
     const prompts = await refreshPrompts()
 
-    setPromptsStatus(prompts.ready ? 'ready' : 'failed')
-    if (!prompts.ready) {
-      videoPromptsMissingAlert(prompts.error)
+    // Verification was restarted mid-request; the flow this screen belonged to is gone
+    if (prompts.discarded) {
+      return
     }
+
+    if (prompts.ready) {
+      setPromptsStatus('ready')
+      return
+    }
+
+    setPromptsStatus('failed')
+    videoPromptsMissingAlert(prompts.error)
   }, [refreshPrompts, videoPromptsMissingAlert])
 
   // Runs on every arrival, including returning here after cancelling a recording or backing out of the

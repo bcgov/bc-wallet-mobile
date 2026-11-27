@@ -11,6 +11,7 @@ import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSecureActions } from './useSecureActions'
 import { useVerificationReset } from './useVerificationReset'
+import { discardInFlightVerificationRequests } from './useVideoPrompts'
 
 /**
  * Returns a callback that restarts the identity verification process at once, with no confirmation.
@@ -57,6 +58,10 @@ export const useRestartVerificationAction = () => {
     const stopLoading = loadingScreen.startLoading(t('Alerts.RestartVerification.Loading'))
 
     try {
+      // Before the cancel: a Send Video request that returns while the cancel is awaited must not save its id.
+      // It leaves the stored id alone, which the cancel still needs.
+      discardInFlightVerificationRequests()
+
       // Must run first: the reset clears the request id and device code the cancel needs
       await cancelPendingVerificationRequest()
 

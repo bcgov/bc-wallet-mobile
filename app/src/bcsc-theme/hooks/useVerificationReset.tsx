@@ -9,6 +9,7 @@ import { withAccount } from '../api/hooks/withAccountGuard'
 import { DeviceRegistration, readDeviceRegistration } from '../services/device-registration'
 import { useRegistrationService } from '../services/hooks/useRegistrationService'
 import { useSecureActions } from './useSecureActions'
+import { discardInFlightVerificationRequests } from './useVideoPrompts'
 
 /**
  * Returns a hook that resets local verification state and re-registers the
@@ -16,6 +17,8 @@ import { useSecureActions } from './useSecureActions'
  * The user will be placed passed the onboarding at Setup Step 2 and will be able to reverify
  *
  * Reset sequence:
+ *   0. Discards any verification request still in flight, so a late response can't save its id into the
+ *      new setup
  *   1. Clears the in-memory secure store, marking the device as unverified. This happens before the
  *      native deletes, so if one fails the surviving record is read back at the next unlock
  *   2. Deletes the existing IAS registration
@@ -75,6 +78,8 @@ export const useVerificationReset = () => {
 
   const verificationReset = useCallback(
     async ({ inVerifyFlow = false }: VerificationResetOptions = {}): Promise<boolean> => {
+      discardInFlightVerificationRequests()
+
       try {
         await withAccount(async (account) => {
           // Read from storage, so the client ID and the token are the pair the device holds now
