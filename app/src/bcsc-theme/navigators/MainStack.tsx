@@ -1,8 +1,9 @@
-import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl, SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS } from '@/constants'
+import { HelpCentreUrl, SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS } from '@/constants'
 import { TestIds } from '@/test-ids/registry'
 import {
   CredentialDetails,
   Screens,
+  Stacks,
   testIdWithKey,
   TOKENS,
   useDefaultStackOptions,
@@ -18,7 +19,6 @@ import { View } from 'react-native'
 import Developer from '../../screens/Developer'
 import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createHeaderBackButton } from '../components/HeaderBackButton'
-import { createStackHeader } from '../components/NavigationHeaders'
 import { useAccount } from '../contexts/BCSCAccountContext'
 import { LoadingScreen } from '../contexts/BCSCLoadingContext'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
@@ -57,6 +57,7 @@ import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
 import { createBifoldNavigationAdapter } from '../features/qr-core/BifoldNavigationAdapter'
 import ConnectionLoadingScreen from '../features/qr-core/ConnectionLoadingScreen'
+import ProofRequestStackScreen from '../features/qr-core/ProofRequestStackScreen'
 import { ServiceNoticeScreen } from '../features/service-notice/ServiceNoticeScreen'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
@@ -75,6 +76,7 @@ import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { useVerificationState } from '../state/verification/useVerificationState'
 import { BCSCMainStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
+import { getMainStackHeaderOptions } from './header-options'
 import QRCoreStack from './QRCoreStack'
 import { getDefaultModalOptions } from './stack-utils'
 import BCSCTabStack from './TabStack'
@@ -209,13 +211,7 @@ const MainStack: React.FC = () => {
             ...defaultStackOptions,
             headerShown: false,
             title: '',
-            headerBackTestID: testIdWithKey(TestIds.common.back),
-            headerShadowVisible: false,
-            headerBackTitleVisible: false,
-            headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
-            headerLeft: createHeaderBackButton,
-            header: createStackHeader,
-            headerRight: createFloatingHelpMenuButton({ webViewScreen: BCSCScreens.MainWebView }),
+            ...getMainStackHeaderOptions(),
           }}
         >
           <Stack.Screen
@@ -322,6 +318,9 @@ const MainStack: React.FC = () => {
               }
             }}
           />
+          {/* The credential picker that a proof request's "Change credential" link opens. The stack
+              renders its own header, styled through TOKENS.OBJECT_SCREEN_CONFIG (container-imp). */}
+          <Stack.Screen name={Stacks.ProofRequestsStack} component={ProofRequestStackScreen} />
           <Stack.Screen
             name={Screens.CredentialDetails}
             component={ScopedCredentialDetails}

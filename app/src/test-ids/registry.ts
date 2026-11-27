@@ -988,6 +988,12 @@ export const TestIds = {
       sent: 'SentProofRequest',
       backToHome: 'BackToHome',
     },
+    /** Bifold's credential picker ("Choose a credential"), opened from a proof-request card's
+     *  "Change credential" link. Hosted in Bifold's proof-request stack behind an agent gate
+     *  (`loading`). */
+    changeCredential: {
+      loading: 'ProofChangeCredential.Loading',
+    },
   },
 
   /**

@@ -99,6 +99,9 @@ jest.mock('../components/NavigationHeaders', () => ({
 jest.mock('./stack-utils', () => ({
   getDefaultModalOptions: jest.fn(() => ({})),
 }))
+jest.mock('./header-options', () => ({
+  getMainStackHeaderOptions: jest.fn(() => ({})),
+}))
 jest.mock('./TabStack', () => 'BCSCTabStack')
 jest.mock('../../screens/Developer', () => 'Developer')
 jest.mock('../features/account-transfer/transferer/TransferQRDisplayScreen', () => 'TransferQRDisplayScreen')
@@ -247,6 +250,10 @@ describe('MainStack', () => {
 
     expect(screenNames).not.toContain(BCSCScreens.VerificationSuccess)
     expect(screenNames).toContain(BCSCScreens.MainSettings)
+  })
+
+  it("registers Bifold's proof-request stack, where a proof request's Change credential link opens the picker", () => {
+    expect(queryScreenNames(render(<MainStack />))).toContain(Bifold.Stacks.ProofRequestsStack)
   })
 
   it('replaces the stack with the loading screen while the account is still loading', () => {

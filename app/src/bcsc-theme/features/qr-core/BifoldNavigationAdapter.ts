@@ -31,6 +31,12 @@ import { z } from 'zod'
  * exchange completes with no goal code. BCSC now has its own chat surface
  * (`BCSCScreens.ContactChat`), so the adapter routes that connectionId into
  * ContactChat instead of falling back to Home.
+ *
+ * Credential picker: when more than one credential can answer a request,
+ * `ProofRequest`'s "Change credential" link calls
+ * `navigation.getParent()?.navigate('Proof Requests Stack', { screen: 'Choose a credential', … })`.
+ * MainStack hosts Bifold's proof-request stack under that name, so the adapter
+ * lets the picker route through. The stack's other screens keep the toast.
  */
 
 // Bifold route names that don't exist in BCSC's nav graph.
@@ -104,6 +110,18 @@ const isCredentialJSONDetailsNavigation = (
   return jsonDetailsNavigationSchema.safeParse({ name, params }).success
 }
 
+// Detect Bifold's navigation to its credential picker (ProofRequest's "Change credential")
+const isProofChangeCredentialNavigation = (name: string, params: unknown): boolean => {
+  const changeCredentialNavigationSchema = z.object({
+    name: z.literal(BIFOLD_PROOF_REQUESTS_STACK),
+    params: z.object({
+      screen: z.literal(Screens.ProofChangeCredential),
+    }),
+  })
+
+  return changeCredentialNavigationSchema.safeParse({ name, params }).success
+}
+
 // Detect Bifold's `reset({ … TabStack … Chat … })` action, dispatched by
 // Connection.tsx on the enableChat=true completion path. The reset routes
 // reference Bifold's nav graph, which BCSC doesn't register; if the Chat route
@@ -168,6 +186,10 @@ export const createBifoldNavigationAdapter = <T extends NavigationProp<any>>(
             return navigation.navigate(BCSCScreens.CredentialJSONDetails, {
               jsonBlob: JSON.stringify(params.params.jsonBlob, null, 2),
             })
+          }
+
+          if (isProofChangeCredentialNavigation(name, params)) {
+            return target.navigate(name, params)
           }
 
           if (name === BIFOLD_CONTACTS_STACK || name === BIFOLD_PROOF_REQUESTS_STACK) {
