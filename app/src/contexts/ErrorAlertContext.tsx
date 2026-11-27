@@ -119,7 +119,7 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
     setAlertPayload({
       title,
       description,
-      actions: options?.actions ?? [getDefaultOkAction()],
+      actions: options?.actions?.length ? options.actions : [getDefaultOkAction()],
       event: options?.event,
     })
 
