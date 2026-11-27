@@ -7,15 +7,12 @@ import React, { useCallback, useMemo } from 'react'
 import { Modal, Pressable, StyleSheet } from 'react-native'
 import type { AppError } from '../appError'
 import { AlertCard } from './AlertCard'
-import { ErrorInfoCard } from './ErrorInfoCard'
+import { ErrorInfoCard, ErrorModalAction } from './ErrorInfoCard'
+
+// Re-exported so the modal's payload types can be imported from one place
+export type { ErrorModalAction }
 
 const ANALYTICS_REPORT_THIS_PROBLEM_LABEL = 'Report this problem'
-
-export interface ErrorModalAction {
-  text: string
-  onPress: () => void
-  style?: 'default' | 'destructive'
-}
 
 export interface ErrorModalPayload {
   title: string

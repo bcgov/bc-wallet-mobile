@@ -9,11 +9,16 @@ import { Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import CommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import Icon from 'react-native-vector-icons/MaterialIcons'
-import { ErrorModalAction } from './AlertModal'
 import { colors, MAX_CARD_HEIGHT_RATIO, ModalCard, modalCardStyles } from './ModalCard'
 
 // Re-exported so existing imports of the card's colours and height ratio keep working
 export { colors, MAX_CARD_HEIGHT_RATIO }
+
+export interface ErrorModalAction {
+  text: string
+  onPress: () => void
+  style?: 'default' | 'destructive'
+}
 
 export interface ErrorInfoCardProps {
   title: string
