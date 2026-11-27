@@ -89,6 +89,19 @@ describe('VideoReview', () => {
     expect(mockNavigation.goBack).not.toHaveBeenCalled()
   })
 
+  it('does nothing when verification was restarted while the fresh set was loading', async () => {
+    mockRefreshPrompts.mockResolvedValue({ ready: false, discarded: true })
+
+    const tree = renderScreen()
+
+    fireEvent.press(tree.getByText('BCSC.SendVideo.VideoReview.RetakeVideo'))
+
+    await waitFor(() => expect(mockRefreshPrompts).toHaveBeenCalledTimes(1))
+    await act(async () => {})
+    expect(mockVideoPromptsMissingAlert).not.toHaveBeenCalled()
+    expect(mockNavigation.goBack).not.toHaveBeenCalled()
+  })
+
   it('keeps Use Video disabled and ignores presses until the video has loaded', async () => {
     // Pressing early sent the user to the upload screen before the store held the video (#4926).
     jest.spyOn(readFile, 'default').mockResolvedValue(Buffer.from('video'))

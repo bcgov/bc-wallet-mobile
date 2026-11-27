@@ -1,5 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import useVideoPrompts, { PromptsResult } from '@/bcsc-theme/hooks/useVideoPrompts'
+import useVideoPrompts, { discardInFlightVerificationRequests, PromptsResult } from '@/bcsc-theme/hooks/useVideoPrompts'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
@@ -46,6 +46,31 @@ describe('useVideoPrompts', () => {
     return new AppError('api failure', ErrorRegistry.SERVER_ERROR, { cause, track: false, context })
   }
 
+  const failureOf = (outcome: PromptsResult | undefined): AppError => {
+    if (outcome?.ready !== false || outcome.discarded) {
+      throw new Error('expected the refresh to fail')
+    }
+
+    return outcome.error
+  }
+
+  const deferred = <T>() => {
+    let resolve!: (value: T) => void
+    let reject!: (reason: unknown) => void
+    const promise = new Promise<T>((res, rej) => {
+      resolve = res
+      reject = rej
+    })
+
+    return { promise, resolve, reject }
+  }
+
+  const verificationResponse = (id: string) => ({
+    id,
+    sha256: `${id}-sha`,
+    prompts: [{ id: 1, prompt: 'Say your name' }],
+  })
+
   const baseStore: any = {
     bcsc: { prompts: [] },
     bcscSecure: { verificationRequestId: undefined, verificationRequestSha: undefined },
@@ -64,6 +89,8 @@ describe('useVideoPrompts', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    // The in-flight slot and generation are module-level, so one test's pending refresh must not leak
+    discardInFlightVerificationRequests()
 
     jest.mocked(useApi).mockReturnValue({ evidence: mockEvidenceApi } as any)
     jest.mocked(Bifold).useServices.mockReturnValue([mockLogger] as any)
@@ -334,7 +361,7 @@ describe('useVideoPrompts', () => {
         expect.stringContaining('Failed to refresh verification prompts'),
         expect.any(Error)
       )
-      expect(outcome?.ready === false && outcome.error.context.prompts_request).toBe('recreate')
+      expect(failureOf(outcome).context.prompts_request).toBe('recreate')
     })
 
     it('reports a failed request as a 2412 that carries the cause and its HTTP context', async () => {
@@ -355,12 +382,10 @@ describe('useVideoPrompts', () => {
         outcome = await result.current.refreshPrompts()
       })
 
-      if (outcome?.ready !== false) {
-        throw new Error('expected the refresh to fail')
-      }
-      expect(outcome.error.appEvent).toBe(AppEventCode.VIDEO_PROMPTS_MISSING)
-      expect(outcome.error.cause).toBe(failure)
-      expect(outcome.error.context).toEqual({
+      const error = failureOf(outcome)
+      expect(error.appEvent).toBe(AppEventCode.VIDEO_PROMPTS_MISSING)
+      expect(error.cause).toBe(failure)
+      expect(error.context).toEqual({
         prompts_request: 'create',
         http_route: '/evidence/v1/verifications',
         http_method: 'POST',
@@ -379,7 +404,7 @@ describe('useVideoPrompts', () => {
         outcome = await result.current.refreshPrompts()
       })
 
-      expect(outcome?.ready === false && outcome.error.context.prompts_request).toBe('refresh')
+      expect(failureOf(outcome).context.prompts_request).toBe('refresh')
     })
 
     it.each([
@@ -400,15 +425,13 @@ describe('useVideoPrompts', () => {
         outcome = await result.current.refreshPrompts()
       })
 
-      if (outcome?.ready !== false) {
-        throw new Error('expected the refresh to fail')
-      }
-      expect(outcome.error.appEvent).toBe(AppEventCode.VIDEO_PROMPTS_MISSING)
-      expect(outcome.error.technicalMessage).toBe(`Server returned no usable prompts (prompts was ${description})`)
+      const error = failureOf(outcome)
+      expect(error.appEvent).toBe(AppEventCode.VIDEO_PROMPTS_MISSING)
+      expect(error.technicalMessage).toBe(`Server returned no usable prompts (prompts was ${description})`)
       expect(mockDispatch).not.toHaveBeenCalledWith(
         expect.objectContaining({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS })
       )
-      expect(outcome.error.context.prompts_request).toBe('create')
+      expect(error.context.prompts_request).toBe('create')
     })
 
     it('keeps a stable identity across a re-render once the request id lands', async () => {
@@ -471,6 +494,149 @@ describe('useVideoPrompts', () => {
       })
 
       expect(result.current.isRefreshingPrompts).toBe(false)
+    })
+  })
+
+  describe('when verification is reset while a request is in flight', () => {
+    const savedAnything = () =>
+      mockDispatch.mock.calls.some(([action]) =>
+        [
+          BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID,
+          BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_SHA,
+          BCDispatchAction.UPDATE_VIDEO_PROMPTS,
+        ].includes(action.type)
+      )
+
+    it.each([
+      ['returns', (create: ReturnType<typeof deferred<any>>) => create.resolve(verificationResponse('old-id'))],
+      ['fails', (create: ReturnType<typeof deferred<any>>) => create.reject(apiError(401))],
+    ])(
+      'discards a created request that %s after the reset, saving nothing and raising no 2412',
+      async (_name, settle) => {
+        const create = deferred<any>()
+        mockEvidenceApi.createVerificationRequest.mockReturnValue(create.promise)
+        const { result } = renderHook(() => useVideoPrompts())
+
+        let outcome: PromptsResult | undefined
+        await act(async () => {
+          const pending = result.current.refreshPrompts().then((value) => (outcome = value))
+          discardInFlightVerificationRequests()
+          settle(create)
+          await pending
+        })
+
+        expect(outcome).toEqual({ ready: false, discarded: true })
+        expect(savedAnything()).toBe(false)
+        expect(setAuthorizationRequest).not.toHaveBeenCalled()
+        expect(mockLogger.error).not.toHaveBeenCalled()
+      }
+    )
+
+    it('does not create a replacement when the open id is rejected with a 500 after the reset', async () => {
+      mockStoreWith({ bcscSecure: { verificationRequestId: 'existing-id' } })
+      const fetch = deferred<any>()
+      mockEvidenceApi.getVerificationRequestPrompts.mockReturnValue(fetch.promise)
+      const { result } = renderHook(() => useVideoPrompts())
+
+      let outcome: PromptsResult | undefined
+      await act(async () => {
+        const pending = result.current.refreshPrompts().then((value) => (outcome = value))
+        discardInFlightVerificationRequests()
+        fetch.reject(apiError(500))
+        await pending
+      })
+
+      expect(outcome).toEqual({ ready: false, discarded: true })
+      expect(mockEvidenceApi.createVerificationRequest).not.toHaveBeenCalled()
+    })
+
+    it('discards a request whose persist finishes after the reset, without dispatching its prompts', async () => {
+      mockEvidenceApi.createVerificationRequest.mockResolvedValue(verificationResponse('old-id'))
+      jest.mocked(setAuthorizationRequest).mockImplementationOnce(async () => {
+        discardInFlightVerificationRequests()
+        return true
+      })
+      const { result } = renderHook(() => useVideoPrompts())
+
+      let outcome: PromptsResult | undefined
+      await act(async () => {
+        outcome = await result.current.refreshPrompts()
+      })
+
+      expect(setAuthorizationRequest).toHaveBeenCalled()
+      expect(outcome).toEqual({ ready: false, discarded: true })
+      expect(mockDispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS })
+      )
+    })
+
+    it('opens its own request after the reset instead of joining the discarded one', async () => {
+      const oldCreate = deferred<any>()
+      const newCreate = deferred<any>()
+      mockEvidenceApi.createVerificationRequest
+        .mockReturnValueOnce(oldCreate.promise)
+        .mockReturnValueOnce(newCreate.promise)
+      const { result } = renderHook(() => useVideoPrompts())
+
+      let oldOutcome: PromptsResult | undefined
+      let newOutcome: PromptsResult | undefined
+      let joinedOutcome: PromptsResult | undefined
+      await act(async () => {
+        const oldCall = result.current.refreshPrompts().then((value) => (oldOutcome = value))
+        discardInFlightVerificationRequests()
+        const newCall = result.current.refreshPrompts().then((value) => (newOutcome = value))
+        expect(mockEvidenceApi.createVerificationRequest).toHaveBeenCalledTimes(2)
+
+        // The old response settling must not clear the new request's slot, so a third call joins it
+        oldCreate.resolve(verificationResponse('old-id'))
+        await oldCall
+        const joinedCall = result.current.refreshPrompts().then((value) => (joinedOutcome = value))
+        expect(mockEvidenceApi.createVerificationRequest).toHaveBeenCalledTimes(2)
+
+        newCreate.resolve(verificationResponse('new-id'))
+        await Promise.all([newCall, joinedCall])
+      })
+
+      expect(oldOutcome).toEqual({ ready: false, discarded: true })
+      expect(newOutcome).toEqual({ ready: true })
+      expect(joinedOutcome).toEqual({ ready: true })
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID,
+        payload: ['new-id'],
+      })
+      expect(mockDispatch).not.toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID,
+        payload: ['old-id'],
+      })
+    })
+
+    it('never lets the discarded response overwrite the new one when it lands last', async () => {
+      const oldCreate = deferred<any>()
+      const newCreate = deferred<any>()
+      mockEvidenceApi.createVerificationRequest
+        .mockReturnValueOnce(oldCreate.promise)
+        .mockReturnValueOnce(newCreate.promise)
+      const { result } = renderHook(() => useVideoPrompts())
+
+      await act(async () => {
+        const oldCall = result.current.refreshPrompts()
+        discardInFlightVerificationRequests()
+        const newCall = result.current.refreshPrompts()
+
+        newCreate.resolve(verificationResponse('new-id'))
+        await newCall
+        oldCreate.resolve(verificationResponse('old-id'))
+        await oldCall
+      })
+
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID,
+        payload: ['new-id'],
+      })
+      expect(mockDispatch).not.toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID,
+        payload: ['old-id'],
+      })
     })
   })
 

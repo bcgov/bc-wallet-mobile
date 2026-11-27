@@ -4,7 +4,7 @@ import { ErrorRegistry } from '@/errors/errorRegistry'
 import usePreventGestureBack from '@/hooks/usePreventGestureBack'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { fireEvent, render, waitFor } from '@testing-library/react-native'
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import VideoTooLongScreen from './VideoTooLongScreen'
 
@@ -71,6 +71,19 @@ describe('VideoTooLong', () => {
 
     await waitFor(() => expect(mockVideoPromptsMissingAlert).toHaveBeenCalledTimes(1))
     expect(mockVideoPromptsMissingAlert).toHaveBeenCalledWith(promptsError)
+    expect(mockNavigation.goBack).not.toHaveBeenCalled()
+  })
+
+  it('does nothing when verification was restarted while the fresh set was loading', async () => {
+    mockRefreshPrompts.mockResolvedValue({ ready: false, discarded: true })
+
+    const tree = renderScreen()
+
+    fireEvent.press(tree.getByText('BCSC.SendVideo.VideoTooLong.ButtonText'))
+
+    await waitFor(() => expect(mockRefreshPrompts).toHaveBeenCalledTimes(1))
+    await act(async () => {})
+    expect(mockVideoPromptsMissingAlert).not.toHaveBeenCalled()
     expect(mockNavigation.goBack).not.toHaveBeenCalled()
   })
 

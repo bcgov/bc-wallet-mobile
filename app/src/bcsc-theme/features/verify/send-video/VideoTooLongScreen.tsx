@@ -38,6 +38,10 @@ const VideoTooLongScreen = ({ navigation, route }: VideoTooLongScreenProps) => {
    */
   const onPressRetake = async () => {
     const prompts = await refreshPrompts()
+    if (prompts.discarded) {
+      return
+    }
+
     if (!prompts.ready) {
       videoPromptsMissingAlert(prompts.error)
       return

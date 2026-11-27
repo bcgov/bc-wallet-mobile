@@ -8,6 +8,7 @@ import { readDeviceRegistration } from '../services/device-registration'
 import * as useRegistrationServiceModule from '../services/hooks/useRegistrationService'
 import * as useSecureActionsModule from './useSecureActions'
 import { useVerificationReset } from './useVerificationReset'
+import { discardInFlightVerificationRequests } from './useVideoPrompts'
 
 jest.mock('@bifold/core')
 jest.mock('@react-navigation/core', () => ({
@@ -35,6 +36,9 @@ jest.mock('../services/device-registration', () => ({
 }))
 jest.mock('./useSecureActions', () => ({
   useSecureActions: jest.fn(),
+}))
+jest.mock('./useVideoPrompts', () => ({
+  discardInFlightVerificationRequests: jest.fn(),
 }))
 
 const mockLogger = {
@@ -126,6 +130,31 @@ describe('useVerificationReset', () => {
     expect(mockCreateRegistration).toHaveBeenCalledWith()
     expect(mockFactoryResetAlert).not.toHaveBeenCalled()
     expect(mockLogger.error).not.toHaveBeenCalled()
+  })
+
+  it('discards in-flight verification requests before clearing anything', async () => {
+    const { result } = renderHook(() => useVerificationReset())
+
+    await act(async () => {
+      await result.current()
+    })
+
+    expect(discardInFlightVerificationRequests).toHaveBeenCalledTimes(1)
+    expect(jest.mocked(discardInFlightVerificationRequests).mock.invocationCallOrder[0]).toBeLessThan(
+      mockClearSecureState.mock.invocationCallOrder[0]
+    )
+  })
+
+  it('discards in-flight verification requests even when the reset fails', async () => {
+    jest.mocked(readDeviceRegistration).mockResolvedValue(null)
+    const { result } = renderHook(() => useVerificationReset())
+
+    await act(async () => {
+      await result.current()
+    })
+
+    expect(discardInFlightVerificationRequests).toHaveBeenCalledTimes(1)
+    expect(mockFactoryResetAlert).toHaveBeenCalled()
   })
 
   it('clears the saved account details once the deletes have succeeded, before re-registering', async () => {

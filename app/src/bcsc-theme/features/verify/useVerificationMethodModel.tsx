@@ -53,6 +53,10 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
       // issued by VideoInstructions immediately beforehand, so entering the flow must not burn one here.
       // This still catches a backend that can't issue prompts at all before the user does the photo steps.
       const request = await ensureVerificationRequest()
+      if (request.discarded) {
+        return
+      }
+
       if (!request.ready) {
         logger.error('[useVerificationMethodModel] No verification request available; aborting Send Video')
         videoPromptsMissingAlert(request.error)

@@ -3,6 +3,7 @@ import { purgeWalletStore } from '@/bcsc-theme/features/agent/services/agent-ser
 import { clearPinAttempts } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { discardInFlightVerificationRequests } from '@/bcsc-theme/hooks/useVideoPrompts'
 import { readDeviceRegistration } from '@/bcsc-theme/services/device-registration'
 import { ledgerResolver } from '@/configs/ledgers/indy/ledgerResolver'
 import { WALLET_ID } from '@/constants'
@@ -124,6 +125,9 @@ export const useFactoryReset = () => {
    */
   const factoryReset = useCallback(
     async (bcscState?: Partial<BCSCState>): Promise<FactoryResetResult> => {
+      // A Send Video response landing mid-reset must not save its id into the cleared state
+      discardInFlightVerificationRequests()
+
       try {
         if (!client) {
           throw new Error('FactoryReset: BCSCApiClient is not initialized')

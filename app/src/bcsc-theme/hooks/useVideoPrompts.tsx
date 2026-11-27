@@ -27,8 +27,22 @@ import { useCallback, useEffect, useRef, useState } from 'react'
  * two gateways refreshing at once would each rotate the server's set, and their store writes would
  * race — landing the sha from one response beside the prompts from another. Every caller wants the same
  * thing, a fresh set in the store, so a second call joins the first rather than starting a rotation.
+ * A verification reset empties the slot, so the next call can't join a discarded request.
  */
 let inFlightRefresh: Promise<PromptsResult> | null = null
+
+// Bumped on every reset; a refresh started under an older value drops its result. Module-level because
+// the screen that started the refresh is gone by then.
+let requestGeneration = 0
+
+/**
+ * Call when the registration is replaced or removed: in-flight results are dropped and the next refresh
+ * opens its own request. The stored id is left alone, so a cancel can still use it.
+ */
+export const discardInFlightVerificationRequests = (): void => {
+  requestGeneration += 1
+  inFlightRefresh = null
+}
 
 /** IAS returns 500 for a verification id it has already deleted server-side. */
 const DELETED_VERIFICATION_REQUEST_STATUS = 500
@@ -36,8 +50,33 @@ const DELETED_VERIFICATION_REQUEST_STATUS = 500
 /** `recreate` is the create that replaces an id the server rejected with a 500. */
 type PromptsRequest = 'create' | 'refresh' | 'recreate'
 
-/** On failure, `error` is the 2412 to report, carrying the real cause so reports name it. */
-export type PromptsResult = { ready: true } | { ready: false; error: AppError }
+/**
+ * On failure, `error` is the 2412 to report, carrying the real cause so reports name it. `discarded`:
+ * a reset landed mid-request, nothing was saved, and the caller must do nothing, not even alert.
+ */
+export type PromptsResult =
+  | { ready: true; discarded?: never }
+  | { ready: false; error: AppError; discarded?: never }
+  | { ready: false; discarded: true }
+
+const DISCARDED: PromptsResult = { ready: false, discarded: true }
+const DISCARDED_LOG = '[useVideoPrompts] Verification request discarded: verification was reset while it was in flight'
+
+const joinOrStartRefresh = (start: () => Promise<PromptsResult>): Promise<PromptsResult> => {
+  if (inFlightRefresh) {
+    return inFlightRefresh
+  }
+
+  const started: Promise<PromptsResult> = start().finally(() => {
+    // A refresh that settles after a reset must not clear the one that replaced it
+    if (inFlightRefresh === started) {
+      inFlightRefresh = null
+    }
+  })
+  inFlightRefresh = started
+
+  return started
+}
 
 const promptsMissingError = (cause: unknown, request: PromptsRequest): AppError => {
   const { http_route, http_method, http_status } = isAppError(cause) ? cause.context : {}
@@ -86,11 +125,27 @@ const useVideoPrompts = () => {
    * only be finalized with the sha they arrived with, so storing one without the other strands the flow.
    */
   const _storeVerificationRequest = useCallback(
-    async (verificationRequest: VerificationResponseData, request: PromptsRequest): Promise<PromptsResult> => {
+    async (
+      verificationRequest: VerificationResponseData,
+      request: PromptsRequest,
+      superseded: () => boolean
+    ): Promise<PromptsResult> => {
+      // Checked before the write, which dispatches the id and sha into the store
+      if (superseded()) {
+        logger.info(DISCARDED_LOG)
+        return DISCARDED
+      }
+
       const { prompts } = verificationRequest
       const usable = Array.isArray(prompts) && prompts.length > 0
 
       await updateVerificationRequest(verificationRequest.id, usable ? verificationRequest.sha256 : null)
+
+      // A reset during the write can't undo the id and sha already dispatched, but the prompts must not land
+      if (superseded()) {
+        logger.info(DISCARDED_LOG)
+        return DISCARDED
+      }
 
       if (!usable) {
         // The previous prompts stay in the store deliberately. TakeVideoScreen hard-throws on an empty
@@ -110,6 +165,8 @@ const useVideoPrompts = () => {
   const _refresh = useCallback(async (): Promise<PromptsResult> => {
     const requestId = verificationRequestIdRef.current
     let request: PromptsRequest = requestId ? 'refresh' : 'create'
+    const generation = requestGeneration
+    const superseded = () => generation !== requestGeneration
 
     try {
       let verificationRequest: VerificationResponseData
@@ -121,7 +178,8 @@ const useVideoPrompts = () => {
           // Only a 500 means the id is gone (TTL expired, agent cancelled) and worth replacing. A
           // timeout, a 401 or a transient 502 leaves it perfectly usable, and creating a fresh request
           // for those orphans the live one and spends rate-limit budget the server enforces.
-          if (!isAxiosAppError(error, DELETED_VERIFICATION_REQUEST_STATUS)) {
+          // Rethrown after a reset too, so no replacement request opens under the new setup
+          if (superseded() || !isAxiosAppError(error, DELETED_VERIFICATION_REQUEST_STATUS)) {
             throw error
           }
 
@@ -134,8 +192,14 @@ const useVideoPrompts = () => {
         verificationRequest = await evidence.createVerificationRequest()
       }
 
-      return await _storeVerificationRequest(verificationRequest, request)
+      return await _storeVerificationRequest(verificationRequest, request, superseded)
     } catch (error) {
+      // A request that fails because its registration was deleted must not raise a 2412 over the new setup
+      if (superseded()) {
+        logger.info(DISCARDED_LOG)
+        return DISCARDED
+      }
+
       logger.error('[useVideoPrompts] Failed to refresh verification prompts', error as Error)
       return { ready: false, error: promptsMissingError(error, request) }
     }
@@ -146,14 +210,11 @@ const useVideoPrompts = () => {
    *
    * @returns {Promise<PromptsResult>} Whether a usable prompt set is now in the store. When not ready the
    * caller must not start a recording — the previous prompts are still cached and would replay a stale
-   * challenge — and should report the returned error.
+   * challenge — and should report the returned error, unless the result is `discarded`: then the
+   * verification was reset mid-request and the caller does nothing.
    */
   const refreshPrompts = useCallback(async (): Promise<PromptsResult> => {
-    inFlightRefresh ??= _refresh().finally(() => {
-      inFlightRefresh = null
-    })
-
-    const refresh = inFlightRefresh
+    const refresh = joinOrStartRefresh(_refresh)
     setIsRefreshingPrompts(true)
     try {
       return await refresh
