@@ -58,7 +58,7 @@ export const useRestartVerificationAction = () => {
     const stopLoading = loadingScreen.startLoading(t('Alerts.RestartVerification.Loading'))
 
     try {
-      // Before the awaited cancel, which leaves the stored id alone for itself
+      // Before the awaited cancel; it doesn't clear the stored id the cancel needs
       discardInFlightVerificationRequests()
 
       // Must run first: the reset clears the request id and device code the cancel needs

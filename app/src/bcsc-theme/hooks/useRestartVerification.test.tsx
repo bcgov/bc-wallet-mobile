@@ -157,9 +157,15 @@ describe('useRestartVerification', () => {
   })
 
   it('does not discard anything when the confirmation is cancelled', async () => {
-    await promptAndGetAlertActions()
+    const actions = await promptAndGetAlertActions()
+    const cancel = actions.find((action: { style?: string }) => action.style === 'cancel')
+
+    await act(async () => {
+      await cancel.onPress?.()
+    })
 
     expect(discardInFlightVerificationRequests).not.toHaveBeenCalled()
+    expect(mockStartLoading).not.toHaveBeenCalled()
   })
 
   it('does not call IAS when there is no verification request', async () => {
