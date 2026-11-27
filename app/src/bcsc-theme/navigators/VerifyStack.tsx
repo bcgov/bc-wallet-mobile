@@ -36,6 +36,7 @@ import { ProofRequestExpirationScreen } from '../features/settings/ProofRequestE
 import { VerifyPrivacyPolicyScreen } from '../features/settings/VerifyPrivacyPolicyScreen'
 import { VerifySettingsScreen } from '../features/settings/VerifySettingsScreen'
 import BirthdateLockoutScreen from '../features/verify/BirthdateLockoutScreen'
+import CardScanningErrorScreen from '../features/verify/CardScanningErrorScreen'
 import DeviceAuthorizationErrorScreen from '../features/verify/DeviceAuthorizationErrorScreen'
 import EnterBirthdateScreen from '../features/verify/EnterBirthdate/EnterBirthdateScreen'
 import IdentitySelectionScreen from '../features/verify/IdentitySelectionScreen'
@@ -44,6 +45,7 @@ import PhotoInstructionsScreen from '../features/verify/PhotoInstructionsScreen'
 import PhotoReviewScreen from '../features/verify/PhotoReviewScreen'
 import { ResidentialAddressScreen } from '../features/verify/ResidentialAddressScreen'
 import ScanSerialScreen from '../features/verify/ScanSerialScreen'
+import ScannedDriversLicence from '../features/verify/ScannedDriversLicence'
 import SerialInstructionsScreen from '../features/verify/SerialInstructionsScreen'
 import TakePhotoScreen from '../features/verify/TakePhotoScreen'
 import VerificationCardErrorScreen from '../features/verify/VerificationCardErrorScreen'
@@ -229,6 +231,16 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
       <Stack.Screen
         name={BCSCScreens.VerificationCardError}
         component={VerificationCardErrorScreen}
+        options={{ header: createProgressHeader(1, 40) }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.CardScanningError}
+        component={CardScanningErrorScreen}
+        options={{ header: createProgressHeader(1, 40) }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.ScannedDriversLicence}
+        component={ScannedDriversLicence}
         options={{ header: createProgressHeader(1, 40) }}
       />
       <Stack.Screen

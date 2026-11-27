@@ -3,8 +3,10 @@ import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { CardBarcodeFailure } from '@/bcsc-theme/utils/bc-card-barcode'
 import { decodeCardBarcode, ScanableCode, toDriversLicenseMetadata } from '@/bcsc-theme/utils/card-barcode-decoder'
 import { CardScan, combineCardBarcodes, EMPTY_CARD_SCAN } from '@/bcsc-theme/utils/card-scan'
+import { isDriversLicenceSerial } from '@/bcsc-theme/utils/card-serial'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { TestIds } from '@/test-ids/registry'
 import {
@@ -28,6 +30,12 @@ import { useCameraDevice, useCameraPermission } from 'react-native-vision-camera
 import CodeScanningCamera from '../../components/CodeScanningCamera'
 import TorchButton from '../../components/TorchButton'
 import { BCSC_SN_SCAN_ZONES, ScanState } from '../../components/utils/camera'
+import {
+  FailedScanAttempts,
+  NO_FAILED_SCAN_ATTEMPTS,
+  recordFailedScanAttempt,
+  shouldAskAboutCard,
+} from './failed-scan-attempts'
 
 /**
  * How long the initial "Scan your card" guidance shows before falling back to
@@ -220,6 +228,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   // Whether the screen has already had focus once — see the focus effect below.
   const hasFocusedRef = useRef(false)
   const cardScanRef = useRef<CardScan>(EMPTY_CARD_SCAN)
+  const failedAttempts = useRef<FailedScanAttempts>(NO_FAILED_SCAN_ATTEMPTS)
 
   useEffect(() => {
     const timer = setTimeout(() => setShowHelp(true), SCAN_HELP_TIMEOUT_MS)
@@ -247,6 +256,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     // Reset the caches so we can scan again.
     isProcessingScan.current = false
     cardScanRef.current = EMPTY_CARD_SCAN
+    failedAttempts.current = NO_FAILED_SCAN_ATTEMPTS
   }, [])
 
   // Reset the scanner on re-entry (e.g. backing out of the next step) so a previous scan's
@@ -269,6 +279,8 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
       return true
     }
 
+    const failureReasons: CardBarcodeFailure['reason'][] = []
+
     for (const code of barcodes) {
       if (code.type === 'unknown') {
         logger.debug('[DecodeBarcodes] Skipping unknown barcode')
@@ -279,14 +291,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
 
       if (decoded.source === 'failure') {
         logger.debug('[DecodeBarcodes] Failed to decode barcode', { type: code.type, reason: decoded.reason })
-
-        if (!cardScanRef.current.serial && !cardScanRef.current.card) {
-          // Scanned a non-BCSC barcode - lock the camera and handle it as a non-BCSC card.
-          isProcessingScan.current = true
-          setScanState('locked')
-          await scanner.handleScanNonBcsc()
-          return true
-        }
+        failureReasons.push(decoded.reason)
         continue
       }
 
@@ -296,12 +301,60 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     }
 
     const { serial, card } = cardScanRef.current
+
+    // A driver's licence alone can't verify the user, so route it away before the combo card path.
+    // Its DCN comes from the PDF-417's security field, or from its 1D barcode when that field is
+    // blank on an older licence; either one is enough to tell it from a BC Services Card.
+    if (isDriversLicenceSerial(card?.dcn) || isDriversLicenceSerial(serial)) {
+      isProcessingScan.current = true
+      setScanState('locked')
+      navigation.navigate(BCSCScreens.ScannedDriversLicence)
+      return true
+    }
+
     if (serial && card) {
       // We have both the serial and the birthdate — lock the camera and handle the card.
       isProcessingScan.current = true
       setScanState('locked')
-      await scanner.handleScanComboCard(serial, { birthDate: toDriversLicenseMetadata(card).birthDate })
-      return true
+      try {
+        const authorized = await scanner.handleScanComboCard(serial, {
+          birthDate: toDriversLicenseMetadata(card).birthDate,
+        })
+        if (!authorized) {
+          // Non-BCSC flow and the card didn't authorize. Unlocking would re-authorize the same card
+          // every frame, so stay locked and offer the user a way on instead of freezing here.
+          logger.info('[DecodeBarcodes] Scanned card did not authorize, routing to the card scanning error')
+          navigation.navigate(BCSCScreens.CardScanningError)
+        }
+        return true
+      } catch (error) {
+        // Stay locked: the camera is still on the same card, so unlocking would decode it and fail
+        // again every frame. The error screen offers a way on; coming back resets the scanner on focus.
+        logger.error('[DecodeBarcodes] Failed to handle the scanned card', error as Error)
+        navigation.navigate(BCSCScreens.CardScanningError)
+        return true
+      }
+    }
+
+    // This attempt ended without a complete card. If anything in it failed to decode, it counts as
+    // a failed attempt, even when the other half of the card has been read. A single failure never
+    // changes the path: only after repeated ones does the scanner ask about the card.
+    if (failureReasons.length > 0) {
+      failedAttempts.current = recordFailedScanAttempt(failedAttempts.current, failureReasons)
+
+      if (shouldAskAboutCard(failedAttempts.current)) {
+        isProcessingScan.current = true
+        setScanState('locked')
+        // Counts and reasons only, never card data, so we can measure how often this happens.
+        logger.info('[DecodeBarcodes] Repeated failed scans, asking whether the citizen has a BC Services Card', {
+          failedAttempts: failedAttempts.current.count,
+          failureReasons: failedAttempts.current.reasons,
+          hasSerial: Boolean(serial),
+          hasCard: Boolean(card),
+        })
+        navigation.navigate(BCSCScreens.CardScanningError)
+        return true
+      }
     }
 
     // Still missing the serial or the birthdate — tell CodeScanningCamera to

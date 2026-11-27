@@ -300,11 +300,6 @@ export const useCardScanner = () => {
     [updateUserMetadata, updateUserInfo]
   )
 
-  const handleScanNonBcsc = useCallback(async () => {
-    navigation.navigate(BCSCScreens.DualIdentificationRequired)
-    await updateCardProcess(BCSCCardProcess.NonBCSC)
-  }, [navigation, updateCardProcess])
-
   /**
    * Starts the scanning process by setting the scan enabled flag.
    * This allows scans to be processed.
@@ -396,16 +391,8 @@ export const useCardScanner = () => {
       handleScanBarcodes,
       handleScanBCServicesCard,
       handleScanDriversLicense,
-      handleScanNonBcsc,
       codeTypes: CARD_CODE_TYPES,
     }),
-    [
-      handleCardScan,
-      handleScanBarcodes,
-      handleScanBCServicesCard,
-      handleScanComboCard,
-      handleScanDriversLicense,
-      handleScanNonBcsc,
-    ]
+    [handleCardScan, handleScanBarcodes, handleScanBCServicesCard, handleScanComboCard, handleScanDriversLicense]
   )
 }

@@ -1157,6 +1157,21 @@ const translation = {
       "Birthdate": "Birthdate: {{birthdate}} (FR)",
       "TryAnotherCard": "Try another card (FR)",
     },
+    "CardScanningError": {
+      "Heading": "Problem scanning the card (FR)",
+      "Description": "Make sure you're using a BC Services Card and that the barcodes are not obstructed. (FR) ",
+      "CheckCardLink": "Check if you have a BC Services Card (FR)",
+      "ScanAgain": "Scan again (FR)",
+      "EnterManually": "Enter serial number manually (FR)",
+      "ProblemsContinue": "If problems scanning the card continue: (FR)",
+      "UseAnotherID": "Use another ID (FR)",
+    },
+    "ScannedDriversLicence": {
+      "Heading": "Continue with a driver's licence? (FR)",
+      "Description": "Did you mean to use a BC Services Card? Using a BC Services Card is a faster way to verify your account. (FR)",
+      "ContinueWithLicence": "Continue with a driver's licence (FR)",
+      "ScanBCSC": "Scan your BC Services Card (FR)",
+    },
     "VerificationCardError": {
       "CardExpired": {
         "Heading": "Sorry, you can't add this card. (FR)",

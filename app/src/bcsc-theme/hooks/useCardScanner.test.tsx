@@ -694,39 +694,6 @@ describe('useCardScanner', () => {
     })
   })
 
-  describe('handleScanNonBcsc', () => {
-    it('should navigate to DualIdentificationRequired and set the Non-BCSC card process', async () => {
-      const bifoldMock = jest.mocked(Bifold)
-      const navigationMock = jest.mocked(navigation)
-      const useSecureActionsMock = jest.mocked(useSecureActions)
-
-      const mockState: any = {
-        bcsc: { accountSetupType: AccountSetupType.AddAccount },
-        bcscSecure: { additionalEvidenceData: [] },
-      }
-      const mockUpdateCardProcess = jest.fn()
-      const mockNavigationNavigate = jest.fn()
-
-      useSecureActionsMock.mockReturnValue({
-        updateUserInfo: jest.fn(),
-        updateDeviceCodes: jest.fn(),
-        updateCardProcess: mockUpdateCardProcess,
-        updateVerificationOptions: jest.fn(),
-      } as any)
-      bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
-      navigationMock.useNavigation = jest.fn().mockReturnValue({ navigate: mockNavigationNavigate })
-      bifoldMock.useServices.mockReturnValue([{ debug: jest.fn() } as any])
-
-      const hook = renderHook(() => useCardScanner())
-
-      await hook.result.current.handleScanNonBcsc()
-
-      expect(mockNavigationNavigate).toHaveBeenCalledWith(BCSCScreens.DualIdentificationRequired)
-      // Downstream screens (EvidenceIDCollection, getResumeStepRoute) read the card process from the store
-      expect(mockUpdateCardProcess).toHaveBeenCalledWith(BCSCCardProcess.NonBCSC)
-    })
-  })
-
   describe('handleScanBarcodes', () => {
     const mockLicense: any = {
       birthDate: new Date('1970-01-01'),

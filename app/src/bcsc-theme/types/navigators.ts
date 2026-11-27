@@ -51,6 +51,8 @@ export enum BCSCScreens {
   ScanSerial = 'Scan Card',
   EnterBirthdate = 'Birthdate',
   VerificationCardError = 'Card Status Error',
+  CardScanningError = 'Card Scanning Error',
+  ScannedDriversLicence = 'Scanned Drivers Licence',
   DeviceAuthorizationError = 'Card Authorization Error',
   BirthdateLockout = 'Too Many Add Attempts',
   EnterEmail = 'Email Entry',
@@ -221,6 +223,8 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.ScanSerial]: undefined
   [BCSCScreens.EnterBirthdate]: undefined
   [BCSCScreens.VerificationCardError]: { errorType: DeviceAuthorizationError }
+  [BCSCScreens.CardScanningError]: undefined
+  [BCSCScreens.ScannedDriversLicence]: undefined
   [BCSCScreens.DeviceAuthorizationError]: { errorType: DeviceAuthorizationError }
   [BCSCScreens.BirthdateLockout]: undefined
   [BCSCScreens.EnterEmail]: { cardProcess: BCSCCardProcess }
