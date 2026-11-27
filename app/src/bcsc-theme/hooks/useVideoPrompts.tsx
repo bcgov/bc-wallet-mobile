@@ -33,17 +33,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 let inFlightRefresh: Promise<PromptsResult> | null = null
 
 /**
- * Counts the times in-flight verification requests were invalidated. A refresh remembers the value it
- * started under and drops its result if the value has moved on, so a response that outlives a reset
- * never lands in the new setup. Module-level, like `inFlightRefresh`, because the screen that started
- * the refresh is gone by the time it matters.
+ * Bumped on every reset; a refresh started under an older value drops its result. Module-level, like
+ * `inFlightRefresh`, because the screen that started the refresh is gone by then.
  */
 let requestGeneration = 0
 
 /**
- * Drops every verification request still in flight: its result is discarded, and the next refresh
- * opens its own request. Call this when the registration the requests were made under is replaced or
- * removed. It never touches the stored id, so a cancel that still needs the id can run after it.
+ * Call when the registration is replaced or removed: in-flight results are dropped and the next refresh
+ * opens its own request. The stored id is left alone, so a cancel can still use it.
  */
 export const discardInFlightVerificationRequests = (): void => {
   requestGeneration += 1
@@ -57,9 +54,8 @@ const DELETED_VERIFICATION_REQUEST_STATUS = 500
 type PromptsRequest = 'create' | 'refresh' | 'recreate'
 
 /**
- * On failure, `error` is the 2412 to report, carrying the real cause so reports name it. `discarded`
- * means a reset replaced the registration while the request was in flight: nothing was saved, and the
- * caller must do nothing, not even alert, because the flow it belonged to is gone.
+ * On failure, `error` is the 2412 to report, carrying the real cause so reports name it. `discarded`:
+ * a reset landed mid-request, nothing was saved, and the caller must do nothing, not even alert.
  */
 export type PromptsResult =
   | { ready: true; discarded?: never }
@@ -162,7 +158,7 @@ const useVideoPrompts = () => {
 
       await updateVerificationRequest(verificationRequest.id, usable ? verificationRequest.sha256 : null)
 
-      // Not before the await above: the response is only discarded once the native write has finished
+      // A reset during the write above still withholds the prompts and the ready result
       throwIfSuperseded()
 
       if (!usable) {
@@ -192,10 +188,11 @@ const useVideoPrompts = () => {
         try {
           verificationRequest = await evidence.getVerificationRequestPrompts(requestId)
         } catch (error) {
+          throwIfSuperseded()
+
           // Only a 500 means the id is gone (TTL expired, agent cancelled) and worth replacing. A
           // timeout, a 401 or a transient 502 leaves it perfectly usable, and creating a fresh request
           // for those orphans the live one and spends rate-limit budget the server enforces.
-          throwIfSuperseded()
           if (!isAxiosAppError(error, DELETED_VERIFICATION_REQUEST_STATUS)) {
             throw error
           }
