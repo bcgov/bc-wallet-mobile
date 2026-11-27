@@ -153,6 +153,18 @@ describe('VideoInstructions', () => {
     expect(tree.queryByText('Say your name')).toBeNull()
   })
 
+  it('stays quiet when verification was restarted while the set was loading', async () => {
+    // The restart tore this flow down; a late result must not raise an alert over the new setup.
+    mockRefreshPrompts.mockResolvedValue({ ready: false, discarded: true })
+
+    const tree = renderScreen()
+
+    await waitFor(() => expect(mockRefreshPrompts).toHaveBeenCalledTimes(1))
+    await act(async () => {})
+    expect(mockVideoPromptsMissingAlert).not.toHaveBeenCalled()
+    expect(tree.queryByTestId(testIdWithKey('RetryLoadPrompts'))).toBeNull()
+  })
+
   it('offers a retry instead of an endless spinner when the fetch fails', async () => {
     // The alert is dismiss-only and this screen sits after every photo step, so without a retry the
     // user's only escape is backing out and redoing the photos.

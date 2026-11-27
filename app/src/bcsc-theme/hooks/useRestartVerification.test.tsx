@@ -9,6 +9,7 @@ import { AxiosError } from 'axios'
 import { useRestartVerification } from './useRestartVerification'
 import * as useSecureActionsModule from './useSecureActions'
 import * as useVerificationResetModule from './useVerificationReset'
+import { discardInFlightVerificationRequests } from './useVideoPrompts'
 
 jest.mock('@bifold/core')
 jest.mock('@/bcsc-theme/hooks/useBCSCApiClient')
@@ -24,6 +25,9 @@ jest.mock('./useSecureActions', () => ({
 }))
 jest.mock('./useVerificationReset', () => ({
   useVerificationReset: jest.fn(),
+}))
+jest.mock('./useVideoPrompts', () => ({
+  discardInFlightVerificationRequests: jest.fn(),
 }))
 
 const mockEmitAlert = jest.fn()
@@ -141,6 +145,21 @@ describe('useRestartVerification', () => {
     expect(mockCancelVerificationRequest.mock.invocationCallOrder[0]).toBeLessThan(
       mockVerificationReset.mock.invocationCallOrder[0]
     )
+  })
+
+  it('discards in-flight verification requests before the cancel is sent', async () => {
+    await confirmRestart()
+
+    expect(discardInFlightVerificationRequests).toHaveBeenCalledTimes(1)
+    expect(jest.mocked(discardInFlightVerificationRequests).mock.invocationCallOrder[0]).toBeLessThan(
+      mockCancelVerificationRequest.mock.invocationCallOrder[0]
+    )
+  })
+
+  it('does not discard anything when the confirmation is cancelled', async () => {
+    await promptAndGetAlertActions()
+
+    expect(discardInFlightVerificationRequests).not.toHaveBeenCalled()
   })
 
   it('does not call IAS when there is no verification request', async () => {

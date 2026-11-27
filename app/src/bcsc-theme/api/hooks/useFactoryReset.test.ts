@@ -4,6 +4,7 @@ import { purgeWalletStore } from '@/bcsc-theme/features/agent/services/agent-ser
 import { clearPinAttempts } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { discardInFlightVerificationRequests } from '@/bcsc-theme/hooks/useVideoPrompts'
 import { BCDispatchAction } from '@/store'
 import * as Bifold from '@bifold/core'
 import { DispatchAction } from '@bifold/core'
@@ -19,6 +20,9 @@ jest.unmock('@/bcsc-theme/api/hooks/useFactoryReset')
 
 jest.mock('@bifold/core')
 jest.mock('@/bcsc-theme/hooks/useSecureActions')
+jest.mock('@/bcsc-theme/hooks/useVideoPrompts', () => ({
+  discardInFlightVerificationRequests: jest.fn(),
+}))
 jest.mock('./useRegistrationApi')
 jest.mock('@/bcsc-theme/features/agent/BCSCAgentProvider', () => ({
   useBCSCAgentSafe: jest.fn(),
@@ -111,6 +115,21 @@ describe('useFactoryReset', () => {
     expect(clearSecureState).toHaveBeenCalledWith()
     expect(dispatch.mock.calls[0]).toStrictEqual([{ type: BCDispatchAction.CLEAR_BCSC, payload: undefined }])
     expect(dispatch.mock.calls[1]).toStrictEqual([{ type: DispatchAction.DID_AUTHENTICATE, payload: [false] }])
+  })
+
+  it('discards in-flight verification requests before removing anything, so a late response saves nothing', async () => {
+    const { bcscCore, deleteRegistration } = setupFactoryReset()
+
+    const hook = renderHook(() => useFactoryReset())
+
+    await act(async () => {
+      await hook.result.current()
+    })
+
+    expect(discardInFlightVerificationRequests).toHaveBeenCalledTimes(1)
+    const discardedAt = jest.mocked(discardInFlightVerificationRequests).mock.invocationCallOrder[0]
+    expect(discardedAt).toBeLessThan(deleteRegistration.mock.invocationCallOrder[0])
+    expect(discardedAt).toBeLessThan(bcscCore.removeAccount.mock.invocationCallOrder[0])
   })
 
   it('forgets the wrong PIN attempts once the account is removed, before the state is cleared', async () => {

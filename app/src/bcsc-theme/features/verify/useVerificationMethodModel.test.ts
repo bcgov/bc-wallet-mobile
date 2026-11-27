@@ -2,6 +2,7 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import { VerificationVideoCache } from '@/bcsc-theme/features/verify/send-video/VideoReviewScreen'
 import useVerificationMethodModel from '@/bcsc-theme/features/verify/useVerificationMethodModel'
+import { discardInFlightVerificationRequests } from '@/bcsc-theme/hooks/useVideoPrompts'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { checkFileSystemFreeStorage, removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import { formatServiceAndUnavailableHours, isLiveCallAvailable } from '@/bcsc-theme/utils/service-hours-formatter'
@@ -343,6 +344,38 @@ describe('useVerificationMethodModel', () => {
         })
       )
       expect(mockNavigation.navigate).not.toHaveBeenCalled()
+      expect(result.current.sendVideoLoading).toBe(false)
+    })
+
+    it('does nothing when verification is restarted while the request is in flight', async () => {
+      // Regression for #5220: the press belongs to a flow the restart tore down, so its late response
+      // must save nothing, raise no alert and navigate nowhere.
+      let resolveRequest: (value: any) => void
+      mockEvidenceApi.createVerificationRequest.mockReturnValue(
+        new Promise((resolve) => {
+          resolveRequest = resolve
+        })
+      )
+
+      const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
+
+      let pressed: Promise<void> = Promise.resolve()
+      act(() => {
+        pressed = result.current.handlePressSendVideo()
+      })
+      expect(result.current.sendVideoLoading).toBe(true)
+
+      await act(async () => {
+        discardInFlightVerificationRequests()
+        resolveRequest!({ id: 'old-id', sha256: 'old-sha', prompts: [{ id: 1, prompt: 'Say your name' }] })
+        await pressed
+      })
+
+      expect(mockNavigation.navigate).not.toHaveBeenCalled()
+      expect(mockVideoPromptsMissingAlert).not.toHaveBeenCalled()
+      expect(mockDispatch).not.toHaveBeenCalled()
+      expect(removeFileSafely).not.toHaveBeenCalled()
+      expect(mockLogger.error).not.toHaveBeenCalled()
       expect(result.current.sendVideoLoading).toBe(false)
     })
   })
