@@ -121,11 +121,17 @@ describe('createVerifyHelpMenuButton', () => {
     expect(mockLeaveVerification).toHaveBeenCalledWith(expect.any(Function))
   })
 
-  it('prompts the restart confirmation from Restart verification process', () => {
+  it('prompts the restart confirmation from Restart verification process once the menu has closed', () => {
     openMenu(FIRST_TIMER, { showRestartVerification: true })
 
     fireEvent.press(screen.getByText(RESTART))
 
-    expect(mockPromptRestartVerification).toHaveBeenCalledWith(expect.any(Function))
+    // The alert is a modal too, so it must not be raised while the menu's modal is still up
+    expect(mockPromptRestartVerification).not.toHaveBeenCalled()
+
+    act(() => jest.advanceTimersByTime(1000))
+
+    expect(screen.queryByText(RESTART)).toBeNull()
+    expect(mockPromptRestartVerification).toHaveBeenCalledTimes(1)
   })
 })

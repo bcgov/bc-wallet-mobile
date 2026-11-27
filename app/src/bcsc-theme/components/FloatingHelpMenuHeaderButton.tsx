@@ -79,8 +79,8 @@ const useReportProblem = (menuRef: React.RefObject<FloatingHelpMenuRef | null>) 
  * ListButtonGroup (for border-radius grouping); `onClose` lets a row dismiss the menu it lives in.
  */
 type MenuRowProps = {
-  /** Closes the owning menu (e.g. after the row's action runs). */
-  onClose: () => void
+  /** Closes the owning menu (e.g. after the row's action runs); `onClosed` runs once it has closed. */
+  onClose: (onClosed?: () => void) => void
 } & Pick<ListButtonProps, 'position'>
 
 /**
@@ -157,13 +157,19 @@ const BackToHomeListButton = ({ onClose, onLeave, position }: MenuRowProps & { o
 /**
  * "Restart verification process" menu row (verify flow only). Kept as its own component so the
  * verification-reset hook only runs in menus that render it.
+ *
+ * The confirmation is raised only once the menu has closed, a frame later, like Report a problem: the
+ * alert is a modal too, and iOS won't present it while the menu's modal is still on screen.
  */
 const RestartVerificationListButton = ({ onClose, position }: MenuRowProps) => {
   const { t } = useTranslation()
   const promptRestartVerification = useRestartVerification()
 
   return (
-    <ListButton position={position} onPress={() => promptRestartVerification(onClose)}>
+    <ListButton
+      position={position}
+      onPress={() => onClose(() => requestAnimationFrame(() => promptRestartVerification()))}
+    >
       {t('BCSC.HelpMenu.RestartVerification')}
     </ListButton>
   )
@@ -263,7 +269,7 @@ export const createVerifyHelpMenuButton = ({
 }: VerifyHelpMenuButtonOptions = {}) => {
   const VerifyHelpMenuHeaderRight = () => {
     const floatingHelpMenuRef = useRef<FloatingHelpMenuRef>(null)
-    const closeMenu = useCallback(() => floatingHelpMenuRef.current?.close(), [])
+    const closeMenu = useCallback((onClosed?: () => void) => floatingHelpMenuRef.current?.close(onClosed), [])
     const reportProblem = useReportProblem(floatingHelpMenuRef)
     const { showBackToHomeMenuRow, isDeveloperMode } = useVerificationExitPolicy()
     const offerBackToHome =
