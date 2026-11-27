@@ -44,8 +44,8 @@ export interface BCSCAlertModalProps {
  * The app's one overlay modal, for both error modals and alerts, so only one popup can ever show.
  *
  * Rendered by ErrorAlertProvider and driven by its state — no event emitters or listeners involved.
- * An error closes on a tap outside or Android back; an alert only through its 'cancel' action,
- * so an alert without one needs an explicit choice, as a native alert does.
+ * An error closes on a tap outside or Android back. An alert never closes on a tap outside, since it
+ * asks for a decision; Android back runs its 'cancel' action, and without one it needs a button press.
  */
 export const BCSCAlertModal: React.FC<BCSCAlertModalProps> = ({ payload, errorKey, onDismiss }) => {
   const { ColorPalette } = useTheme()
@@ -97,6 +97,13 @@ export const BCSCAlertModal: React.FC<BCSCAlertModalProps> = ({ payload, errorKe
     }
   }, [handleAlertAction, onDismiss, payload])
 
+  // Tapping outside closes an error, never an alert: an alert asks for a decision, so it needs a button
+  const handleOverlayPress = useCallback(() => {
+    if (payload?.kind === 'error') {
+      onDismiss()
+    }
+  }, [onDismiss, payload])
+
   const overlayStyle = useMemo(
     () =>
       StyleSheet.create({
@@ -116,9 +123,9 @@ export const BCSCAlertModal: React.FC<BCSCAlertModalProps> = ({ payload, errorKe
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={handleRequestClose}>
-      {/* Allow presses outside of the modal to close it */}
+      {/* Presses outside of the card close an error (see handleOverlayPress) */}
       <Pressable
-        onPress={handleRequestClose}
+        onPress={handleOverlayPress}
         style={overlayStyle.overlay}
         accessible={false}
         importantForAccessibility="no"

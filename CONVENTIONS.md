@@ -22,9 +22,10 @@ Raise alerts with `emitAlert` and errors with `emitErrorModal` (`useErrorAlert`)
 render in `BCSCAlertModal`, the app's one overlay modal: an error uses `ErrorInfoCard` (red "!"), an alert
 `AlertCard` (blue "i"), and both are built on `ModalCard`. Only one shows at a time: an error takes
 priority, and an alert raised meanwhile shows once the error is dismissed. Tapping outside or Android back
-closes an error, but closes an alert only by running its `cancel` action; an alert without one needs a button
-press, as a native alert does. Close any other React Native `Modal` (the help menu, a sheet) before raising
-one, the way the help menu opens Report a problem only after it has closed.
+closes an error. An alert never closes on a tap outside, since it asks for a decision; Android back runs its
+`cancel` action, and an alert without one needs a button press, as a native alert does. Close any other
+React Native `Modal` (the help menu, a sheet) before raising one, the way the help menu opens Report a
+problem only after it has closed.
 
 **Why:** a native alert can't be read or dismissed from JS, so it stacked on top of the error modal (a camera
 error and a "Recording interrupted" alert at once) and couldn't match the app's look. iOS won't present a

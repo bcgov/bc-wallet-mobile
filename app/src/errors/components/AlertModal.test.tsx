@@ -139,6 +139,16 @@ describe('BCSCAlertModal with an error', () => {
 
       expect(onDismiss).toHaveBeenCalledTimes(1)
     })
+
+    it('should call onDismiss when the area outside the card is tapped', () => {
+      const onDismiss = jest.fn()
+      const { UNSAFE_getByType } = renderModal({ payload: validPayload, onDismiss })
+
+      // The Modal's direct child is the overlay behind the card
+      UNSAFE_getByType(Modal).props.children.props.onPress()
+
+      expect(onDismiss).toHaveBeenCalledTimes(1)
+    })
   })
 
   describe('content rendering', () => {
@@ -376,5 +386,25 @@ describe('BCSCAlertModal with an alert', () => {
 
     expect(onDismiss).not.toHaveBeenCalled()
     expect(onPress).not.toHaveBeenCalled()
+  })
+
+  it('stays open when the area outside it is tapped, even with a cancel action', () => {
+    const onDismiss = jest.fn()
+    const onCancel = jest.fn()
+    const { UNSAFE_getByType } = renderModal({
+      payload: {
+        kind: 'alert',
+        title: 'Alert Title',
+        description: 'Alert Description',
+        actions: [{ text: 'Cancel', style: 'cancel', onPress: onCancel }, { text: 'Continue' }],
+      },
+      onDismiss,
+    })
+
+    // The Modal's direct child is the overlay behind the card
+    UNSAFE_getByType(Modal).props.children.props.onPress()
+
+    expect(onDismiss).not.toHaveBeenCalled()
+    expect(onCancel).not.toHaveBeenCalled()
   })
 })
