@@ -1,4 +1,4 @@
-import { Screens } from '@bifold/core'
+import { Screens, Stacks } from '@bifold/core'
 import { NavigatorScreenParams } from '@react-navigation/native'
 import { BCSCCardProcess, EvidenceType } from 'react-native-bcsc-core'
 import { DeviceAuthorizationError } from '../features/verify/deviceAuthorizationError'
@@ -178,6 +178,20 @@ export enum BCSCQRCoreScreens {
   AccountNotVerified = 'AccountNotVerified',
 }
 
+/**
+ * The one route of Bifold's proof-request stack that BCSC reaches: the credential picker that
+ * Bifold's ProofRequest opens from a card's "Change credential" link. Bifold doesn't export the
+ * stack's param type, so this mirrors the picker's entry.
+ */
+export type BifoldProofRequestsStackParams = {
+  [Screens.ProofChangeCredential]: {
+    selectedCred: string
+    altCredentials: string[]
+    proofId: string
+    onCredChange: (credentialId: string) => void
+  }
+}
+
 export type BCSCQRCoreTabParams = {
   [BCSCQRCoreScreens.Scanner]: undefined
   [BCSCQRCoreScreens.Display]: undefined
@@ -324,6 +338,10 @@ export type BCSCMainStackParams = {
   // so ListCredentials (rendered in the Wallet tab) can navigate to it.
   [Screens.CredentialDetails]: { credentialId: string }
   [BCSCScreens.CredentialJSONDetails]: { jsonBlob: string }
+
+  // Bifold's proof-request stack, hosted so the credential picker opened from a proof request
+  // ("Change credential") resolves here. BifoldNavigationAdapter forwards only the picker route.
+  [Stacks.ProofRequestsStack]: NavigatorScreenParams<BifoldProofRequestsStackParams>
 
   [BCSCScreens.QRCore]: NavigatorScreenParams<BCSCQRCoreTabParams> | undefined
   [BCSCScreens.ConnectionLoading]: { oobRecordId?: string; credentialId?: string; proofId?: string }

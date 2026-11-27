@@ -31,11 +31,11 @@ describe('BifoldNavigationAdapter', () => {
     )
   })
 
-  it('shows feature-unavailable toast for Contacts Stack and Proof Requests Stack', () => {
+  it('shows feature-unavailable toast for Contacts Stack and Proof Requests Stack screens other than the picker', () => {
     const { nav } = mkNav()
     const adapted = createBifoldNavigationAdapter(nav as any, { t })
     adapted.navigate('Contacts Stack' as never, { screen: 'JSON Details' } as never)
-    adapted.navigate('Proof Requests Stack' as never, { screen: 'Choose a credential' } as never)
+    adapted.navigate('Proof Requests Stack' as never, { screen: 'Proof Details' } as never)
     expect(Toast.show).toHaveBeenCalledTimes(2)
     expect(Toast.show).toHaveBeenLastCalledWith({ type: 'info', text1: 'BCSC.Scan.FeatureUnavailable' })
     expect(nav.navigate).not.toHaveBeenCalled()
@@ -239,13 +239,30 @@ describe('BifoldNavigationAdapter', () => {
     )
   })
 
-  it('proof-request alt-credential picker is deferred — toasts feature-unavailable', () => {
+  it('forwards the proof-request credential picker to the proof-request stack MainStack hosts', () => {
     // ProofRequest.js: navigation.getParent()?.navigate('Proof Requests Stack', { screen: 'Choose a credential', ... })
-    // Deferred to v4.2 — tracked in issue #3877. Current behaviour is a soft no-op with toast.
-    const { nav } = mkNav()
+    const { nav, parent } = mkNav()
     const adapted = createBifoldNavigationAdapter(nav as any, { t })
+    const pickerParams = {
+      screen: 'Choose a credential',
+      params: {
+        selectedCred: 'cred-1',
+        altCredentials: ['cred-1', 'cred-2'],
+        proofId: 'proof-1',
+        onCredChange: jest.fn(),
+      },
+    }
+    adapted.getParent()?.navigate('Proof Requests Stack' as never, pickerParams as never)
+    expect(parent.navigate).toHaveBeenCalledWith('Proof Requests Stack', pickerParams)
+    expect(Toast.show).not.toHaveBeenCalled()
+  })
+
+  it('forwards the credential picker on the current navigator when there is no parent (MainStack is the root)', () => {
+    const orphan = { navigate: jest.fn(), dispatch: jest.fn(), getParent: jest.fn(() => undefined) }
+    const adapted = createBifoldNavigationAdapter(orphan as any, { t })
     adapted.getParent()?.navigate('Proof Requests Stack' as never, { screen: 'Choose a credential' } as never)
-    expect(Toast.show).toHaveBeenCalledWith({ type: 'info', text1: 'BCSC.Scan.FeatureUnavailable' })
+    expect(orphan.navigate).toHaveBeenCalledWith('Proof Requests Stack', { screen: 'Choose a credential' })
+    expect(Toast.show).not.toHaveBeenCalled()
   })
 
   it('proof-request View-JSON debug surface toasts feature-unavailable (Bifold ContactStack/JSONDetails)', () => {

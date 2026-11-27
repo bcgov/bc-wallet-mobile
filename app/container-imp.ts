@@ -37,6 +37,7 @@ import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import EmptyWalletList from '@/bcsc-theme/components/EmptyWalletList'
 import { createFloatingHelpMenuButton } from '@/bcsc-theme/components/FloatingHelpMenuHeaderButton'
 import { CredentialDetailsSubHeader } from '@/bcsc-theme/features/credentials/CredentialDetailsSubHeader'
+import { getMainStackHeaderOptions } from '@/bcsc-theme/navigators/header-options'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import filePersistedLedgers from '@/configs/ledgers/indy/ledgers'
 import useBCAgentSetup from '@/hooks/useBCAgentSetup'
@@ -270,6 +271,9 @@ export class AppContainer implements Container {
         [Screens.Credentials]: {
           headerShown: false,
         },
+        // The credential picker renders inside Bifold's proof-request stack (hosted by MainStack),
+        // so give it MainStack's header rather than Bifold's default.
+        [Screens.ProofChangeCredential]: getMainStackHeaderOptions(),
       })
     }
     this._container.registerInstance(TOKENS.COMPONENT_CRED_SUBHEADER, CredentialDetailsSubHeader)

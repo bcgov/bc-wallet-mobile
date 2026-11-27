@@ -1753,9 +1753,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bifold/core@npm:3.1.3":
-  version: 3.1.3
-  resolution: "@bifold/core@npm:3.1.3"
+"@bifold/core@npm:3.1.5":
+  version: 3.1.5
+  resolution: "@bifold/core@npm:3.1.5"
   dependencies:
     "@openwallet-foundation/askar-react-native": "npm:0.6.1"
     "@openwallet-foundation/askar-shared": "npm:0.6.1"
@@ -1834,13 +1834,13 @@ __metadata:
     uuid: ~9.0.1
   bin:
     bifold: bin/bifold
-  checksum: 10c0/de075f2ed123548ddda250ad1e2a0bf8b55052ea15cefca37da6184d149c825d254fb482fad507ea0c914444d8220b3e011b0ff2b62516ee2477c1a8c4b61af2
+  checksum: 10c0/486a3bb2cf0820ee9d7997907cde1776cb7d02bc9884229d6e2858e77025860c10c913808044d1bbd73bc92f2498b8ced64b712459877bfbdee70cdc0d0133f9
   languageName: node
   linkType: hard
 
-"@bifold/oca@npm:3.1.3":
-  version: 3.1.3
-  resolution: "@bifold/oca@npm:3.1.3"
+"@bifold/oca@npm:3.1.5":
+  version: 3.1.5
+  resolution: "@bifold/oca@npm:3.1.5"
   dependencies:
     "@credo-ts/anoncreds": "npm:0.7.0"
     "@credo-ts/core": "npm:0.7.0"
@@ -1848,13 +1848,13 @@ __metadata:
     axios: "npm:~1.15.0"
     lodash.startcase: "npm:~4.4.0"
     react-native-fs: "npm:~2.20.0"
-  checksum: 10c0/cc45c7f674d7ad38c23a01ca7acb347fcddae75664be0d019e724f4e7877b299f116824a2f09d2762d4108bb4c7127fe9daedc4d5819a2e8dbff982cd8e8826e
+  checksum: 10c0/6faa40ad1589a7a46b30fadacf9c2ef8833a2d502f7adf2d9dab51b01a45fdeade2af7b748d60e31077c9b3f49b7b8f2b205c294dd796f658094a3c594225a01
   languageName: node
   linkType: hard
 
-"@bifold/react-hooks@npm:3.1.3":
-  version: 3.1.3
-  resolution: "@bifold/react-hooks@npm:3.1.3"
+"@bifold/react-hooks@npm:3.1.5":
+  version: 3.1.5
+  resolution: "@bifold/react-hooks@npm:3.1.5"
   dependencies:
     rxjs: "npm:^7.2.0"
   peerDependencies:
@@ -1864,25 +1864,25 @@ __metadata:
     react: 19.2.3
   bin:
     bifold: bin/bifold
-  checksum: 10c0/3ccd5b7071dbbd367254ca96b8627194c0428fafff2a0f411bcdad13270c8638cabf906e4f00dbab0ad330c183433245604e83121c45874d9560839009b167b9
+  checksum: 10c0/68c19914b2342cde876622d7a4b3ccb530a1bc43dd523339a5fc3bd3da6c63e435d1b8403f53f81b5d491172493f37b86cd816cc1409217ba4da6e63e4038c55
   languageName: node
   linkType: hard
 
-"@bifold/react-native-attestation@npm:3.1.3":
-  version: 3.1.3
-  resolution: "@bifold/react-native-attestation@npm:3.1.3"
+"@bifold/react-native-attestation@npm:3.1.5":
+  version: 3.1.5
+  resolution: "@bifold/react-native-attestation@npm:3.1.5"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10c0/c8acc90d13b1054c16ec9850285e6a7610e6a239b5f64d1854c9c7445a4c0421f534940547b71d38a519d780acbe2ebf8bdadc9c84f90bc03e0325a1b0e35c4e
+  checksum: 10c0/2901e96cd96ffdec9a902874ebb9876a9d30a478a22ecff7643bd4da8c4bde5559fae92a1d4e05e2118970e3a3b79bc016fc18107c5ce61dbf3579e9842295d2
   languageName: node
   linkType: hard
 
-"@bifold/remote-logs@npm:3.1.3":
-  version: 3.1.3
-  resolution: "@bifold/remote-logs@npm:3.1.3"
+"@bifold/remote-logs@npm:3.1.5":
+  version: 3.1.5
+  resolution: "@bifold/remote-logs@npm:3.1.5"
   dependencies:
-    "@bifold/core": "npm:3.1.3"
+    "@bifold/core": "npm:3.1.5"
     "@credo-ts/core": "npm:0.7.0"
     axios: "npm:~1.15.0"
     buffer: "npm:~6.0.3"
@@ -1896,15 +1896,15 @@ __metadata:
     react: 19.2.3
     react-native: 0.86.3
     react-native-logs: ~5.1.0
-  checksum: 10c0/bad7541b3ec111b8b6f50f52c446a311151656b14fd474b0c17f53bc6c07e4ab16d26522067b149d21cc21aac57df5e74c8028e6bd46390f8faeb1e3b3bcb2c7
+  checksum: 10c0/b61565d0e7f23a4b1cab8b74bb76d8dd8f1f0ac7672700f80132d2ccd84b7130417478310c360dfd4dd519fbd65dd3edccec03ac2d0ba91051f7c67659feb0c3
   languageName: node
   linkType: hard
 
-"@bifold/remote-logs@patch:@bifold/remote-logs@npm%3A3.1.3#~/.yarn/patches/@bifold-remote-logs-npm-3.1.3-757c19c437.patch":
-  version: 3.1.3
-  resolution: "@bifold/remote-logs@patch:@bifold/remote-logs@npm%3A3.1.3#~/.yarn/patches/@bifold-remote-logs-npm-3.1.3-757c19c437.patch::version=3.1.3&hash=d66630"
+"@bifold/remote-logs@patch:@bifold/remote-logs@npm%3A3.1.5#~/.yarn/patches/@bifold-remote-logs-npm-3.1.5-63beed47fa.patch":
+  version: 3.1.5
+  resolution: "@bifold/remote-logs@patch:@bifold/remote-logs@npm%3A3.1.5#~/.yarn/patches/@bifold-remote-logs-npm-3.1.5-63beed47fa.patch::version=3.1.5&hash=d66630"
   dependencies:
-    "@bifold/core": "npm:3.1.3"
+    "@bifold/core": "npm:3.1.5"
     "@credo-ts/core": "npm:0.7.0"
     axios: "npm:~1.15.0"
     buffer: "npm:~6.0.3"
@@ -1918,20 +1918,20 @@ __metadata:
     react: 19.2.3
     react-native: 0.86.3
     react-native-logs: ~5.1.0
-  checksum: 10c0/8fe05da6cf7e241dc07fc777aed4ca7a1ce2082eb17c39911853aca13e0a8babab83ef554d51b8d1793d2e39b7739d473abf1c0267b6203a5485fbc218fc40fd
+  checksum: 10c0/ea09f14580a6d33cc3b8efcbdf7525bcbc8f8c254aacfc56602873647e78e6042a69e07699ed9750c715f9c13a609b85348c7bb2d7a60c55b51b059583c5bc94
   languageName: node
   linkType: hard
 
-"@bifold/verifier@npm:3.1.3":
-  version: 3.1.3
-  resolution: "@bifold/verifier@npm:3.1.3"
+"@bifold/verifier@npm:3.1.5":
+  version: 3.1.5
+  resolution: "@bifold/verifier@npm:3.1.5"
   peerDependencies:
     "@bifold/react-hooks": ^3.0.22
     "@credo-ts/anoncreds": 0.7.0
     "@credo-ts/core": 0.7.0
     "@hyperledger/anoncreds-shared": 0.4.1-alpha-20260609124337
     react: 19.2.3
-  checksum: 10c0/eb6971e47a8327630dc6d6dddfe79f5715a34a8ba6ee6353239600de561da8025e3d9a153c1c2ee2c2c0f7f9dee5c8008dff7f2f4ea51d9822f1e739d89f7f68
+  checksum: 10c0/c17452ab3971253099aae4809dad095d4e39dadaaf7315b9e6c79d794db8156db24f22b2a9035e34fcad807e21c8b6b6590654bc48dd4d472494e2c9e23e8d06
   languageName: node
   linkType: hard
 
@@ -7567,12 +7567,12 @@ __metadata:
     "@babel/core": "npm:~7.28.6"
     "@babel/preset-env": "npm:~7.28.6"
     "@babel/runtime": "npm:~7.28.6"
-    "@bifold/core": "npm:3.1.3"
-    "@bifold/oca": "npm:3.1.3"
-    "@bifold/react-hooks": "npm:3.1.3"
-    "@bifold/react-native-attestation": "npm:3.1.3"
-    "@bifold/remote-logs": "patch:@bifold/remote-logs@npm%3A3.1.3#~/.yarn/patches/@bifold-remote-logs-npm-3.1.3-757c19c437.patch"
-    "@bifold/verifier": "npm:3.1.3"
+    "@bifold/core": "npm:3.1.5"
+    "@bifold/oca": "npm:3.1.5"
+    "@bifold/react-hooks": "npm:3.1.5"
+    "@bifold/react-native-attestation": "npm:3.1.5"
+    "@bifold/remote-logs": "patch:@bifold/remote-logs@npm%3A3.1.5#~/.yarn/patches/@bifold-remote-logs-npm-3.1.5-63beed47fa.patch"
+    "@bifold/verifier": "npm:3.1.5"
     "@credo-ts/anoncreds": "npm:0.7.0"
     "@credo-ts/askar": "npm:0.7.0"
     "@credo-ts/core": "npm:0.7.0"
