@@ -44,8 +44,8 @@ export interface BCSCAlertModalProps {
  * The app's one overlay modal, for both error modals and alerts, so only one popup can ever show.
  *
  * Rendered by ErrorAlertProvider and driven by its state — no event emitters or listeners involved.
- * An error closes on a tap outside or Android back. An alert never closes on a tap outside, since it
- * asks for a decision; Android back runs its 'cancel' action, and without one it needs a button press.
+ * An error closes on a tap outside or Android back. An alert closes only from one of its buttons, since it
+ * asks for a decision.
  */
 export const BCSCAlertModal: React.FC<BCSCAlertModalProps> = ({ payload, errorKey, onDismiss }) => {
   const { ColorPalette } = useTheme()
@@ -85,20 +85,8 @@ export const BCSCAlertModal: React.FC<BCSCAlertModalProps> = ({ payload, errorKe
     [onDismiss, payload]
   )
 
-  const handleRequestClose = useCallback(() => {
-    if (payload?.kind === 'error') {
-      onDismiss()
-      return
-    }
-
-    const cancelAction = payload?.actions.find((action) => action.style === 'cancel')
-    if (cancelAction) {
-      handleAlertAction(cancelAction)
-    }
-  }, [handleAlertAction, onDismiss, payload])
-
-  // Tapping outside closes an error, never an alert: an alert asks for a decision, so it needs a button
-  const handleOverlayPress = useCallback(() => {
+  // Tapping outside or Android back closes an error, never an alert: an alert asks for a decision, so it needs a button
+  const handleOutsidePress = useCallback(() => {
     if (payload?.kind === 'error') {
       onDismiss()
     }
@@ -122,10 +110,10 @@ export const BCSCAlertModal: React.FC<BCSCAlertModalProps> = ({ payload, errorKe
   }
 
   return (
-    <Modal visible transparent animationType="fade" onRequestClose={handleRequestClose}>
-      {/* Presses outside of the card close an error (see handleOverlayPress) */}
+    <Modal visible transparent animationType="fade" onRequestClose={handleOutsidePress}>
+      {/* Presses outside of the card close an error (see handleOutsidePress) */}
       <Pressable
-        onPress={handleOverlayPress}
+        onPress={handleOutsidePress}
         style={overlayStyle.overlay}
         accessible={false}
         importantForAccessibility="no"

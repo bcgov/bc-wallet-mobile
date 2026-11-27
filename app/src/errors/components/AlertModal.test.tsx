@@ -350,7 +350,7 @@ describe('BCSCAlertModal with an alert', () => {
     expect(Analytics.trackAlertActionEvent).toHaveBeenCalledWith(AppEventCode.GENERAL, 'Delete')
   })
 
-  it('runs the cancel action on Android back', () => {
+  it('stays open on Android back, even with a cancel action', () => {
     const onDismiss = jest.fn()
     const onCancel = jest.fn()
     const { UNSAFE_getByType } = renderModal({
@@ -365,27 +365,8 @@ describe('BCSCAlertModal with an alert', () => {
 
     UNSAFE_getByType(Modal).props.onRequestClose()
 
-    expect(onCancel).toHaveBeenCalledTimes(1)
-    expect(onDismiss).toHaveBeenCalledTimes(1)
-  })
-
-  it('stays open on Android back when it has no cancel action', () => {
-    const onDismiss = jest.fn()
-    const onPress = jest.fn()
-    const { UNSAFE_getByType } = renderModal({
-      payload: {
-        kind: 'alert',
-        title: 'Alert Title',
-        description: 'Alert Description',
-        actions: [{ text: 'Update', onPress }],
-      },
-      onDismiss,
-    })
-
-    UNSAFE_getByType(Modal).props.onRequestClose()
-
     expect(onDismiss).not.toHaveBeenCalled()
-    expect(onPress).not.toHaveBeenCalled()
+    expect(onCancel).not.toHaveBeenCalled()
   })
 
   it('stays open when the area outside it is tapped, even with a cancel action', () => {
