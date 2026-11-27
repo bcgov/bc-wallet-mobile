@@ -459,6 +459,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
   }
 
   const triggerErrorAsAlert = (description: string) => {
+    onBack()
     emitAlert('Native alert triggered', description, {
       actions: [
         { text: t('Global.Cancel'), style: 'cancel' },
@@ -496,6 +497,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
   }
 
   const triggerAlert = (title: string, body: string) => {
+    onBack()
     emitAlert(title, body, { actions: [{ text: t('Global.Okay'), style: 'default' }] })
   }
 

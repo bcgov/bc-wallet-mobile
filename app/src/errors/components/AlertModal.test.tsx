@@ -1,11 +1,14 @@
 import { AppEventCode } from '@/events/appEventCode'
+import { TestIds } from '@/test-ids/registry'
 import { reportProblem } from '@/utils/logger'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
+import { Modal } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { AppError } from '../appError'
 import { ErrorCategory } from '../errorRegistry'
-import { BCSCErrorModal, BCSCErrorModalProps, ErrorModalPayload } from './ErrorModal'
+import { BCSCAlertModal, BCSCAlertModalProps, ModalPayload } from './AlertModal'
+import { colors } from './ModalCard'
 
 // AppError reads the active screen off navigationRef at construction. Mocking the leaf keeps
 // this suite from pulling the whole navigator/store import chain in through appError.ts.
@@ -81,7 +84,9 @@ const validError = new AppError(
   { track: false }
 )
 
-const validPayload: ErrorModalPayload = {
+const validPayload: Extract<ModalPayload, { kind: 'error' }> = {
+  kind: 'error',
+  enableReport: true,
   title: 'Test Error Title',
   description: 'Something went wrong.',
   error: validError,
@@ -89,17 +94,20 @@ const validPayload: ErrorModalPayload = {
   buildHistory: '4.0.0+100 < 3.9.0+90',
 }
 
-const defaultProps: BCSCErrorModalProps = {
+const defaultProps: BCSCAlertModalProps = {
   payload: null,
   errorKey: 0,
   onDismiss: jest.fn(),
-  enableReport: true,
 }
 
-const renderModal = (overrides: Partial<BCSCErrorModalProps> = {}) =>
-  render(<BCSCErrorModal {...defaultProps} {...overrides} />)
+// The icon left of the title: the first MaterialIcons in the card (mocked to a host 'Icon')
+const headerIcon = (root: ReturnType<typeof render>['UNSAFE_root']) =>
+  root.findAll((node) => (node.type as unknown) === 'Icon')[0].props
 
-describe('BCSCErrorModal', () => {
+const renderModal = (overrides: Partial<BCSCAlertModalProps> = {}) =>
+  render(<BCSCAlertModal {...defaultProps} {...overrides} />)
+
+describe('BCSCAlertModal with an error', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
@@ -131,9 +139,25 @@ describe('BCSCErrorModal', () => {
 
       expect(onDismiss).toHaveBeenCalledTimes(1)
     })
+
+    it('should call onDismiss when the area outside the card is tapped', () => {
+      const onDismiss = jest.fn()
+      const { UNSAFE_getByType } = renderModal({ payload: validPayload, onDismiss })
+
+      // The Modal's direct child is the overlay behind the card
+      UNSAFE_getByType(Modal).props.children.props.onPress()
+
+      expect(onDismiss).toHaveBeenCalledTimes(1)
+    })
   })
 
   describe('content rendering', () => {
+    it('should show the red error icon', () => {
+      const { UNSAFE_root } = renderModal({ payload: validPayload })
+
+      expect(headerIcon(UNSAFE_root)).toMatchObject({ name: 'error', color: colors.errorIcon })
+    })
+
     it('should display error title and description', () => {
       const { getByText } = renderModal({ payload: validPayload })
 
@@ -179,19 +203,19 @@ describe('BCSCErrorModal', () => {
 
   describe('report button', () => {
     it('should show Report button when enableReport is true', () => {
-      const { getByTestId } = renderModal({ payload: validPayload, enableReport: true })
+      const { getByTestId } = renderModal({ payload: validPayload })
 
       expect(getByTestId('com.aries.bifold:id/ReportThisProblem')).toBeTruthy()
     })
 
     it('should hide Report button when enableReport is false', () => {
-      const { queryByTestId } = renderModal({ payload: validPayload, enableReport: false })
+      const { queryByTestId } = renderModal({ payload: { ...validPayload, enableReport: false } })
 
       expect(queryByTestId('com.aries.bifold:id/ReportThisProblem')).toBeNull()
     })
 
     it('should track analytics via trackAlertActionEvent when report is pressed', () => {
-      const { getByTestId } = renderModal({ payload: validPayload, enableReport: true })
+      const { getByTestId } = renderModal({ payload: validPayload })
 
       fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
 
@@ -199,7 +223,7 @@ describe('BCSCErrorModal', () => {
     })
 
     it('should report error via logger when report is pressed', () => {
-      const { getByTestId } = renderModal({ payload: validPayload, enableReport: true })
+      const { getByTestId } = renderModal({ payload: validPayload })
 
       fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
 
@@ -214,7 +238,7 @@ describe('BCSCErrorModal', () => {
     })
 
     it('should surface the reference code returned by reportProblem after reporting', () => {
-      const { getByTestId, getByText } = renderModal({ payload: validPayload, enableReport: true })
+      const { getByTestId, getByText } = renderModal({ payload: validPayload })
 
       fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
 
@@ -234,12 +258,12 @@ describe('BCSCErrorModal', () => {
       )
       contextError.addContext({ url: 'https://example.com/userinfo', method: 'GET' })
 
-      const payload: ErrorModalPayload = {
+      const payload: Extract<ModalPayload, { kind: 'error' }> = {
         ...validPayload,
         error: contextError,
         installId: 'install-id-123',
       }
-      const { getByTestId } = renderModal({ payload, enableReport: true })
+      const { getByTestId } = renderModal({ payload })
 
       fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
 
@@ -249,7 +273,7 @@ describe('BCSCErrorModal', () => {
     })
 
     it('should disable the Report button after being pressed', async () => {
-      const { getByTestId } = renderModal({ payload: validPayload, enableReport: true })
+      const { getByTestId } = renderModal({ payload: validPayload })
 
       const reportBtn = getByTestId('com.aries.bifold:id/ReportThisProblem')
       fireEvent.press(reportBtn)
@@ -265,24 +289,103 @@ describe('BCSCErrorModal', () => {
       const { getByTestId, queryByTestId, rerender } = renderModal({
         payload: validPayload,
         errorKey: 1,
-        enableReport: true,
       })
 
       fireEvent.press(getByTestId('com.aries.bifold:id/ShowDetails'))
       fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
 
-      rerender(
-        <BCSCErrorModal
-          {...defaultProps}
-          payload={{ ...validPayload, title: 'Second Error' }}
-          errorKey={2}
-          enableReport
-        />
-      )
+      rerender(<BCSCAlertModal {...defaultProps} payload={{ ...validPayload, title: 'Second Error' }} errorKey={2} />)
 
       expect(queryByTestId('com.aries.bifold:id/DetailsText')).toBeNull()
       expect(getByTestId('com.aries.bifold:id/ShowDetails')).toBeTruthy()
       expect(getByTestId('com.aries.bifold:id/ReportThisProblem').props.accessibilityState?.disabled).toBeFalsy()
     })
+  })
+})
+
+describe('BCSCAlertModal with an alert', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  const actionButton = (index: number) => `com.aries.bifold:id/${TestIds.alertModal.action}${index}`
+
+  it('renders the title, description and one button per action in order', () => {
+    const { getByText, getByTestId, queryByTestId, UNSAFE_root } = renderModal({
+      payload: {
+        kind: 'alert',
+        title: 'Alert Title',
+        description: 'Alert Description',
+        actions: [{ text: 'Cancel', style: 'cancel' }, { text: 'Continue' }],
+      },
+    })
+
+    expect(getByText('Alert Title')).toBeTruthy()
+    expect(getByText('Alert Description')).toBeTruthy()
+    expect(getByTestId(actionButton(0))).toHaveTextContent('Cancel')
+    expect(getByTestId(actionButton(1))).toHaveTextContent('Continue')
+    expect(headerIcon(UNSAFE_root)).toMatchObject({ name: 'info', color: colors.infoIcon })
+    // The error card's controls are not part of an alert
+    expect(queryByTestId('com.aries.bifold:id/ReportThisProblem')).toBeNull()
+  })
+
+  it('dismisses, runs the action and tracks it when a button is pressed', () => {
+    const onDismiss = jest.fn()
+    const onPress = jest.fn()
+    const { getByTestId } = renderModal({
+      payload: {
+        kind: 'alert',
+        title: 'Alert Title',
+        description: 'Alert Description',
+        actions: [{ text: 'Delete', style: 'destructive', onPress }],
+        event: AppEventCode.GENERAL,
+      },
+      onDismiss,
+    })
+
+    fireEvent.press(getByTestId(actionButton(0)))
+
+    expect(onDismiss).toHaveBeenCalledTimes(1)
+    expect(onPress).toHaveBeenCalledTimes(1)
+    expect(Analytics.trackAlertActionEvent).toHaveBeenCalledWith(AppEventCode.GENERAL, 'Delete')
+  })
+
+  it('stays open on Android back, even with a cancel action', () => {
+    const onDismiss = jest.fn()
+    const onCancel = jest.fn()
+    const { UNSAFE_getByType } = renderModal({
+      payload: {
+        kind: 'alert',
+        title: 'Alert Title',
+        description: 'Alert Description',
+        actions: [{ text: 'Cancel', style: 'cancel', onPress: onCancel }, { text: 'Continue' }],
+      },
+      onDismiss,
+    })
+
+    UNSAFE_getByType(Modal).props.onRequestClose()
+
+    expect(onDismiss).not.toHaveBeenCalled()
+    expect(onCancel).not.toHaveBeenCalled()
+  })
+
+  it('stays open when the area outside it is tapped, even with a cancel action', () => {
+    const onDismiss = jest.fn()
+    const onCancel = jest.fn()
+    const { UNSAFE_getByType } = renderModal({
+      payload: {
+        kind: 'alert',
+        title: 'Alert Title',
+        description: 'Alert Description',
+        actions: [{ text: 'Cancel', style: 'cancel', onPress: onCancel }, { text: 'Continue' }],
+      },
+      onDismiss,
+    })
+
+    // The Modal's direct child is the overlay behind the card
+    UNSAFE_getByType(Modal).props.children.props.onPress()
+
+    expect(onDismiss).not.toHaveBeenCalled()
+    expect(onCancel).not.toHaveBeenCalled()
   })
 })

@@ -18,6 +18,7 @@ import { acceptAppAlert } from '../../../src/helpers/alerts.js'
 import { returnFromBrowserHandoff } from '../../../src/helpers/browser-handoff.js'
 import { injectQrCode } from '../../../src/helpers/camera.js'
 import { currentPlatform, dispatchDeepLink, getCurrentAppId } from '../../../src/helpers/deep-link.js'
+import { tapInAppAlertAction } from '../../../src/helpers/in-app-alert.js'
 import {
   CUSTOM_CARD_COPY,
   EMPTY_NOTIFICATION_COPY,
@@ -527,8 +528,8 @@ describe('Verified journey: combined card', () => {
   it('verified: forgets all device pairings', async () => {
     await SettingsScreen.link('forgetPairings') // verified-only row → ForgetAllPairings confirmation
     await ForgetPairingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-    await ForgetPairingsScreen.tap('primary') // the Critical button confirms → app "Success"/OK alert
-    await acceptAppAlert() // tap the "Success — device unpaired" OK (app Alert.alert, not a system dialog)
+    await ForgetPairingsScreen.tap('primary') // the Critical button confirms → in-app "Success"/OK alert
+    await tapInAppAlertAction(0) // "Success — device unpaired" / OK (emitAlert, not a native alert)
     await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION) // goBack after the alert
   })
 

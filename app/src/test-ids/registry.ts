@@ -51,7 +51,7 @@ export const TestIds = {
   },
 
   /**
-   * The app-wide error modal (`ErrorInfoCard` inside `BCSCErrorModal`) — an overlay ANY screen can
+   * The app-wide error modal (`ErrorInfoCard` inside `BCSCAlertModal`) — an overlay ANY screen can
    * raise, which is why its ids live here rather than under a feature.
    *
    * `close` is the only one that is always rendered, so it doubles as the "is it up" marker;
@@ -76,6 +76,16 @@ export const TestIds = {
     copyReportId: 'CopyReportId',
     supportLink: 'SupportLink',
     versionNumber: 'VersionNumber',
+  },
+
+  /**
+   * The in-app alert `emitAlert` raises (replaces the native alert). `action` is suffixed with the
+   * button's index in the alert's actions, e.g. `AlertAction0`.
+   */
+  alertModal: {
+    title: 'AlertTitle',
+    body: 'AlertBody',
+    action: 'AlertAction',
   },
 
   /**

@@ -27,10 +27,10 @@ export const HelpMenuRows = {
   restartVerification: 'Restart verification process',
 } as const
 
-/** The restart confirmation's buttons (`Alerts.RestartVerification.*` / `Global.Cancel`). */
+/** The restart confirmation's actions, by index in `useRestartVerification`'s actions array. */
 export const RestartVerificationAlert = {
-  cancel: 'Cancel',
-  confirm: 'Restart Verification',
+  cancel: 0,
+  confirm: 1,
 } as const
 
 /** The menu's own close (X) control — `Global.Close`, passed directly so it is NOT nbsp-joined. */
@@ -122,7 +122,7 @@ export async function expectHelpMenuRowAbsent(
   }
 }
 
-/** Close the help menu via its X. Needed after a row that leaves the menu up (e.g. a cancelled alert). */
+/** Close the help menu via its X. Needed after a row that leaves the menu up. */
 export async function closeHelpMenu(): Promise<void> {
   await tapHelpMenuRow(CLOSE_LABEL)
 }

@@ -11,11 +11,12 @@ exports[`ErrorInfoCard snapshots should match snapshot with default props 1`] = 
   }
 >
   <View
+    accessibilityViewIsModal={true}
     style={
       {
         "backgroundColor": "#FFFFFF",
         "borderColor": "#D3D3D3",
-        "borderRadius": 8,
+        "borderRadius": 12,
         "borderWidth": 1,
         "elevation": 4,
         "flexShrink": 1,
@@ -40,7 +41,7 @@ exports[`ErrorInfoCard snapshots should match snapshot with default props 1`] = 
       }
     >
       <Icon
-        color="#313132"
+        color="#D8292F"
         name="error"
         size={30}
         style={
@@ -59,6 +60,7 @@ exports[`ErrorInfoCard snapshots should match snapshot with default props 1`] = 
         }
       >
         <Text
+          accessibilityRole="header"
           style={
             {
               "color": "#313132",
@@ -153,8 +155,7 @@ exports[`ErrorInfoCard snapshots should match snapshot with default props 1`] = 
           style={
             {
               "gap": 8,
-              "paddingHorizontal": 4,
-              "paddingTop": 16,
+              "paddingTop": 8,
             }
           }
         />
@@ -194,11 +195,12 @@ exports[`ErrorInfoCard snapshots should match snapshot with details expanded 1`]
   }
 >
   <View
+    accessibilityViewIsModal={true}
     style={
       {
         "backgroundColor": "#FFFFFF",
         "borderColor": "#D3D3D3",
-        "borderRadius": 8,
+        "borderRadius": 12,
         "borderWidth": 1,
         "elevation": 4,
         "flexShrink": 1,
@@ -223,7 +225,7 @@ exports[`ErrorInfoCard snapshots should match snapshot with details expanded 1`]
       }
     >
       <Icon
-        color="#313132"
+        color="#D8292F"
         name="error"
         size={30}
         style={
@@ -242,6 +244,7 @@ exports[`ErrorInfoCard snapshots should match snapshot with details expanded 1`]
         }
       >
         <Text
+          accessibilityRole="header"
           style={
             {
               "color": "#313132",
@@ -414,8 +417,7 @@ exports[`ErrorInfoCard snapshots should match snapshot with details expanded 1`]
           style={
             {
               "gap": 8,
-              "paddingHorizontal": 4,
-              "paddingTop": 16,
+              "paddingTop": 8,
             }
           }
         >
@@ -453,7 +455,7 @@ exports[`ErrorInfoCard snapshots should match snapshot with details expanded 1`]
               {
                 "alignItems": "center",
                 "backgroundColor": "#003366",
-                "borderRadius": 8,
+                "borderRadius": 4,
                 "justifyContent": "center",
                 "opacity": 1,
                 "paddingHorizontal": 24,
@@ -491,7 +493,6 @@ exports[`ErrorInfoCard snapshots should match snapshot with details expanded 1`]
               "color": "#313132",
               "fontSize": 16,
               "lineHeight": 24,
-              "marginHorizontal": 4,
               "marginTop": 16,
             }
           }

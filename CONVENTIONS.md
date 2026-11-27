@@ -16,6 +16,21 @@ Where possible, users should be able to access screens or tools before async res
 (e.g. wallet initialization) are ready. Rather than blocking navigation, show a banner
 message or text on the screen itself informing the user that the feature isn't available yet and to try again shortly.
 
+## Alerts and error modals: one in-app modal, one at a time
+
+Raise alerts with `emitAlert` and errors with `emitErrorModal` (`useErrorAlert`), never `Alert.alert`. Both
+render in `BCSCAlertModal`, the app's one overlay modal: an error uses `ErrorInfoCard` (red "!"), an alert
+`AlertCard` (blue "i"), and both are built on `ModalCard`. Only one shows at a time: an error takes
+priority, and an alert raised meanwhile shows once the error is dismissed. Tapping outside or Android back
+closes an error. An alert closes only from one of its buttons, since it asks for a decision, as a native
+alert does. Close any other
+React Native `Modal` (the help menu, a sheet) before raising one, the way the help menu opens Report a
+problem only after it has closed.
+
+**Why:** a native alert can't be read or dismissed from JS, so it stacked on top of the error modal (a camera
+error and a "Recording interrupted" alert at once) and couldn't match the app's look. iOS won't present a
+second React Native `Modal` while another is on screen, so an alert raised from inside one may never show.
+
 ## Waiting screens
 
 BCSC loading overlays, video submission, video-call waits, and transfer-scan processing use the shared `WaitingScreenContent`

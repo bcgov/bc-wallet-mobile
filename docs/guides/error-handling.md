@@ -31,7 +31,7 @@ emitErrorModal(t('Title'), t('Message'), ensureAppError(error, AppEventCode.XXX)
 
 Example: `app/src/bcsc-theme/features/verify/useResidentialAddressModel.tsx` does this for a failed device authorization.
 
-**BC Wallet features** use `useErrorAlert()` directly, as in `app/src/bcwallet-theme/features/person-flow/screens/PersonCredentialLoading.tsx`. `ErrorAlertProvider` wraps both modes in `app/App.tsx`. For an informational native alert use `emitAlert(title, description, { actions, event })` from the same hook.
+**BC Wallet features** use `useErrorAlert()` directly, as in `app/src/bcwallet-theme/features/person-flow/screens/PersonCredentialLoading.tsx`. `ErrorAlertProvider` wraps both modes in `app/App.tsx`. For an informational in-app alert use `emitAlert(title, description, { actions, event })` from the same hook; see "Alerts and error modals" in `CONVENTIONS.md` for how it shares one modal with errors.
 
 ## One owner per failure
 

@@ -1,8 +1,14 @@
 import { AppError } from '@/errors'
-import { BCSCErrorModal, ErrorModalAction, ErrorModalPayload } from '@/errors/components/ErrorModal'
+import {
+  AlertModalPayload,
+  BCSCAlertModal,
+  ErrorModalAction,
+  ErrorModalPayload,
+  ModalPayload,
+} from '@/errors/components/AlertModal'
 import { AppEventCode } from '@/events/appEventCode'
 import { BCState } from '@/store'
-import { AlertAction, showAlert } from '@/utils/alert'
+import { AlertAction, getDefaultOkAction } from '@/utils/alert'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { formatBuildHistory } from '@/utils/app-build'
 import { appLogger } from '@/utils/logger'
@@ -21,7 +27,7 @@ interface ErrorModalOptions {
 }
 
 export interface AlertOptions {
-  /** Custom actions/buttons for the native alert */
+  /** Custom actions/buttons for the alert */
   actions?: AlertAction[]
   /** Optional AlertEvent for analytics tracking */
   event?: AppEventCode
@@ -34,7 +40,7 @@ export interface ErrorAlertContextType {
   emitErrorModal: (title: string, description: string, error: AppError, options?: ErrorModalOptions) => void
 
   /**
-   * Show native alert with title and description
+   * Show alert (via BCSCAlertModal) with title and description
    */
   emitAlert: (title: string, description: string, options?: AlertOptions) => void
 
@@ -53,12 +59,11 @@ interface ErrorAlertProviderProps extends PropsWithChildren {
 /**
  * ErrorAlertProvider - Unified error and alert handling for BC Wallet
  *
- * Owns the error modal state and renders BCSCErrorModal directly,
+ * Owns the error modal and alert state and renders BCSCAlertModal directly,
  * eliminating the DeviceEventEmitter indirection.
  *
  * Provides a single entry point for:
- * - Error modals (via BCSCErrorModal, rendered internally)
- * - Native alerts (via React Native Alert)
+ * - Error modals and alerts (via BCSCAlertModal, rendered internally, one at a time)
  * - Analytics tracking
  * - Error logging
  *
@@ -67,6 +72,7 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
   const [errorPayload, setErrorPayload] = useState<ErrorModalPayload | null>(null)
   const [errorKey, setErrorKey] = useState(0)
   const [errorModalOptions, setErrorModalOptions] = useState<ErrorModalOptions | null>(null)
+  const [alertPayload, setAlertPayload] = useState<AlertModalPayload | null>(null)
   const [store] = useStore<BCState>() // Ensure store is initialized for error handling
 
   const reportEnabled = errorModalOptions?.enableReport !== false && enableReport !== false
@@ -107,10 +113,23 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
   )
 
   /**
-   * Show native alert with title and description
+   * Show alert with title and description
    */
   const emitAlert = useCallback((title: string, description: string, options?: AlertOptions): void => {
-    showAlert(title, description, options?.actions, options?.event)
+    setAlertPayload({
+      title,
+      description,
+      actions: options?.actions?.length ? options.actions : [getDefaultOkAction()],
+      event: options?.event,
+    })
+
+    if (options?.event) {
+      Analytics.trackAlertDisplayEvent(options.event)
+    }
+  }, [])
+
+  const dismissAlert = useCallback((): void => {
+    setAlertPayload(null)
   }, [])
 
   /**
@@ -130,15 +149,21 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
     [emitErrorModal, emitAlert, errorPayload]
   )
 
+  // One popup at a time: an alert waits until the error modal is dismissed
+  let modalPayload: ModalPayload | null = null
+  if (errorPayload) {
+    modalPayload = { kind: 'error', ...errorPayload, action: errorModalOptions?.action, enableReport: reportEnabled }
+  } else if (alertPayload) {
+    modalPayload = { kind: 'alert', ...alertPayload }
+  }
+
   return (
     <ErrorAlertContext.Provider value={value}>
       {children}
-      <BCSCErrorModal
-        payload={errorPayload}
+      <BCSCAlertModal
+        payload={modalPayload}
         errorKey={errorKey}
-        onDismiss={dismissErrorModal}
-        enableReport={reportEnabled}
-        action={errorModalOptions?.action}
+        onDismiss={errorPayload ? dismissErrorModal : dismissAlert}
       />
     </ErrorAlertContext.Provider>
   )

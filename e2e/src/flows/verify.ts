@@ -25,6 +25,7 @@ import {
   RestartVerificationAlert,
   tapHelpMenuRow,
 } from '../helpers/help-menu.js'
+import { tapInAppAlertAction } from '../helpers/in-app-alert.js'
 import { registerUsercode } from '../helpers/redact.js'
 import { describeCurrentScreen, probeAnyScreen, reachCameraScreen, type ScreenProbe } from '../helpers/screens.js'
 import { bcsc } from '../screens/core/appId.js'
@@ -220,18 +221,13 @@ export async function resumeVerification(
 /**
  * Help menu → "Restart verification process", answering its confirmation alert.
  *
- * `confirm` wipes progress and re-registers the device with IAS, reopening on AccountSetup — NOT
- * IdentitySelection. `cancel` leaves the menu open, so it is closed here.
+ * The menu closes before the alert opens. `confirm` wipes progress and re-registers the device with
+ * IAS, reopening on AccountSetup — NOT IdentitySelection. `cancel` leaves the user on the same step.
  */
 export async function restartVerification(answer: 'confirm' | 'cancel'): Promise<void> {
   await openHelpMenu()
   await tapHelpMenuRow(HelpMenuRows.restartVerification)
-  if (answer === 'cancel') {
-    await tapAlertButton(RestartVerificationAlert.cancel)
-    await closeHelpMenu()
-    return
-  }
-  await tapAlertButton(RestartVerificationAlert.confirm)
+  await tapInAppAlertAction(RestartVerificationAlert[answer])
 }
 
 /**
