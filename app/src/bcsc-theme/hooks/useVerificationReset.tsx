@@ -96,11 +96,8 @@ export const useVerificationReset = () => {
             registrationAccessToken: registration.registrationAccessToken,
             inVerifyFlow, // whether the verify flow stays mounted is the caller's call
           })
-          // Restarting returns the user to the first step of the verify journey: the setup question
-          // ("verify a new account" vs. "connect an existing device"). Clearing the prior choice makes
-          // the VerifyStack land there (via getResumeStepRoute) instead of resuming the transfer or
-          // identity sub-flow the user was previously in, e.g. renewing an account first set up by
-          // transfer from a device the user may no longer have.
+
+          // Clear account setup so users can choose how to verify
           dispatch({ type: BCDispatchAction.ACCOUNT_SETUP_TYPE, payload: [] })
 
           logger.info('[useVerificationReset] Secure state cleared. Deleting IAS registration...')
