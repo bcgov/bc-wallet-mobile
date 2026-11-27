@@ -27,15 +27,12 @@ import { useCallback, useEffect, useRef, useState } from 'react'
  * two gateways refreshing at once would each rotate the server's set, and their store writes would
  * race — landing the sha from one response beside the prompts from another. Every caller wants the same
  * thing, a fresh set in the store, so a second call joins the first rather than starting a rotation.
- * A verification reset empties the slot, so the next call starts its own request rather than joining one
- * the reset discarded.
+ * A verification reset empties the slot, so the next call can't join a discarded request.
  */
 let inFlightRefresh: Promise<PromptsResult> | null = null
 
-/**
- * Bumped on every reset; a refresh started under an older value drops its result. Module-level, like
- * `inFlightRefresh`, because the screen that started the refresh is gone by then.
- */
+// Bumped on every reset; a refresh started under an older value drops its result. Module-level because
+// the screen that started the refresh is gone by then.
 let requestGeneration = 0
 
 /**
@@ -65,16 +62,13 @@ export type PromptsResult =
 const DISCARDED: PromptsResult = { ready: false, discarded: true }
 const DISCARDED_LOG = '[useVideoPrompts] Verification request discarded: verification was reset while it was in flight'
 
-/**
- * Starts a refresh, or joins the one in flight. The slot is cleared only if it is still this refresh's,
- * so one that settles after a reset cannot clear its replacement.
- */
 const joinOrStartRefresh = (start: () => Promise<PromptsResult>): Promise<PromptsResult> => {
   if (inFlightRefresh) {
     return inFlightRefresh
   }
 
   const started: Promise<PromptsResult> = start().finally(() => {
+    // A refresh that settles after a reset must not clear the one that replaced it
     if (inFlightRefresh === started) {
       inFlightRefresh = null
     }
@@ -147,8 +141,9 @@ const useVideoPrompts = () => {
 
       await updateVerificationRequest(verificationRequest.id, usable ? verificationRequest.sha256 : null)
 
-      // A reset during the write above still withholds the prompts and the ready result
+      // A reset during the write can't undo the id and sha already dispatched, but the prompts must not land
       if (superseded()) {
+        logger.info(DISCARDED_LOG)
         return DISCARDED
       }
 
@@ -183,7 +178,7 @@ const useVideoPrompts = () => {
           // Only a 500 means the id is gone (TTL expired, agent cancelled) and worth replacing. A
           // timeout, a 401 or a transient 502 leaves it perfectly usable, and creating a fresh request
           // for those orphans the live one and spends rate-limit budget the server enforces.
-          // A reset in between also rethrows, so no replacement request opens under the new setup.
+          // Rethrown after a reset too, so no replacement request opens under the new setup
           if (superseded() || !isAxiosAppError(error, DELETED_VERIFICATION_REQUEST_STATUS)) {
             throw error
           }

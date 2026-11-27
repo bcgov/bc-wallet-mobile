@@ -54,7 +54,6 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
       // This still catches a backend that can't issue prompts at all before the user does the photo steps.
       const request = await ensureVerificationRequest()
       if (request.discarded) {
-        // Verification was restarted while the request was in flight; the flow this press belonged to is gone
         return
       }
 

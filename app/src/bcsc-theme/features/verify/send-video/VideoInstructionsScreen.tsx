@@ -20,7 +20,11 @@ type VideoInstructionsScreenProps = {
 }
 
 /** `failed` is distinct from `loading` so a failed fetch offers a retry instead of an endless spinner. */
-type PromptsStatus = 'loading' | 'ready' | 'failed'
+enum PromptsStatus {
+  Loading = 'loading',
+  Ready = 'ready',
+  Failed = 'failed',
+}
 
 const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) => {
   const { Spacing, TextTheme, ColorPalette } = useTheme()
@@ -28,7 +32,7 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
   const { t } = useTranslation()
   const { refreshPrompts } = useVideoPrompts()
   const { videoPromptsMissingAlert } = useAlerts(navigation)
-  const [promptsStatus, setPromptsStatus] = useState<PromptsStatus>('loading')
+  const [promptsStatus, setPromptsStatus] = useState<PromptsStatus>(PromptsStatus.Loading)
   const ensureFreeStorage = useEnsureFreeStorage()
   const scrollViewRef = useRef<ScrollView>(null)
 
@@ -42,23 +46,22 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
    * only escape by redoing the photos. `failed` puts a retry in front of them instead.
    */
   const loadPrompts = useCallback(async (): Promise<void> => {
-    setPromptsStatus('loading')
+    setPromptsStatus(PromptsStatus.Loading)
 
     const prompts = await refreshPrompts()
 
-    // Verification was reset mid-request, so there is nothing to alert about. If the reset then failed
-    // and this screen survived, Retry is the way out of the spinner.
+    // No alert over the new setup; Retry covers a reset that failed and left this screen mounted
     if (prompts.discarded) {
-      setPromptsStatus('failed')
+      setPromptsStatus(PromptsStatus.Failed)
       return
     }
 
     if (prompts.ready) {
-      setPromptsStatus('ready')
+      setPromptsStatus(PromptsStatus.Ready)
       return
     }
 
-    setPromptsStatus('failed')
+    setPromptsStatus(PromptsStatus.Failed)
     videoPromptsMissingAlert(prompts.error)
   }, [refreshPrompts, videoPromptsMissingAlert])
 
@@ -97,7 +100,7 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
         }}
         testID={testIdWithKey(TestIds.verify.videoInstructions.startRecording)}
         accessibilityLabel={t('BCSC.SendVideo.VideoInstructions.StartRecordingButton')}
-        disabled={promptsStatus !== 'ready'}
+        disabled={promptsStatus !== PromptsStatus.Ready}
       />
     </View>
   )
@@ -120,7 +123,7 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
         {t('BCSC.SendVideo.VideoInstructions.Heading2')}
       </ThemedText>
       {/* Held back until the refresh lands so the user is never shown a set from an earlier attempt. */}
-      {promptsStatus === 'ready' &&
+      {promptsStatus === PromptsStatus.Ready &&
         store.bcsc.prompts?.map(({ prompt, id }: VerificationPrompt, index) => (
           <Fragment key={id}>
             <ThemedText variant={'headingFour'} style={{ textAlign: 'center', color: ColorPalette.grayscale.black }}>
@@ -133,13 +136,13 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
             </ThemedText>
           </Fragment>
         ))}
-      {promptsStatus === 'loading' && (
+      {promptsStatus === PromptsStatus.Loading && (
         <ActivityIndicator
           style={{ marginBottom: Spacing.xl }}
           testID={testIdWithKey(TestIds.verify.videoInstructions.promptsLoading)}
         />
       )}
-      {promptsStatus === 'failed' && (
+      {promptsStatus === PromptsStatus.Failed && (
         <Button
           buttonType={ButtonType.Secondary}
           title={t('Global.Retry')}

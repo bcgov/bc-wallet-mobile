@@ -154,8 +154,6 @@ describe('VideoInstructions', () => {
   })
 
   it('stays quiet but offers a retry when verification was restarted while the set was loading', async () => {
-    // A late result must not raise an alert over the new setup. If the reset failed and this screen
-    // survived, Retry keeps the user from a stuck spinner.
     mockRefreshPrompts.mockResolvedValue({ ready: false, discarded: true })
 
     const tree = renderScreen()

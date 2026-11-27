@@ -46,7 +46,6 @@ describe('useVideoPrompts', () => {
     return new AppError('api failure', ErrorRegistry.SERVER_ERROR, { cause, track: false, context })
   }
 
-  /** Narrows a result to the failure that carries an error, past the `discarded` outcome. */
   const failureOf = (outcome: PromptsResult | undefined): AppError => {
     if (outcome?.ready !== false || outcome.discarded) {
       throw new Error('expected the refresh to fail')
@@ -553,7 +552,6 @@ describe('useVideoPrompts', () => {
 
     it('discards a request whose persist finishes after the reset, without dispatching its prompts', async () => {
       mockEvidenceApi.createVerificationRequest.mockResolvedValue(verificationResponse('old-id'))
-      // The reset lands while the native write is still running
       jest.mocked(setAuthorizationRequest).mockImplementationOnce(async () => {
         discardInFlightVerificationRequests()
         return true

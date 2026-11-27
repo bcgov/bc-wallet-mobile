@@ -348,8 +348,7 @@ describe('useVerificationMethodModel', () => {
     })
 
     it('does nothing when verification is restarted while the request is in flight', async () => {
-      // Regression for #5220: the press belongs to a flow the restart tore down, so its late response
-      // must save nothing, raise no alert and navigate nowhere.
+      // #5220: a response from before the restart must save nothing, alert nothing and navigate nowhere
       let resolveRequest: (value: any) => void
       mockEvidenceApi.createVerificationRequest.mockReturnValue(
         new Promise((resolve) => {

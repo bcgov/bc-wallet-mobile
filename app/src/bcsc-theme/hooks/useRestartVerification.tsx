@@ -58,8 +58,7 @@ export const useRestartVerificationAction = () => {
     const stopLoading = loadingScreen.startLoading(t('Alerts.RestartVerification.Loading'))
 
     try {
-      // Before the cancel: a Send Video request that returns while the cancel is awaited must not save its id.
-      // It leaves the stored id alone, which the cancel still needs.
+      // Before the awaited cancel, which leaves the stored id alone for itself
       discardInFlightVerificationRequests()
 
       // Must run first: the reset clears the request id and device code the cancel needs

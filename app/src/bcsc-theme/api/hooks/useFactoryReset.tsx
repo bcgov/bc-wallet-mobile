@@ -125,7 +125,7 @@ export const useFactoryReset = () => {
    */
   const factoryReset = useCallback(
     async (bcscState?: Partial<BCSCState>): Promise<FactoryResetResult> => {
-      // First, so a Send Video request that returns during the reset can't save its id into the cleared state
+      // A Send Video response landing mid-reset must not save its id into the cleared state
       discardInFlightVerificationRequests()
 
       try {

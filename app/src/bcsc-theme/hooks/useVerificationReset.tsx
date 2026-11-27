@@ -17,8 +17,7 @@ import { discardInFlightVerificationRequests } from './useVideoPrompts'
  * The user will be placed passed the onboarding at Setup Step 2 and will be able to reverify
  *
  * Reset sequence:
- *   0. Discards any verification request still in flight, so a late response can't save its id into the
- *      new setup
+ *   0. Discards in-flight verification requests, so a late response can't save its id into the new setup
  *   1. Clears the in-memory secure store, marking the device as unverified. This happens before the
  *      native deletes, so if one fails the surviving record is read back at the next unlock
  *   2. Deletes the existing IAS registration
