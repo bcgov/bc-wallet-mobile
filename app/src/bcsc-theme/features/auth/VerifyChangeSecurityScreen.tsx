@@ -7,10 +7,6 @@ export interface VerifyChangeSecurityScreenProps {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VerifyAppSecurity>
 }
 
-/**
- * App Security screen for the Verify stack.
- * Wraps ChangeSecurityContent with Verify stack-specific navigation callbacks.
- */
 export const VerifyChangeSecurityScreen = ({ navigation }: VerifyChangeSecurityScreenProps) => {
   const handleDeviceAuthSuccess = useCallback(() => {
     navigation.goBack()

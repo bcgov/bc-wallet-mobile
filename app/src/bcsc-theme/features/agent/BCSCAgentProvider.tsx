@@ -40,8 +40,8 @@ export const useBCSCAgent = (): BCSCAgentContextValue => {
 export const useBCSCAgentSafe = (): BCSCAgentContextValue | null => useContext(BCSCAgentContext)
 
 /**
- * Provider that owns the BCSC Credo agent lifecycle and exposes `{ agent,
- * loading, error, retry }` to descendants.
+ * Provider that owns the BCSC Credo agent lifecycle and exposes `agent`,
+ * `loading`, `error` and `retry` to descendants.
  *
  * Non-blocking and decoupled from Bifold's AgentProvider. Children always
  * render; consumers inspect the context via {@link useBCSCAgent} and decide

@@ -43,7 +43,7 @@ const AuthIntroScreen = (): React.ReactElement => {
 /**
  * Renders the auth stack. These screens are shown when the user has an account but is not yet authenticated.
  *
- * @returns {*} {React.ReactElement} The AuthStack component.
+ * @returns The AuthStack component.
  */
 const AuthStack = (): React.ReactElement => {
   const { t } = useTranslation()

@@ -260,7 +260,6 @@ class BCSCApiClient {
   private async ensureValidTokens(): Promise<TokenResponse> {
     return withAccount(async () => {
       if (this.tokensPromise) {
-        // return the existing promise if currently refreshing
         return this.tokensPromise
       }
 
@@ -462,7 +461,6 @@ class BCSCApiClient {
 
   async getTokensForRefreshToken(refreshToken: string): Promise<TokenResponse> {
     if (this.tokensPromise) {
-      // Return the existing promise if currently refreshing
       return this.tokensPromise
     }
 

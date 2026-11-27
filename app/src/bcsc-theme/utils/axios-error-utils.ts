@@ -18,15 +18,7 @@ enum AxiosErrorCode {
 }
 
 interface LogAxiosErrorOptions {
-  /**
-   * The axios error to log
-   * @type {AxiosError<any>}
-   */
   error: AxiosError<any>
-  /**
-   * Suppress stack trace in logs
-   * @type {boolean}
-   */
   suppressStackTrace: boolean
 }
 
@@ -257,8 +249,7 @@ const redactHeaders = (headers: unknown): unknown => {
  * Outputs detailed information about an AxiosError to the provided logger.
  *
  * @see bcsc-theme/api/client.ts
- * @param {LogAxiosErrorOptions} options - The options for logging the error
- * @returns {*} {void}
+ * @param options - The options for logging the error
  */
 export const formatAxiosErrorForLogger = (options: LogAxiosErrorOptions): Record<string, unknown> => {
   const errorDetails: Record<string, unknown> = {
@@ -289,7 +280,6 @@ export const formatAxiosErrorForLogger = (options: LogAxiosErrorOptions): Record
     }
   }
 
-  // Include stack trace unless suppressed
   if (options.error.stack && !options.suppressStackTrace) {
     errorDetails.stack = options.error.stack
   }
@@ -300,9 +290,9 @@ export const formatAxiosErrorForLogger = (options: LogAxiosErrorOptions): Record
 /**
  * Determines if the provided error is a network error: the request produced no HTTP response.
  *
- * @param {unknown} error - The error to check
+ * @param error - The error to check
  * @param depth - Recursion guard for the cause chain
- * @returns {*} {boolean} True if the error is a network error, false otherwise.
+ * @returns True if the error is a network error, false otherwise.
  */
 export const isNetworkError = (error: unknown, depth = 0): boolean => {
   if (depth > 10) {
@@ -326,8 +316,8 @@ const MAX_CAUSE_DEPTH = 5
 /**
  * Checks a single error for a network error, a timeout, or a 5xx server response.
  *
- * @param {unknown} error - The error to check
- * @returns {*} {boolean} True if this error is transient, false otherwise.
+ * @param error - The error to check
+ * @returns True if this error is transient, false otherwise.
  */
 const isTransientError = (error: unknown): boolean => {
   if (isNetworkError(error)) {
@@ -356,8 +346,8 @@ const isTransientError = (error: unknown): boolean => {
  * Walks cause chain for transient errors (network, timeout, 5xx) and returns true if any are found.
  * Walk is limited to 5 to prevent infinite loops
  *
- * @param {unknown} error - The error to check
- * @returns {*} {boolean} True if this error alone is transient, false otherwise.
+ * @param error - The error to check
+ * @returns True if this error alone is transient, false otherwise.
  */
 export const isTransientRequestError = (error: unknown): boolean => {
   let current: unknown = error
@@ -514,7 +504,10 @@ export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
  * Converts an HTTP path into a normalized route template.
  * @param url - The HTTP path to normalize
  * @returns The normalized HTTP path with UUIDs and numeric segments replaced by `{id}`
- * @example normalizeHttpPath('/api/users/1234/profile') // returns '/api/users/{id}/profile'
+ * @example
+ * ```ts
+ * normalizeHttpPath('/api/users/1234/profile') // returns '/api/users/{id}/profile'
+ * ```
  */
 const _toRouteTemplate = (url: string): string => {
   const pathIdentifierSegment = z.union([
@@ -534,10 +527,12 @@ const _toRouteTemplate = (url: string): string => {
  * Checks if a string is a Base64 URL-encoded representation of a numeric verification request ID.
  * This is used to identify segments in a URL that represent verification request IDs.
  *
- * @description // This function decodes this server side Java code:
+ * Decodes what this server-side Java code encodes:
+ * ```java
  * public String encodeVerificationRequestId(final BigDecimal verificationRequestId) {
  *   return Base64.getUrlEncoder().withoutPadding().encodeToString(verificationRequestId.toPlainString().getBytes());
  * }
+ * ```
  *
  * @param value - The string to check
  * @returns True if the string is a Base64 URL-encoded numeric verification request ID, false otherwise
@@ -547,11 +542,6 @@ const _isEncodedVerificationRequestId = (value: string): boolean => {
   return /^\d+$/.test(Buffer.from(value.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'))
 }
 
-/**
- * For a given payload, calculate its byte length.
- * @param value - The value to calculate the byte length for
- * @returns The byte length of the value
- */
 const _getByteLength = (value: unknown): number => {
   if (value === undefined || value === null) {
     return 0

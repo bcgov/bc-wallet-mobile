@@ -9,7 +9,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons'
 interface TorchButtonProps {
   active: boolean
   onPress?: () => void
-  /** Diameter of the circular button. @default 24 */
+  /** Diameter of the circular button. @defaultValue 24 */
   size?: number
 }
 

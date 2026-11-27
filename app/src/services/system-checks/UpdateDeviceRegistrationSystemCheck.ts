@@ -12,9 +12,6 @@ type UpdateRegistrationFunction = () => Promise<RegistrationResponseData>
  *
  * Currently supports:
  *    - The running build differs from the last registered build (new build, failed earlier update, or v3→v4 upgrade)
- *
- * @class UpdateDeviceRegistrationSystemCheck
- * @implements {SystemCheckStrategy}
  */
 export class UpdateDeviceRegistrationSystemCheck implements SystemCheckStrategy {
   private readonly registeredBuild: AppBuild | undefined

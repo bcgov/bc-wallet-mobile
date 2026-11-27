@@ -52,7 +52,6 @@ export const useVerificationResponseListener = () => {
     try {
       const { verificationRequestId, deviceCode, userCode } = store.bcscSecure
 
-      // Validate we have the device codes needed for token fetch
       if (!deviceCode || !userCode || !verificationRequestId) {
         logger.error(
           `[useVerificationResponseListener] Missing deviceCode ${deviceCode} or userCode ${userCode} or verificationRequestId ${verificationRequestId}`
@@ -75,7 +74,6 @@ export const useVerificationResponseListener = () => {
       }
 
       if (status === VerificationRequestStatus.VERIFIED) {
-        // Status is verified - fetch and update tokens
         await token.checkDeviceCodeStatus(deviceCode, userCode)
         dispatch({
           type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
@@ -98,7 +96,6 @@ export const useVerificationResponseListener = () => {
           type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
           payload: [{ status: VerificationRequestStatus.PENDING }],
         })
-        // Status is pending - user should check manually via the UI
         logger.info(`[useVerificationResponseListener] Verification status is '${status}', not navigating`)
         return
       }
@@ -119,9 +116,6 @@ export const useVerificationResponseListener = () => {
     }
   }, [logger, store.bcscSecure, evidenceService, token, dispatch])
 
-  /**
-   * Route the event to the appropriate handler based on event type.
-   */
   const handleNavigationEvent = useCallback(
     async (event: VerificationResponseNavigationEvent) => {
       if (event.eventType === 'request_reviewed') {
@@ -134,7 +128,6 @@ export const useVerificationResponseListener = () => {
   )
 
   useEffect(() => {
-    // Subscribe to navigation events from the service
     const unsubscribe = verificationResponseService.onNavigationRequest(handleNavigationEvent)
 
     // Process any pending approval that was buffered before this hook mounted

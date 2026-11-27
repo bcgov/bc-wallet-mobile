@@ -8,8 +8,6 @@ import { throwDecodeAppError } from './native-error-map'
 /**
  * BCSC event types
  * Added from https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574688/5.1+System+Interfaces#ID-Token
- * @export
- * @enum {number}
  */
 export enum BCSCEvent {
   Authorization = 'Authorization',
@@ -21,9 +19,6 @@ export enum BCSCEvent {
 
 /**
  * BCSC reason types
- *
- * @export
- * @enum {number}
  */
 export enum BCSCReason {
   ApprovedByAgent = 'Approved by Agent',

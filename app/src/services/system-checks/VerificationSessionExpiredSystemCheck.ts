@@ -16,10 +16,7 @@ import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './
  * stacks and needs no verified-status gating. The check passes (no action) when there is no pending
  * `device_code`, and fails (→ onFail) when the pending code's expiry is in the past. See issue #4050.
  *
- * @see {VerificationSessionExpired.tsx} for the modal displayed on failure.
- *
- * @class VerificationSessionExpiredSystemCheck
- * @implements {SystemCheckStrategy}
+ * @see `VerificationSessionExpired.tsx` for the modal displayed on failure.
  */
 export class VerificationSessionExpiredSystemCheck implements SystemCheckStrategy {
   private readonly getDeviceCodeExpiry: () => Promise<Date | null>
@@ -28,10 +25,10 @@ export class VerificationSessionExpiredSystemCheck implements SystemCheckStrateg
   private readonly now: Date
 
   /**
-   * @param getDeviceCodeExpiry Resolves the pending device_code's expiry, or null when there is no pending code.
-   * @param navigation Navigation used to route to the expired-session modal on failure.
-   * @param utils Shared system-check utilities (logger, dispatch, translation).
-   * @param now Current time (injectable for testing).
+   * @param getDeviceCodeExpiry - Resolves the pending device_code's expiry, or null when there is no pending code.
+   * @param navigation - Navigation used to route to the expired-session modal on failure.
+   * @param utils - Shared system-check utilities (logger, dispatch, translation).
+   * @param now - Current time (injectable for testing).
    */
   constructor(
     getDeviceCodeExpiry: () => Promise<Date | null>,
@@ -48,7 +45,7 @@ export class VerificationSessionExpiredSystemCheck implements SystemCheckStrateg
   /**
    * Runs the check to verify the in-progress verification session has not expired.
    *
-   * @returns {*} {Promise<boolean>} - true if the session is valid or not applicable, false if expired.
+   * @returns - true if the session is valid or not applicable, false if expired.
    */
   async runCheck(): Promise<boolean> {
     try {
@@ -81,8 +78,6 @@ export class VerificationSessionExpiredSystemCheck implements SystemCheckStrateg
 
   /**
    * Handles failure by routing to the verification session expired modal.
-   *
-   * @returns {*} {void}
    */
   onFail() {
     this.utils.logger.warn(
@@ -98,7 +93,7 @@ export class VerificationSessionExpiredSystemCheck implements SystemCheckStrateg
  * Returns null when there is no pending `device_code` (i.e. no in-progress verification); otherwise the
  * expiry as a Date (native persists it as a Unix-seconds timestamp).
  *
- * @returns {*} {Promise<Date | null>} The pending device_code expiry, or null when none is pending.
+ * @returns The pending device_code expiry, or null when none is pending.
  */
 export async function getPendingDeviceCodeExpiry(): Promise<Date | null> {
   const authRequest = await getAuthorizationRequest()

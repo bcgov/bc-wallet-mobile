@@ -37,7 +37,6 @@ const readFileInChunks = async (
       const chunkBase64 = await RNFS.read(filePath, length, offset, 'base64')
       const chunkBuffer = Buffer.from(chunkBase64, 'base64')
 
-      // Call chunk callback if provided
       if (onChunk) {
         const progress = ((offset + length) / fileSize) * 100
         await onChunk(chunkBuffer, progress)
@@ -48,7 +47,6 @@ const readFileInChunks = async (
       logger.debug(`Read chunk: ${offset}/${fileSize} bytes`)
     } while (offset < fileSize)
 
-    // Combine all chunks
     const fullBuffer = Buffer.concat(chunks)
 
     logger.debug(`File has been read into memory`)

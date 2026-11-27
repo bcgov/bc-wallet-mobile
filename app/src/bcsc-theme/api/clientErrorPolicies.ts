@@ -30,7 +30,7 @@ import { BCSCEndpoints } from './client'
  * NOTE: Use `skipOnErrorHandler` API client option to disable injected error
  * handling for a specific call.
  *
- * @link useEvidenceService.tsx -> cancelVerificationRequest
+ * @see `cancelVerificationRequest` in `useEvidenceService.tsx`
  */
 
 const UNSUPPORTED_OS_TECHNICAL_MESSAGE = 'unsupported os version'
@@ -66,10 +66,6 @@ type ErrorHandlingPolicy = {
   matches: (error: AxiosAppError, context: ErrorMatcherContext) => boolean
   handle: (error: AxiosAppError, context: ErrorHandlerContext) => void
 }
-
-// ----------------------------------------
-// Helper Functions + Alert Maps
-// ----------------------------------------
 
 // HTTP alert map for network and server errors that can occur on multiple endpoints (client metadata fetch, device authorization, token, etc.)
 const _getHTTPAlertMap = (alerts?: AppAlerts) => {
@@ -137,10 +133,7 @@ export const getGlobalAlertMap = (alerts: AppAlerts) => {
   return new Map([...httpAlertMap, ...iasAlertMap])
 }
 
-// ----------------------------------------
-// Error Handling Policies
 // https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574122/Mobile+App+Alerts#MobileAppAlerts-Alertswithouterrorcodes
-// ----------------------------------------
 
 // IAS errors 201–300 — server configuration, registration, terms of use, provider, JSON, network, auth, etc.
 export const iasErrorPolicy: ErrorHandlingPolicy = {
@@ -457,8 +450,6 @@ export const verifyDeviceAssertionErrorPolicy: ErrorHandlingPolicy = {
 
 /**
  * Error policy for expired verify request during app setup (user input error)
- *
- * @returns ErrorHandlingPolicy
  */
 export const expiredAppSetupErrorPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
@@ -488,8 +479,6 @@ export const alreadyVerifiedErrorPolicy: ErrorHandlingPolicy = {
  * account is suspended or deactivated. Show the generic
  * "Problem with Account" modal (Remove Account + Close) instead of failing silently. Suspended
  * and deactivated share the same modal copy but track as distinct analytics events.
- *
- * @returns ErrorHandlingPolicy
  */
 export const digitalServiceCardAccountUnavailableErrorPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
@@ -520,8 +509,6 @@ export const digitalServiceCardAccountUnavailableErrorPolicy: ErrorHandlingPolic
  * means that code is expired or has been superseded server-side. Route the user to the verification
  * session expired modal (which resets the app) instead of the generic error modal, whose
  * "re-open the app" advice cannot renew the code. See issue #4050.
- *
- * @returns ErrorHandlingPolicy
  */
 export const verificationSessionExpiredErrorPolicy: ErrorHandlingPolicy = {
   matches: (_error, context) => {
@@ -564,10 +551,6 @@ export const invalidRegistrationRequestErrorPolicy: ErrorHandlingPolicy = {
     context.alerts.invalidRegistrationRequestAlert(error)
   },
 }
-
-// ----------------------------------------
-// Error Handling Policy Factories
-// ----------------------------------------
 
 // Aggregate of all client error handling policies
 export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [

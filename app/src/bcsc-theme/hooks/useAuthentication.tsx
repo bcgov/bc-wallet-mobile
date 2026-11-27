@@ -23,7 +23,7 @@ import useSecureActions from './useSecureActions'
  * - unlockApp: Handles unlocking the app using the configured authentication method (device auth or PIN)
  * - performDeviceAuth: Prompts for device authentication (biometric or passcode) and completes the unlock
  *
- * @param navigation The navigation prop for navigating between auth screens
+ * @param navigation - The navigation prop for navigating between auth screens
  * @returns An object containing `unlockApp` and `performDeviceAuth`
  */
 export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackParams>) => {
@@ -148,7 +148,6 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
         logger.info(`[Authentication:UnlockApp] PIN unlock, PIN entry locked: ${locked}`)
 
         if (!locked) {
-          // If not locked, navigate to PIN entry screen
           navigation.navigate(BCSCScreens.EnterPIN)
           return
         }

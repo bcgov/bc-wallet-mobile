@@ -52,10 +52,6 @@ public class BcscFileDecryptor implements FileDecryptor {
         }
     }
     
-    /**
-     * Get information about the decryptor state
-     * @return debug information string
-     */
     public String getDebugInfo() {
         return "BcscFileDecryptor{" +
                 "available=" + isAvailable() +

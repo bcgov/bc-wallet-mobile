@@ -35,10 +35,6 @@ const useManageDevicesNavigation = (navigation: HomeProps['navigation']) => {
   }, [apiClient.endpoints.accountDevices, navigation, t])
 }
 
-/**
- * Home screen for >= V4.1.x
- * @returns React element
- */
 const Home: React.FC<HomeProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()

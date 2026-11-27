@@ -207,8 +207,6 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     }
   }, [flowState, callStartTime])
 
-  // when call start time is first set, begin updating the user-facing
-  // display of the call length
   useEffect(() => {
     if (callStartTime) {
       const updateTimer = () => {
@@ -235,7 +233,6 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     return () => fcmService.service.setSuppressed(false)
   }, [fcmService.service])
 
-  // setup volume detection
   useEffect(() => {
     const getInitialVolume = async () => {
       try {
@@ -279,7 +276,6 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     return null
   }, [isInBackground, onMute, videoHidden, systemVolume, t])
 
-  // whenever mute choice changes, update the audio tracks accordingly
   useEffect(() => {
     if (localStream) {
       const audioTracks = localStream.getAudioTracks()
@@ -289,7 +285,6 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     }
   }, [onMute, localStream])
 
-  // whenever hide video choice changes, update the video tracks accordingly
   useEffect(() => {
     if (localStream) {
       const videoTracks = localStream.getVideoTracks()
@@ -315,7 +310,6 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     }
   }, [flowState, startVideoCall])
 
-  // disconnect any active call when unmounting
   useEffect(() => {
     return () => {
       InCallManager.stop()
@@ -329,7 +323,6 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     }
   }, [pauseActivityTracking, resumeActivityTracking])
 
-  // loading / error user-facing state message
   const stateMessage = useMemo(() => {
     switch (flowState) {
       case VideoCallFlowState.UPLOADING_DOCUMENTS:
@@ -354,7 +347,6 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     navigation.navigate(BCSCScreens.StartCall)
   }, [cleanup, navigation])
 
-  // when the user presses the end call button
   const handleEndCall = useCallback(async () => {
     try {
       logger.info('User initiated call end')

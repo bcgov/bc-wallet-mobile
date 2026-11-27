@@ -9,13 +9,6 @@ interface PrivacyPolicyContentProps {
   controls?: React.ReactNode
 }
 
-/**
- * Privacy Policy content that informs users about the app's privacy practices.
- *
- * onLearnMore: function to be called when the Learn More button is pressed.
- *
- * @returns {*} {React.ReactElement} The PrivacyPolicyContent component.
- */
 export const PrivacyPolicyContent: React.FC<PrivacyPolicyContentProps> = ({
   onLearnMore,
   controls,

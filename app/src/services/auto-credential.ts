@@ -45,7 +45,10 @@ export interface AutoCredentialRule {
    * An array of AnonCredsProofRequestRestriction objects that match the proof request
    * to trigger the workflow.  If any of the restrictions match, the rule is triggered.
    *
-   * @example [ { cred_def_id: 'abc' }, { schema_id: 'xyz' } ] // first tries matching cred def, then schema
+   * @example
+   * ```ts
+   * [{ cred_def_id: 'abc' }, { schema_id: 'xyz' }] // first tries matching cred def, then schema
+   * ```
    */
   triggerRestrictions: AnonCredsProofRequestRestriction[]
 
@@ -159,10 +162,6 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
     return true
   }
 
-  // ---------------------------------------------------------------------------
-  // Private — state machine helpers
-  // ---------------------------------------------------------------------------
-
   private startWorkflow(proof: DidCommProofExchangeRecord, rule: AutoCredentialRule): void {
     this._workflowInProgress = true
     this._pendingProofRequest = proof
@@ -252,10 +251,6 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Private — credential check
-  // ---------------------------------------------------------------------------
-
   // Check if all key-value pairs in the trigger match the restriction
   // ie: { cred_def_id: 'abc' } matches { cred_def_id: 'abc', schema_id: 'xyz' }
   // ie: { cred_def_id: 'abc', schema_id: 'xyz' } does NOT match { cred_def_id: 'abc' }
@@ -342,10 +337,6 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
       return true
     }
   }
-
-  // ---------------------------------------------------------------------------
-  // Private — workflow driver
-  // ---------------------------------------------------------------------------
 
   /**
    * Fetch the missing credential:
@@ -465,10 +456,6 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
       this.failWorkflow(CredentialProvisioningEventTypes.FailedRequestCredential, err as Error)
     }
   }
-
-  // ---------------------------------------------------------------------------
-  // Private — event handler
-  // ---------------------------------------------------------------------------
 
   private readonly handleProofStateChanged = async (event: DidCommProofStateChangedEvent): Promise<void> => {
     if (!this.agent) {

@@ -39,12 +39,6 @@ const getRegistrationAlertMap = (alerts: AppAlerts): Partial<Record<AppEventCode
   [AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST]: alerts.invalidRegistrationRequestAlert,
 })
 
-/**
- * Service layer hook for registration api.
- * Business logic related to registration API calls and UI event handling should be implemented here.
- *
- * @returns Registration service
- */
 export const useRegistrationService = () => {
   const { client, isClientReady } = useBCSCApiClientState()
   const registrationApi = useRegistrationApi(client, isClientReady)
@@ -96,7 +90,7 @@ export const useRegistrationService = () => {
    * @param options - Set `suppressTransientAlerts` for automatic (non user-initiated) callers:
    *   transient keychain-unavailable failures are logged but not surfaced as a modal, since
    *   the operation retries on the next app launch
-   * @return Promise resolving to updated registration response data
+   * @returns Promise resolving to updated registration response data
    */
   const updateRegistration = useCallback(
     async (selectedNickname: string | undefined, options?: { suppressTransientAlerts?: boolean }) => {
@@ -151,7 +145,6 @@ export const useRegistrationService = () => {
    * registration then fails, the account has no registration (rather than a client ID the server has
    * deleted) and `ensureRegistered` registers it again.
    *
-   * @returns Promise<void>
    * @throws AppError `ACCOUNT_NOT_FOUND` when there is no native account to hold the registration
    */
   const cycleRegistration = useCallback(async () => {

@@ -6,6 +6,7 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactNativeA11y from 'eslint-plugin-react-native-a11y'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
+import tsdoc from 'eslint-plugin-tsdoc'
 
 // Device registration (#4925): the client ID and its registration access token are saved together and
 // cleared together by one owner, so a save or a clear anywhere else can leave the two not matching.
@@ -74,6 +75,11 @@ export default [
       '@typescript-eslint/ban-ts-comment': 'warn',
       '@typescript-eslint/no-unused-expressions': ['error', { allowShortCircuit: true }],
     },
+  },
+  {
+    files: ['**/*.{ts,tsx}'],
+    plugins: { tsdoc },
+    rules: { 'tsdoc/syntax': 'error' },
   },
   {
     ignores: [

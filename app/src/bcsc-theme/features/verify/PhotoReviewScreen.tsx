@@ -27,7 +27,6 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
 
   const onPressUse = async () => {
     try {
-      // Wrap getPhotoMetadata with alert
       const getPhotoMetadataWithAlert = withAlert(getPhotoMetadata, failedToReadFromLocalStorageAlert)
       const photoMetadata = await getPhotoMetadataWithAlert(photoPath, logger)
 

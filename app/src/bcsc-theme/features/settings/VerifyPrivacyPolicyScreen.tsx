@@ -8,9 +8,6 @@ type VerifyPrivacyPolicyScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VerifyPrivacyPolicy>
 }
 
-/**
- * Privacy Policy screen for the Verify stack.
- */
 export const VerifyPrivacyPolicyScreen = ({ navigation }: VerifyPrivacyPolicyScreenProps) => {
   const { t } = useTranslation()
 

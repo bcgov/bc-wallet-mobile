@@ -10,28 +10,16 @@ import {
 } from '@react-native-firebase/messaging'
 import { AppState } from 'react-native'
 
-// ============================================================================
-// Status Notification Types
-// ============================================================================
-
 export type StatusNotification = {
   bcsc_status_notification: string // JSON string of BCSCStatusNotificationClaims
   message: string
   title: string
 }
 
-// ============================================================================
-// Basic Notification Types
-// ============================================================================
-
 export type BasicNotification = {
   title: string
   body: string
 }
-
-// ============================================================================
-// Challenge Notification Types
-// ============================================================================
 
 export type ChallengeNotification = {
   /** The raw JWT string to be decoded */
@@ -53,10 +41,6 @@ export type ChallengeResult = {
   claims: BCSCChallengeClaims
   verified: boolean
 }
-
-// ============================================================================
-// Discriminated Union for FCM Messages
-// ============================================================================
 
 type FcmMessageBase = {
   rawMessage: FirebaseMessagingTypes.RemoteMessage
@@ -114,12 +98,10 @@ export class FcmService {
     if (!this.initialized) {
       this.initialized = true
 
-      // Handle foreground messages
       this.foregroundSubscription = onMessage(messagingInstance, (remoteMessage) => {
         this.emit(remoteMessage, { source: 'foreground' })
       })
 
-      // Handle when user taps notification while app is in background
       this.notificationOpenedSubscription = onNotificationOpenedApp(messagingInstance, (remoteMessage) => {
         this.lastOpenedMessageId = remoteMessage.messageId
         this.emit(remoteMessage)
@@ -206,7 +188,6 @@ export class FcmService {
     const data = remoteMessage.data
     const notification = remoteMessage.notification
 
-    // Check for BCSC challenge request
     if (data?.[FcmService.BCSC_CHALLENGE_REQUEST]) {
       return {
         rawMessage: remoteMessage,
@@ -217,7 +198,6 @@ export class FcmService {
       }
     }
 
-    // Check for BCSC status notification
     if (data?.[FcmService.BCSC_STATUS_NOTIFICATION]) {
       return {
         rawMessage: remoteMessage,
@@ -242,7 +222,6 @@ export class FcmService {
       }
     }
 
-    // Unknown message type
     return {
       rawMessage: remoteMessage,
       type: 'unknown',

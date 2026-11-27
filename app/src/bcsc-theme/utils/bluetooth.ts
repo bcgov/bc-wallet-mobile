@@ -4,10 +4,11 @@ import { throwNativeBcscError } from './native-error-map'
 
 /**
  * Checks if the device requires Bluetooth permission (Android API 31+).
- * NOTE: This command can be used to reset the bluetooth permissions for testing purposes: `
- *   adb shell pm revoke ca.bc.gov.id.servicescard.dev android.permission.BLUETOOTH_CONNECT
- *   adb shell pm clear-permission-flags ca.bc.gov.id.servicescard.dev android.permission.BLUETOOTH_CONNECT user-set user-fixed
- *   `
+ * NOTE: These commands reset the bluetooth permissions for testing:
+ * ```sh
+ * adb shell pm revoke ca.bc.gov.id.servicescard.dev android.permission.BLUETOOTH_CONNECT
+ * adb shell pm clear-permission-flags ca.bc.gov.id.servicescard.dev android.permission.BLUETOOTH_CONNECT user-set user-fixed
+ * ```
  * @returns `true` if the device requires Bluetooth permission, `false` otherwise.
  * @throws A mapped native error if Bluetooth audio detection fails; callers decide whether that is critical.
  */

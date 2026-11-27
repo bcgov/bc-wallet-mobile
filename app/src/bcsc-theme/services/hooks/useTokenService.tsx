@@ -22,12 +22,6 @@ const getIdTokenAlertMap = (alerts: AppAlerts): Partial<Record<AppEventCode, (er
   [AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL]: alerts.tokenUnexpectedlyNullAlert,
 })
 
-/**
- * Service layer hook for token api.
- * Business logic related to token API calls and UI event handling should be implemented here.
- *
- * @returns Token API service with UI event handling.
- */
 export const useTokenService = () => {
   const { client } = useBCSCApiClientState()
   const tokenApi = useTokenApi(client as BCSCApiClient)

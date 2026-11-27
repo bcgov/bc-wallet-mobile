@@ -19,11 +19,6 @@ export interface ChangeSecurityContentProps {
   onPINPress: () => void
 }
 
-/**
- * Shared ChangeSecurityContent component that can be used across different navigation stacks.
- * Allows users to toggle between PIN and biometric/device authentication.
- * Uses the shared SecurityMethodSelector component.
- */
 export const ChangeSecurityContent = ({ onDeviceAuthSuccess, onPINPress }: ChangeSecurityContentProps) => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])

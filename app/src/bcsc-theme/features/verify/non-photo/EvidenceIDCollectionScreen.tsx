@@ -48,12 +48,10 @@ type EvidenceIDCollectionScreenProps = {
 }
 
 /**
- * Screen for collecting ID formState information from the user.
- *
  * Note: Depending on which card type is selected, additional formState fields may be required. ie: First name, last name, birth date, etc.
  *
- * @param {EvidenceIDCollectionScreenProps} props - The props for the screen, including navigation and route parameters.
- * @returns {*} {React.ReactElement} The rendered EvidenceIDCollectionScreen component.
+ * @param props - The props for the screen, including navigation and route parameters.
+ * @returns The rendered EvidenceIDCollectionScreen component.
  */
 const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionScreenProps) => {
   const [store] = useStore<BCState>()
@@ -97,30 +95,16 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   })
   const [formErrors, setFormErrors] = useState<EvidenceCollectionFormErrors>({})
 
-  /**
-   * Handles changes to the form fields.
-   *
-   * @param {keyof EvidenceCollectionFormState} field - The field being updated.
-   * @param {string} value - The new value for the field.
-   * @returns {*} {void}
-   */
   const handleChange = (field: keyof EvidenceCollectionFormState, value: string) => {
     setFormState((prev) => ({ ...prev, [field]: value }))
-    // clear field-specific error on change
     setFormErrors((prev) => ({ ...prev, [field]: undefined }))
   }
 
-  /**
-   * Handles the continue button press.
-   *
-   * @returns {*} {Promise<void>}
-   */
   const handleOnContinue = async () => {
     const documentNumber = normalizeForSubmission(formState.documentNumber)
 
     try {
       setIsSubmitting(true)
-      // clear previous validation errors
       setFormErrors({})
 
       const evidenceFormErrors = validateEvidence({
@@ -134,7 +118,6 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
           logger.error(`Invalid regex pattern: ${cardType.document_reference_input_mask}`, error),
       })
 
-      // if there are validation errors, display them and do not proceed
       if (Object.keys(evidenceFormErrors).length > 0) {
         setFormErrors(evidenceFormErrors)
         focusFirstInvalidField(evidenceFormErrors)

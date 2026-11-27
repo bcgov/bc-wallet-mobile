@@ -32,7 +32,6 @@ export type {
  * Access via `error.code` on caught native module errors.
  */
 export const BcscNativeErrorCodes = {
-  // --- DCR error codes (E_120_* series) ---
   /** toJSON method failed while serializing dynamic client registration body (error 120-1) */
   TOJSON_METHOD_FAILURE: 'E_120_TOJSON_METHOD_FAILURE',
   /** toJSONString method failed while serializing device info JWT (error 120-2) */
@@ -349,7 +348,7 @@ export const createNewKeyPair = (): Promise<KeyPublicInfo> => {
 
 /**
  * Retrieves a key pair (public and optionally private) for a given label.
- * @param label The identifier for the key pair.
+ * @param label - The identifier for the key pair.
  * @returns A promise that resolves to a KeyPair object.
  */
 export const getKeyPair = (label: string): Promise<KeyPair> => {
@@ -370,7 +369,7 @@ interface NativeTokenResponse {
 
 /**
  * Retrieves a token of a specified type.
- * @param tokenType The type of token to retrieve (e.g., Access, Refresh, Registration).
+ * @param tokenType - The type of token to retrieve (e.g., Access, Refresh, Registration).
  * @returns A promise that resolves to a TokenInfo object if found, otherwise null.
  */
 export const getToken = async (tokenType: TokenType): Promise<TokenInfo | null> => {
@@ -391,7 +390,7 @@ export const getToken = async (tokenType: TokenType): Promise<TokenInfo | null> 
 /**
  * Wraps getToken() to return both token and optional diagnostic information
  *
- * @param tokenType The type of token to retrieve (e.g., Access, Refresh, Registration).
+ * @param tokenType - The type of token to retrieve (e.g., Access, Refresh, Registration).
  */
 export const getTokenWithDiagnostics = async (
   tokenType: TokenType
@@ -415,9 +414,9 @@ export const getTokenWithDiagnostics = async (
  *
  * Use it for the access and refresh tokens. The registration access token is saved with its client ID
  * by {@link setRegistration}, so the two cannot stop matching.
- * @param tokenType The type of token (Access, Refresh)
- * @param token The token string to store
- * @param expiry Optional Unix timestamp in seconds when token expires
+ * @param tokenType - The type of token (Access, Refresh)
+ * @param token - The token string to store
+ * @param expiry - Optional Unix timestamp in seconds when token expires
  * @returns A promise that resolves to true if saved successfully
  */
 export const setToken = async (tokenType: TokenType, token: string, expiry?: number): Promise<boolean> => {
@@ -429,7 +428,7 @@ export const setToken = async (tokenType: TokenType, token: string, expiry?: num
  *
  * Use it for the access and refresh tokens. The registration access token is removed with its client ID
  * by {@link clearRegistration}.
- * @param tokenType The type of token to delete (Access, Refresh)
+ * @param tokenType - The type of token to delete (Access, Refresh)
  * @returns A promise that resolves to true if deleted successfully
  */
 export const deleteToken = async (tokenType: TokenType): Promise<boolean> => {
@@ -438,7 +437,7 @@ export const deleteToken = async (tokenType: TokenType): Promise<boolean> => {
 
 /**
  * Sets the issuer in the file system for later reference.
- * @param issuer The issuer string to set.
+ * @param issuer - The issuer string to set.
  * @returns A promise that resolves to true if the issuer was set successfully.
  */
 export const setIssuer = (issuer: string): Promise<boolean> => {
@@ -458,6 +457,7 @@ export const getIssuer = (): Promise<string | null> => {
  * Useful for diagnosing v3 vs v4 storage layouts.
  * Example code to place in App.tsx:
  *
+ * ```ts
  * useEffect(() => {
  *   getNativeFilesScan()
  *     .then((scan) => {
@@ -474,6 +474,7 @@ export const getIssuer = (): Promise<string | null> => {
  *       logger.error(`[Native File Scan] Error: ${errorMsg}`)
  *     })
  * }, [logger])
+ * ```
  */
 export const getNativeFilesScan = (): Promise<NativeFilesScan> => {
   return BcscCore.getNativeFilesScan();
@@ -485,7 +486,7 @@ export const getNativeFilesScan = (): Promise<NativeFilesScan> => {
  * Never changes the client ID: a new account has none, and an existing account keeps the one it has.
  * The client ID belongs to the device registration, which only {@link setRegistration} and
  * {@link clearRegistration} change.
- * @param account The account fields to save (without id, which is generated for a new account).
+ * @param account - The account fields to save (without id, which is generated for a new account).
  * @returns A promise that resolves when the account has been successfully set.
  */
 export const setAccount = (account: NativeAccountWithoutId): Promise<void> => {
@@ -501,9 +502,9 @@ export const setAccount = (account: NativeAccountWithoutId): Promise<void> => {
  * when there is no account to register.
  *
  * The app calls this through its device registration owner only (`services/device-registration`).
- * @param clientID The client ID the server issued. Never empty.
- * @param issuer The issuer the device is registered with. Never empty.
- * @param registrationAccessToken The token that manages this registration; null leaves the stored token as it is.
+ * @param clientID - The client ID the server issued. Never empty.
+ * @param issuer - The issuer the device is registered with. Never empty.
+ * @param registrationAccessToken - The token that manages this registration; null leaves the stored token as it is.
  */
 export const setRegistration = (
   clientID: string,
@@ -548,7 +549,7 @@ export type RegisteredNativeAccount = NativeAccount & { readonly clientID: strin
 
 /**
  * Checks if an account is registered by verifying the presence of a client ID.
- * @param account The Account object to check.
+ * @param account - The Account object to check.
  * @returns True if an account is registered, false otherwise.
  */
 export const isAccountRegistered = (account: NativeAccount | null): account is RegisteredNativeAccount => {
@@ -571,9 +572,9 @@ export const getDeviceId = async (): Promise<string> => {
  * This involves creating a JWT, signing it with the latest private key,
  * and then formatting it along with the provided refresh token and other
  * necessary OAuth parameters.
- * @param issuer The issuer URL for the OAuth provider.
- * @param clientID The client ID for the OAuth application.
- * @param refreshToken The refresh token to include in the request.
+ * @param issuer - The issuer URL for the OAuth provider.
+ * @param clientID - The client ID for the OAuth application.
+ * @param refreshToken - The refresh token to include in the request.
  * @returns A promise that resolves to a string containing the full
  *          refresh token request body, or null if an error occurs.
  */
@@ -600,12 +601,12 @@ export enum ChallengeSource {
 
 /**
  * Signs a given pairing code.
- * @param code The pairing code string to sign.
- * @param issuer The issuer URL for the OAuth provider.
- * @param clientID The client ID for the OAuth application.
- * @param fcmDeviceToken The FCM device token for push notifications.
- * @param deviceToken The APNS device token (iOS only).
- * @param challengeSource How the login was initiated; sent as the assertion's `challenge_source` claim.
+ * @param code - The pairing code string to sign.
+ * @param issuer - The issuer URL for the OAuth provider.
+ * @param clientID - The client ID for the OAuth application.
+ * @param fcmDeviceToken - The FCM device token for push notifications.
+ * @param deviceToken - The APNS device token (iOS only).
+ * @param challengeSource - How the login was initiated; sent as the assertion's `challenge_source` claim.
  * @returns A promise that resolves to the signed assertion JWT, or null if an error occurs.
  */
 export const signPairingCode = async (
@@ -621,10 +622,10 @@ export const signPairingCode = async (
 
 /**
  * Creates the dynamic client registration body for OAuth client registration.
- * @param fcmDeviceToken The FCM device token for push notifications.
- * @param deviceToken Optional device token (APNS token for iOS).
- * @param attestation Optional attestation data (Play Integrity token for Android, App Store receipt for iOS).
- * @param nickname Optional nickname to use for client_name. If not provided, falls back to device name.
+ * @param fcmDeviceToken - The FCM device token for push notifications.
+ * @param deviceToken - Optional device token (APNS token for iOS).
+ * @param attestation - Optional attestation data (Play Integrity token for Android, App Store receipt for iOS).
+ * @param nickname - Optional nickname to use for client_name. If not provided, falls back to device name.
  * @returns A promise that resolves to the registration body string or null if an error occurs.
  */
 export const getDynamicClientRegistrationBody = async (
@@ -640,10 +641,10 @@ export const getDynamicClientRegistrationBody = async (
  * Constructs the body for a device code request.
  * This involves creating a JWT, signing it with the latest private key,
  * and constructing the full OAuth device code request body.
- * @param deviceCode The device code received from the authorization server.
- * @param clientId The client ID for the OAuth application.
- * @param issuer The issuer URL for the OAuth provider.
- * @param confirmationCode The confirmation code to include in the request.
+ * @param deviceCode - The device code received from the authorization server.
+ * @param clientId - The client ID for the OAuth application.
+ * @param issuer - The issuer URL for the OAuth provider.
+ * @param confirmationCode - The confirmation code to include in the request.
  * @returns A promise that resolves to a string containing the full
  *          device code request body, or null if an error occurs.
  */
@@ -672,8 +673,7 @@ export const decodeLoginChallenge = async (jwt: string, key?: JWK): Promise<Logi
 /**
  * Creates a device signed JWT with the provided claims.
  *
- * @param {JWTClaims} claims - An object containing the JWT claims
- * @returns {*} {Promise<string>}
+ * @param claims - An object containing the JWT claims
  */
 export const createDeviceSignedJWT = async (claims: JWTClaims): Promise<string> => {
   return BcscCore.createSignedJWT(claims);
@@ -693,7 +693,7 @@ export const hashBase64 = async (base64: string): Promise<string> => {
  * iOS: VisionCamera v5 records QuickTime even when asked for MP4, which IAS rejects. Android: the
  * recording is already MP4, so the same path is returned unchanged.
  *
- * @param path Path (or file:// URI) of the recorded video
+ * @param path - Path (or file:// URI) of the recorded video
  * @returns Path of the MP4 file, in the same form (path or file:// URI) as the input
  * @throws If the video can't be read or exported
  */
@@ -718,13 +718,13 @@ export const activateAudioSessionForRecording = async (): Promise<void> => {
 /**
  * Creates a quick login JWT assertion matching the format used in ias-ios app.
  * This creates a signed JWT with device info claims and access token nonce, following QuickLoginProtocol pattern.
- * @param accessToken The access token to include in the nonce
- * @param clientId The client ID (used for both iss claim)
- * @param issuer The issuer/audience for the JWT
- * @param clientRefId The client reference ID (used for client_ref_id claim)
- * @param key The JWK public key object for encryption
- * @param fcmDeviceToken The FCM device token for push notifications
- * @param deviceToken The device token (APNS token on iOS, optional)
+ * @param accessToken - The access token to include in the nonce
+ * @param clientId - The client ID (used for both iss claim)
+ * @param issuer - The issuer/audience for the JWT
+ * @param clientRefId - The client reference ID (used for client_ref_id claim)
+ * @param key - The JWK public key object for encryption
+ * @param fcmDeviceToken - The FCM device token for push notifications
+ * @param deviceToken - The device token (APNS token on iOS, optional)
  * @returns A promise that resolves to the signed and encrypted JWT string
  */
 export const createQuickLoginJWT = async (
@@ -755,15 +755,13 @@ export const clearAllKeychainData = async (): Promise<void> => {
   return BcscCore.clearAllKeychainData();
 };
 
-// MARK: - Authentication Methods
-
 // Export authentication types
 export { BiometricType } from './NativeBcscCore';
 export type { DeviceSecurityUnlockResult, PINSetupResult, PINVerificationResult } from './NativeBcscCore';
 
 /**
  * Sets a user-created PIN for the current account.
- * @param pin The PIN to set (should be validated before calling)
+ * @param pin - The PIN to set (should be validated before calling)
  * @returns A promise that resolves to setup result with success status and wallet key hash
  */
 export const setPIN = async (pin: string): Promise<import('./NativeBcscCore').PINSetupResult> => {
@@ -773,7 +771,7 @@ export const setPIN = async (pin: string): Promise<import('./NativeBcscCore').PI
 /**
  * Verifies a PIN for the current account. Only checks the PIN: wrong attempts are counted, and
  * lockouts enforced, by the caller.
- * @param pin The PIN to verify
+ * @param pin - The PIN to verify
  * @returns A promise that resolves to verification result with success status and wallet key hash on success
  */
 export const verifyPIN = async (pin: string): Promise<import('./NativeBcscCore').PINVerificationResult> => {
@@ -798,7 +796,7 @@ export const hasPINSet = async (): Promise<boolean> => {
 
 /**
  * Performs device authentication (biometric or passcode).
- * @param reason Optional reason string for the authentication prompt
+ * @param reason - Optional reason string for the authentication prompt
  * @returns A promise that resolves to true on successful authentication
  */
 export const performDeviceAuthentication = async (reason?: string): Promise<boolean> => {
@@ -831,7 +829,7 @@ export const canPerformBiometricAuthentication = async (): Promise<boolean> => {
 
 /**
  * Sets the security method for the current account.
- * @param securityMethod The security method to set
+ * @param securityMethod - The security method to set
  * @returns A promise that resolves to true on success
  */
 export const setAccountSecurityMethod = async (
@@ -853,8 +851,6 @@ export const getAccountSecurityMethod = async (): Promise<import('./NativeBcscCo
  * Gets the best available account security method based on device capabilities.
  * @returns A promise that resolves to the recommended security method
  */
-
-// MARK: - Device Security Methods (for biometric/device authentication)
 
 /**
  * Sets up device security by generating a random PIN internally,
@@ -882,7 +878,7 @@ export const setupDeviceSecurity = async (): Promise<import('./NativeBcscCore').
  * 1. performDeviceAuthentication()
  * 2. getPINHash()
  *
- * @param reason Optional reason string for the biometric prompt
+ * @param reason - Optional reason string for the biometric prompt
  * @returns A promise that resolves to unlock result containing:
  *   - success: Whether unlock succeeded; false ONLY when the user deliberately cancelled the prompt
  *   - walletKey: The PBKDF2-derived key (base64 encoded), only present on success
@@ -906,8 +902,6 @@ export const unlockWithDeviceSecurity = async (
 export const isPINAutoGenerated = async (): Promise<boolean> => {
   return BcscCore.isPINAutoGenerated();
 };
-
-// MARK: - Authorization Request Storage Methods
 
 /**
  * Gets the stored authorization request data.
@@ -935,7 +929,7 @@ export const getAuthorizationRequest = async (): Promise<NativeAuthorizationRequ
  * or encrypted storage (Android). The storage location and format is compatible
  * with the v3 native app for migration purposes.
  *
- * @param data The authorization request data to save
+ * @param data - The authorization request data to save
  * @returns A promise that resolves to true if saved successfully
  */
 export const setAuthorizationRequest = async (data: NativeAuthorizationRequest): Promise<boolean> => {
@@ -950,8 +944,6 @@ export const setAuthorizationRequest = async (data: NativeAuthorizationRequest):
 export const deleteAuthorizationRequest = async (): Promise<boolean> => {
   return BcscCore.deleteAuthorizationRequest();
 };
-
-// MARK: - Secure State Types and Hydration
 
 /**
  * Address information for user metadata.
@@ -973,8 +965,6 @@ export interface SecureStateUserMetadata {
   middleNames?: string;
   address?: SecureStateAddress;
 }
-
-// MARK: - Account Flags Storage
 
 /**
  * Known account flag keys for type safety.
@@ -1057,7 +1047,7 @@ export const getAccountFlags = async (): Promise<AccountFlags> => {
  *
  * This enables rollback to v3 while preserving user's email verification state.
  *
- * @param flags The flags to set (will be merged with existing flags)
+ * @param flags - The flags to set (will be merged with existing flags)
  * @returns A promise that resolves to true if saved successfully
  */
 export const setAccountFlags = async (flags: AccountFlags): Promise<boolean> => {
@@ -1072,10 +1062,6 @@ export const setAccountFlags = async (flags: AccountFlags): Promise<boolean> => 
 export const deleteAccountFlags = async (): Promise<boolean> => {
   return BcscCore.deleteAccountFlags();
 };
-
-// ============================================================================
-// Evidence Metadata Storage Methods
-// ============================================================================
 
 /**
  * Evidence image side information.
@@ -1172,7 +1158,7 @@ export const getEvidence = async (): Promise<EvidenceMetadata[]> => {
 /**
  * Sets evidence metadata in native storage.
  *
- * @param evidence The evidence metadata array to save
+ * @param evidence - The evidence metadata array to save
  * @returns A promise that resolves to true if saved successfully
  */
 export const setEvidence = async (evidence: EvidenceMetadata[]): Promise<boolean> => {
@@ -1190,11 +1176,11 @@ export const deleteEvidence = async (): Promise<boolean> => {
 
 /**
  * Saves a photo to permanent storage.
- * Android: Writes JPEG to {filesDir}/documents/{filename}
- * iOS: Writes JPEG to Application Support/documents/{filename}
+ * Android: Writes JPEG to `{filesDir}/documents/{filename}`
+ * iOS: Writes JPEG to Application Support/documents/`{filename}`
  *
- * @param base64Data Base64-encoded photo data
- * @param filename Target filename
+ * @param base64Data - Base64-encoded photo data
+ * @param filename - Target filename
  * @returns The absolute path to the saved file
  */
 export const saveEvidencePhoto = async (base64Data: string, filename: string): Promise<string> => {
@@ -1291,10 +1277,6 @@ export const isBluetoothAudioConnected = async (): Promise<boolean | null> => {
   return BcscCore.isBluetoothAudioConnected();
 };
 
-// ============================================================================
-// Saved Services (Client Metadata) Storage Methods
-// ============================================================================
-
 /**
  * Gets saved services from native storage.
  *
@@ -1317,7 +1299,7 @@ export const getSavedServices = async (): Promise<NativeSavedService[]> => {
  * - iOS: client_metadata file in Application Support (NSKeyedArchiver)
  * - Android: Encrypted clientmetadata file
  *
- * @param services The saved service metadata array to write
+ * @param services - The saved service metadata array to write
  * @returns A promise that resolves to true if saved successfully
  */
 export const setSavedServices = async (services: NativeSavedService[]): Promise<boolean> => {

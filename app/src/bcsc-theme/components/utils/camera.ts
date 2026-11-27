@@ -2,8 +2,6 @@ import { Platform } from 'react-native'
 import { CameraDevice } from 'react-native-vision-camera'
 import { Barcode, BarcodeFormat } from 'react-native-vision-camera-barcode-scanner'
 
-// ─── Shared Types ─────────────────────────────────────────────────────────────
-
 /** Axis-aligned bounding rectangle */
 export type Rect = { x: number; y: number; width: number; height: number }
 
@@ -65,14 +63,6 @@ export interface ScanZone {
 /** Collective scan state: scanning → aligned → locked */
 export type ScanState = 'scanning' | 'aligned' | 'locked'
 
-// ─── Pure Utility Functions ───────────────────────────────────────────────────
-
-/**
- * Calculate barcode orientation from its corner points.
- *
- * @param corners Corner points of the detected barcode
- * @returns 'horizontal' if wider than tall, 'vertical' otherwise
- */
 export const calculateBarcodeOrientation = (corners?: { x: number; y: number }[]): 'horizontal' | 'vertical' => {
   if (!corners || corners.length < 2) {
     return 'horizontal'
@@ -85,9 +75,9 @@ export const calculateBarcodeOrientation = (corners?: { x: number; y: number }[]
 /**
  * Clamp a zoom level to the device's supported min/max range.
  *
- * @param target Requested zoom level
- * @param min Device minimum zoom (e.g. device.minZoom ?? 1)
- * @param max Device maximum zoom (e.g. device.maxZoom ?? 10)
+ * @param target - Requested zoom level
+ * @param min - Device minimum zoom (e.g. device.minZoom ?? 1)
+ * @param max - Device maximum zoom (e.g. device.maxZoom ?? 10)
  * @returns Clamped zoom value within [min, max]
  */
 export const clampZoom = (target: number, min: number, max: number): number => Math.max(min, Math.min(target, max))
@@ -108,12 +98,12 @@ export const clampZoom = (target: number, min: number, max: number): number => M
  * aspect ratio, center-cropping any overflow. We use Math.max(scaleX, scaleY) for
  * the uniform scale and compute centering offsets for the cropped dimension.
  *
- * @param frame Code bounding box in scanner-frame coordinates
- * @param cameraFrameWidth Width of the scanner output's `currentResolution`
- * @param cameraFrameHeight Height of the scanner output's `currentResolution`
- * @param containerWidth Width of the camera preview container in pixels
- * @param containerHeight Height of the camera preview container in pixels
- * @param windowDimensions Current window dimensions, used to detect device orientation
+ * @param frame - Code bounding box in scanner-frame coordinates
+ * @param cameraFrameWidth - Width of the scanner output's `currentResolution`
+ * @param cameraFrameHeight - Height of the scanner output's `currentResolution`
+ * @param containerWidth - Width of the camera preview container in pixels
+ * @param containerHeight - Height of the camera preview container in pixels
+ * @param windowDimensions - Current window dimensions, used to detect device orientation
  * @returns Bounding box mapped to container coordinate space
  */
 export const transformBarcodeCoordinates = (
@@ -187,12 +177,12 @@ export const transformBarcodeCoordinates = (
  *
  * Uses a box-in-zone check, with proportional expansion by `marginFactor` on each side.
  *
- * @param codePosition Detected code's position in container coordinates
- * @param codeType Optional barcode type for type-aware zone matching
- * @param containerSize Dimensions of the camera preview container (null → returns false)
- * @param scanZones Pre-defined scan zones with normalized (0–1) coordinates
- * @param scanZoneBounds Fallback default scan zone in absolute container coordinates
- * @param marginFactor Proportional expansion of zone bounds for alignment tolerance (default 0)
+ * @param codePosition - Detected code's position in container coordinates
+ * @param codeType - Optional barcode type for type-aware zone matching
+ * @param containerSize - Dimensions of the camera preview container (null → returns false)
+ * @param scanZones - Pre-defined scan zones with normalized (0–1) coordinates
+ * @param scanZoneBounds - Fallback default scan zone in absolute container coordinates
+ * @param marginFactor - Proportional expansion of zone bounds for alignment tolerance (default 0)
  * @returns true if the code box falls within any matching scan zone (± margin)
  */
 export const isCodeAlignedWithZones = (
@@ -260,8 +250,8 @@ export const isCodeAlignedWithZones = (
  * code (see `enhanceSingleCode`) but only drives focus-cycle prioritisation and
  * the (purely visual) scan zone outline colour — never whether a scan counts.
  *
- * @param codes Enhanced codes from the current scan frame
- * @param options Thresholds controlling state transitions
+ * @param codes - Enhanced codes from the current scan frame
+ * @param options - Thresholds controlling state transitions
  * @returns The new scan state and the qualifying codes that drove the transition
  */
 export const determineScanState = (
@@ -325,10 +315,10 @@ export type AccumulatedCode = { code: EnhancedCode; timestamp: number }
  * no-longer-visible barcode into the lock is precisely the point. A correct
  * card-identity-aware invalidation is deferred as out of scope.
  *
- * @param currentFrameCodes Qualifying codes from the frame that triggered the lock
- * @param accumulated Map of recently-validated codes, keyed by `${type}-${value}`
- * @param windowMs Max age (ms) for an accumulated entry to still be eligible
- * @param now Current time in ms (injectable for tests; defaults to `Date.now()`)
+ * @param currentFrameCodes - Qualifying codes from the frame that triggered the lock
+ * @param accumulated - Map of recently-validated codes, keyed by `${type}-${value}`
+ * @param windowMs - Max age (ms) for an accumulated entry to still be eligible
+ * @param now - Current time in ms (injectable for tests; defaults to `Date.now()`)
  * @returns Current-frame codes plus any still-fresh, non-duplicate accumulated codes, extras first
  */
 export const mergeLockedCodesWithAccumulated = (
@@ -372,8 +362,8 @@ const errorMessage = (error: unknown) => (error instanceof Error ? error.message
  * Android reports only critical CameraX errors through `onError` (recoverable ones arrive as
  * interruptions), so every error stays fatal there.
  *
- * @param error The error passed to the Camera `onError` callback
- * @param platform Platform the app is running on (injectable for tests)
+ * @param error - The error passed to the Camera `onError` callback
+ * @param platform - Platform the app is running on (injectable for tests)
  * @returns true if the error should be given a chance to recover before failing over
  */
 export const isRecoverableCameraRuntimeError = (error: unknown, platform: string = Platform.OS): boolean =>
@@ -383,7 +373,7 @@ export const isRecoverableCameraRuntimeError = (error: unknown, platform: string
  * Whether a photo capture failed only because the camera wasn't running at that moment (stopped,
  * interrupted or restarting), so the user can simply try again.
  *
- * @param error The error thrown by the photo capture
+ * @param error - The error thrown by the photo capture
  * @returns true if the capture can be retried once the camera is running again
  */
 export const isCameraNotReadyCaptureError = (error: unknown): boolean => {
@@ -396,7 +386,7 @@ export const isCameraNotReadyCaptureError = (error: unknown): boolean => {
  * Get camera metadata including the selected device and format, with deduplicated formats.
  * Mostly used for logging and debugging purposes.
  *
- * @param device The CameraDevice to get metadata for
+ * @param device - The CameraDevice to get metadata for
  * @returns An object containing the selected device and format, with deduplicated formats
  */
 export const getCameraMetadata = (device?: CameraDevice) => {

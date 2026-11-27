@@ -10,11 +10,6 @@ interface TermsOfUseScreenProps {
   navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingTermsOfUse>
 }
 
-/**
- * Terms of Use screen component that presents the application's terms of use to the user.
- *
- * @returns {*} {React.ReactElement} The TermsOfUseScreen component.
- */
 export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.ReactElement => {
   const [, dispatch] = useStore<BCState>()
 

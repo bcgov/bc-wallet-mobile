@@ -19,21 +19,12 @@ const ALLOWED_QR_SCHEMES = [
 ]
 
 type ToErrorModalReturn = {
-  /**
-   * The error that occurred during the QR code handling process.
-   */
   error: AppError
-  /**
-   * The title to display in the error modal.
-   */
   title: string
-  /**
-   * The description/message to display in the error modal.
-   */
   description: string
   /**
    * Indicates whether the error modal should include a report button for sending error details to support.
-   * @default true
+   * @defaultValue true
    */
   enableReport?: boolean
 }
@@ -53,11 +44,6 @@ export type QRCodeStrategy = {
   toErrorModal: (error: unknown) => ToErrorModalReturn | null // Return null to suppress the modal. ie: already handled.
 }
 
-/**
- * Custom hook to handle QR code scanning with multiple strategies.
- * @param strategies - An array of QRCodeStrategy objects that define how to handle different QR code formats.
- * @returns An object containing the scan handling functions and state.
- */
 export const useQRScanner = (strategies: QRCodeStrategy[]) => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])

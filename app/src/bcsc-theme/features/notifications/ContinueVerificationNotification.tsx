@@ -3,11 +3,6 @@ import { useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import NotificationActionCard from './NotificationActionCard'
 
-/**
- * ContinueVerificationNotification is a component that displays a notification card prompting the user to continue the verification process for their BCSC account.
- *
- * @returns React.Element - The rendered ContinueVerificationNotification component.
- */
 const ContinueVerificationNotification = () => {
   const { t } = useTranslation()
   const { ColorPalette } = useTheme()

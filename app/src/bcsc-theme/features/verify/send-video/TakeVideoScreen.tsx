@@ -346,7 +346,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
     try {
       await startRecordingVideo({
         onRecordingError: (error) => {
-          stopTimer() // Stop timer on error
+          stopTimer()
           recordingAttemptActiveRef.current = false
 
           if (abandonedRef.current) {
@@ -364,7 +364,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
         },
         onRecordingFinished: async (video) => {
           logger.info(`Recording finished, duration: ${video.duration}`)
-          stopTimer() // Stop timer when manually stopping recording
+          stopTimer()
           recordingAttemptActiveRef.current = false
           setPrompt('')
 

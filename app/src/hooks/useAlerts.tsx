@@ -63,8 +63,6 @@ export const useAlerts = (navigationProp?: NavigationProp<any>) => {
   const defaultNavigation = useNavigation<NavigationProp<any>>()
   const navigation = navigationProp ?? defaultNavigation
 
-  // HELPER FUNCTIONS
-
   const _createBasicErrorModal = useCallback(
     (event: AppEventCode, alertKey: string, params?: Record<string, unknown>) => {
       return (error?: AppError | unknown) => {
@@ -413,7 +411,6 @@ export const useAlerts = (navigationProp?: NavigationProp<any>) => {
     () =>
       // prettier-ignore
       ({
-      // ALERTS
       clockSkewAlert,
       appUpdateRequiredAlert,
       setupExpiredAlert,
@@ -424,7 +421,6 @@ export const useAlerts = (navigationProp?: NavigationProp<any>) => {
       loginRequestExpiredAlert,
       forgetPairingsAlert: _createBasicAlert(AppEventCode.FORGET_ALL_PAIRINGS, 'ForgetPairings'), // Informative success alert
 
-      // ERROR MODALS
       unknownErrorModal,
       factoryResetAlert: factoryResetErrorModal,
       problemWithAppAlert: _createBasicErrorModal(AppEventCode.GENERAL, 'SomethingWentWrong'),
@@ -530,7 +526,6 @@ export const useAlerts = (navigationProp?: NavigationProp<any>) => {
  * Falls back to a generic unknown error modal if not recognized.
  * @param error - The error to handle.
  * @param alerts - The AppAlerts object containing alert functions.
- * @returns void
  */
 export function showErrorAlert(error: unknown, alerts: AppAlerts) {
   const alert = isAppError(error) && getGlobalAlertMap(alerts).get(error.appEvent)

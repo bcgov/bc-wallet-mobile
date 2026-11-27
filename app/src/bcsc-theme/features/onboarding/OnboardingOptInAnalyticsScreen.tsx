@@ -26,10 +26,6 @@ interface OnboardingOptInAnalyticsScreenProps {
   navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingOptInAnalytics>
 }
 
-/**
- * Opt-In Analytics screen component that allows users to choose whether to participate in analytics data collection.
- * @returns {*} {React.ReactElement} The OnboardingOptInAnalyticsScreen component.
- */
 export const OnboardingOptInAnalyticsScreen: React.FC<OnboardingOptInAnalyticsScreenProps> = ({
   navigation,
 }: OnboardingOptInAnalyticsScreenProps): React.ReactElement => {
@@ -47,7 +43,6 @@ export const OnboardingOptInAnalyticsScreen: React.FC<OnboardingOptInAnalyticsSc
   const nextScreen = async () => {
     const status = await PushNotifications.status()
 
-    // if permission is granted, skip notification screen
     if (status === PushNotifications.NotificationPermissionStatus.GRANTED) {
       return navigation.navigate(BCSCScreens.OnboardingSecureApp)
     }

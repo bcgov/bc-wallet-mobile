@@ -2,9 +2,6 @@ import { AnalyticsTracker } from '@/utils/analytics/analytics-tracker'
 import { BifoldLogger } from '@bifold/core'
 import { SystemCheckStrategy } from './system-checks'
 
-/**
- * System check to ensure analytics tracker is initialized.
- */
 export class AnalyticsSystemCheck implements SystemCheckStrategy {
   private readonly analyticsEnabled: boolean
   private readonly analyticsAppId: string
@@ -26,7 +23,7 @@ export class AnalyticsSystemCheck implements SystemCheckStrategy {
   /**
    * Runs the analytics system check to verify if the analytics tracker is initialized.
    *
-   * @returns {*} {boolean} - True if the analytics tracker is initialized, false otherwise.
+   * @returns - True if the analytics tracker is initialized, false otherwise.
    */
   runCheck(): boolean {
     if (!this.analyticsEnabled) {
@@ -38,8 +35,6 @@ export class AnalyticsSystemCheck implements SystemCheckStrategy {
 
   /**
    * Handles the failure of the analytics system check by initializing the analytics tracker.
-   *
-   * @return {*} {Promise<void>}
    */
   async onFail() {
     try {

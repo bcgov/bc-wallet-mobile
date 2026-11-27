@@ -4,9 +4,6 @@ import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './
 /**
  * Routes a verified user to account renewal when the stored refresh token has expired (#4654),
  * instead of letting the first bearer request surface a "Problem with Account" error.
- *
- * @class RefreshTokenExpiredSystemCheck
- * @implements {SystemCheckStrategy}
  */
 export class RefreshTokenExpiredSystemCheck implements SystemCheckStrategy {
   private readonly refreshTokenExpired: boolean

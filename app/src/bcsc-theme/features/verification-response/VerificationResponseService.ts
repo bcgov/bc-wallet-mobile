@@ -31,17 +31,11 @@ export class VerificationResponseService {
 
   constructor(private readonly logger: AbstractBifoldLogger) {}
 
-  /**
-   * Subscribe to navigation events. Called when verification approval should trigger screen navigation.
-   */
   public onNavigationRequest(listener: VerificationResponseNavigationListener): () => void {
     this.navigationListeners.add(listener)
     return () => this.navigationListeners.delete(listener)
   }
 
-  /**
-   * Check if there's a pending verification approval waiting to be processed.
-   */
   public get hasPendingApproval(): boolean {
     return this.pendingApproval !== null
   }

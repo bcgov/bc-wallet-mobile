@@ -3,8 +3,6 @@ import { HeaderBackButtonProps } from '@react-navigation/elements'
 
 /**
  * Shared Header Back Button component that navigates back on press.
- *
- * @returns {*} {React.ReactElement}
  */
 export const HeaderBackButton = (props: HeaderBackButtonProps) => {
   const { ColorPalette } = useTheme()
@@ -21,11 +19,6 @@ export const HeaderBackButton = (props: HeaderBackButtonProps) => {
   )
 }
 
-/**
- * Creates a Header Back Button component.
- *
- * @returns {*} {React.ReactElement}
- */
 export const createHeaderBackButton = (props: HeaderBackButtonProps) => {
   return <HeaderBackButton {...props} />
 }

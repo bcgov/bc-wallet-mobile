@@ -15,7 +15,6 @@ export const useBannersWriter = () => {
    * Dismisses a banner message by dispatching an action to the store.
    *
    * @param bannerId - The ID of the banner message to dismiss.
-   * @returns void
    */
   const recordBannerDismissal = useCallback(
     (bannerId: BCSCBanner) => {

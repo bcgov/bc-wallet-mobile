@@ -42,7 +42,7 @@ const SKELETON_CARDS: { id: string; rows: SkeletonRow[] }[] = [
 
 /**
  * The frame of a credential card on a screen of the given width. These are the sizes Bifold's card
- * uses (`useCredentialCardStyles` in @bifold/core's `credential-card-styles.ts`, which the package
+ * uses (`useCredentialCardStyles` in `@bifold/core`'s `credential-card-styles.ts`, which the package
  * does not export), so the skeleton's cards line up with the real ones.
  *
  * @param windowWidth - Width of the window the card is drawn in.

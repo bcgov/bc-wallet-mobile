@@ -274,11 +274,6 @@ const ServiceLoginDefaultView = ({
   )
 }
 
-/**
- * Renders the service details screen component, which displays information about a specific serviceClient.
- *
- * @returns {*} {React.ReactElement} The service screen component or null if not implemented.
- */
 export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
   navigation,
   route,
@@ -360,12 +355,6 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     },
   })
 
-  /**
-   * Handles navigation to login by pairing code flow
-   * If successful, navigates to the pairing confirmation screen
-   * If unsuccessful, displays an error alert
-   *
-   */
   const onContinueWithPairingCode = useCallback(async () => {
     const code = state.pairingCode
     if (!code) {
@@ -413,12 +402,6 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     }
   }, [state.pairingCode, pairing, navigation, logger, alerts, fromAppSwitch, setIsContinueDisabled, resetToHome])
 
-  /**
-   * Handles quick login and navigation
-   * If successful, opens the quick login URL and navigates to the home screen
-   * If unsuccessful, displays an error alert
-   *
-   */
   const onContinueWithQuickLoginUrl = useCallback(async () => {
     if (!state.service) {
       logger.error('ServiceLoginScreen: No service context available for quick login')
@@ -507,7 +490,6 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       return
     }
 
-    // If the app already has history, go back
     if (navigation.canGoBack()) {
       navigation.goBack()
       return
@@ -518,7 +500,6 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     logger.info('ServiceLoginScreen: Cancel pressed without history, redirecting to Home tab')
   }, [logger, navigation, pairingService])
 
-  // IAS is down, show outage screen
   if (!isServerAvailable) {
     return <ServiceOutage />
   }

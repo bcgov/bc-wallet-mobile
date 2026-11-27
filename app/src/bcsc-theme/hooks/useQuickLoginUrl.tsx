@@ -41,7 +41,7 @@ export const STUB_SERVICE_CLIENT: ClientMetadataStub = { client_ref_id: '' }
  * this is to prevent stale and expired URLs from being used.
  *
  * @see https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574688/5.1+System+Interfaces#IAS-Client-Metadata-endpoint
- * @returns {*} {(serviceClient: ClientMetadataStub) => Promise<QuickLoginURLResult>} A function that takes a service client
+ * @returns A function that takes a service client
  * and returns a promise resolving to the quick login URL or an error message.
  */
 export const useQuickLoginURL = () => {
@@ -53,8 +53,8 @@ export const useQuickLoginURL = () => {
   /**
    * Generates a quick login URL for the given service client.
    *
-   * @param {ClientMetadataStub} serviceClient - The service client metadata.
-   * @returns {*} {Promise<QuickLoginURLResult>} An object containing the quick login URL or an AppError
+   * @param serviceClient - The service client metadata.
+   * @returns An object containing the quick login URL or an AppError
    * recording which step failed.
    */
   const getQuickLoginURL = useCallback(

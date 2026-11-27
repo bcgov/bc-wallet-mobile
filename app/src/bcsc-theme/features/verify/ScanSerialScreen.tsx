@@ -64,7 +64,7 @@ type BarcodeGuideProps = {
   width: number
   height: number
   pattern: number[]
-  /** Direction the individual bars run. @default 'vertical' */
+  /** Direction the individual bars run. @defaultValue 'vertical' */
   bars?: 'vertical' | 'horizontal'
   color?: string
   opacity?: number
@@ -244,7 +244,6 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     setCameraFailed(false)
     setScanState('scanning')
     setCameraKey((prev) => prev + 1)
-    // Reset the caches so we can scan again.
     isProcessingScan.current = false
     cardScanRef.current = EMPTY_CARD_SCAN
   }, [])
@@ -281,7 +280,6 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
         logger.debug('[DecodeBarcodes] Failed to decode barcode', { type: code.type, reason: decoded.reason })
 
         if (!cardScanRef.current.serial && !cardScanRef.current.card) {
-          // Scanned a non-BCSC barcode - lock the camera and handle it as a non-BCSC card.
           isProcessingScan.current = true
           setScanState('locked')
           await scanner.handleScanNonBcsc()
@@ -297,7 +295,6 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
 
     const { serial, card } = cardScanRef.current
     if (serial && card) {
-      // We have both the serial and the birthdate — lock the camera and handle the card.
       isProcessingScan.current = true
       setScanState('locked')
       await scanner.handleScanComboCard(serial, { birthDate: toDriversLicenseMetadata(card).birthDate })
@@ -449,7 +446,6 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
             style={StyleSheet.absoluteFill}
           />
 
-          {/* Vertical ID-card framing guide (appearance of MaskType.ID_CARD) */}
           {size ? (
             <IdCardMaskOverlay
               width={size.width}

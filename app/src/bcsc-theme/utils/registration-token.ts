@@ -46,7 +46,7 @@ export const getRegistrationTokenClientId = (registrationAccessToken?: string): 
 }
 
 /**
- * Asks the server for the registration `clientId` using the token (GET /device/register/{clientId}) and reports
+ * Asks the server for the registration `clientId` using the token (`GET /device/register/{clientId}`) and reports
  * whether the registration it describes is that client ID. Bounded by a timeout; never throws.
  */
 export const confirmRegistrationClientId = async (

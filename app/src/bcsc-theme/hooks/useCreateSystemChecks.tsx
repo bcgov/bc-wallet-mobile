@@ -103,10 +103,6 @@ const rotateKey = async ({
 type UseGetSystemChecksReturn = Record<
   SystemCheckScope,
   {
-    /**
-     * Callback to get system checks for the scope
-     * @return Array of system check strategies
-     */
     getSystemChecks: () => Promise<SystemCheckStrategy[]> | SystemCheckStrategy[]
     /**
      * Callback to get the checks to run again each time the app returns to the foreground
@@ -197,16 +193,10 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   // the stack waits on the batch
   const requestCheck = useMemo(() => selectVerificationRequestCheck(store), [store])
 
-  // update credential metadata ref on store change
   useEffect(() => {
     credentialMetadataRef.current = store.bcsc.credentialMetadata
   }, [store.bcsc.credentialMetadata])
 
-  /**
-   * Get system checks to run at app startup
-   *
-   * @returns Array of system check strategies
-   */
   const getStartupSystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
     const serverStatus = cachedServerStatus ?? (await refreshServerStatus({ force: true })).serverStatus
 
@@ -262,11 +252,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     return client ? [new ServerClockSkewSystemCheck(client, clockSkewAlert, utils)] : []
   }, [client, clockSkewAlert, refreshServerStatus, utils])
 
-  /**
-   * Get system checks to run on main stack
-   *
-   * @returns Array of system check strategies
-   */
   const getMainSystemChecks = useCallback((): SystemCheckStrategy[] => {
     // Guard the native call so a failure here cannot throw away the whole batch
     const getIdToken = () => tokenService.getCachedIdTokenMetadata({ refreshCache: false })

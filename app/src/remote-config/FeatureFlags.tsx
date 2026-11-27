@@ -19,11 +19,6 @@ export const useFeatureFlags = () => {
   const featureFlags = remoteConfig.getValue('featureFlags')
   const apiBaseUrl = store.developer.environment.iasApiBaseUrl
 
-  /**
-   * Get the value of a feature flag.
-   * @param flag The feature flag to get.
-   * @returns True if the feature flag is enabled, false otherwise.
-   */
   const getFeatureFlag = useCallback(
     <TFlag extends FeatureFlag>(flag: TFlag): boolean => {
       return featureFlags[flag]
@@ -72,7 +67,7 @@ export const useFeatureFlags = () => {
 
 /**
  * Get the value of a feature flag from the memory cache.
- * @param flag The feature flag to get.
+ * @param flag - The feature flag to get.
  * @returns True if the feature flag is enabled, false otherwise.
  */
 export function getFeatureFlag<TFlag extends FeatureFlag>(flag: TFlag): boolean {

@@ -33,7 +33,7 @@ const useMetadataApi = (apiClient: BCSCApiClient) => {
   /**
    * Fetches the client metadata from the IAS Client Metadata endpoint.
    *
-   * @return {*} {Promise<ClientMetadata[]>} A promise that resolves to an array of client metadata objects.
+   * @returns A promise that resolves to an array of client metadata objects.
    */
   const getClientMetadata = useCallback(async (): Promise<ClientMetadata[]> => {
     const {
@@ -45,7 +45,7 @@ const useMetadataApi = (apiClient: BCSCApiClient) => {
   /**
    * Fetches the client metadata for the BCSC application specifically.
    *
-   * @return {*} {Promise<ClientMetadata | null>} A promise that resolves to the BCSC client metadata object, or null if not found.
+   * @returns A promise that resolves to the BCSC client metadata object, or null if not found.
    */
   const getBCSCClientMetadata = useCallback(async (): Promise<ClientMetadata | null> => {
     const clients = await getClientMetadata()

@@ -26,7 +26,7 @@ export class KeyRotationSystemCheck implements SystemCheckStrategy {
   private readonly utils: SystemCheckUtils
 
   /**
-   * @param deferForPendingRegistrationUpdate Whether `UpdateDeviceRegistrationSystemCheck` already PUT the
+   * @param deferForPendingRegistrationUpdate - Whether `UpdateDeviceRegistrationSystemCheck` already PUT the
    *   current key during this launch. Read in both `runCheck` and `onFail` (the PUT happens between them), so it must be answered by this launch's
    *   outcome, never from the persisted `registeredBuild` — that stays unset while the PUT keeps
    *   failing, which would latch rotation off forever (see the #3876 review that caught this).

@@ -15,20 +15,11 @@ public class KeyPairInfo {
   @NonNull
   private final Long createdAt;
 
-  /**
-   * Create new key pair information.
-   * @param alias the unique identifier for this key pair in the keystore
-   * @param createdAt the timestamp when this key pair was created
-   */
   public KeyPairInfo(@NonNull String alias, @NonNull Long createdAt) {
     this.alias = alias;
     this.createdAt = createdAt;
   }
 
-  /**
-   * Get the alias (identifier) for this key pair.
-   * @return the alias string
-   */
   @NonNull
   public String getAlias() {
     return alias;

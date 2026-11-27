@@ -42,10 +42,8 @@ export const nativeBcscErrorMap: ReadonlyMap<string, ErrorDefinition> = new Map<
   ['E_120_KEYCHAIN_UNAVAILABLE_ERROR', ErrorRegistry.KEYCHAIN_UNAVAILABLE],
   ['E_KEYSTORE_UNAVAILABLE', ErrorRegistry.KEYCHAIN_UNAVAILABLE],
 
-  // --- Serialization ---
   ['E_JSON_SERIALIZATION_FAILED', ErrorRegistry.SERIALIZE_JSON_ERROR],
 
-  // --- Keys / keystore ---
   ['E_KEY_NOT_FOUND', ErrorRegistry.KEYCHAIN_KEY_NOT_FOUND],
   ['E_KEY_EXPORT_FAILED', ErrorRegistry.KEY_EXPORT_FAILED],
   ['E_KEY_DATA_EXTRACTION_FAILED', ErrorRegistry.KEY_EXPORT_FAILED],
@@ -71,12 +69,10 @@ export const nativeBcscErrorMap: ReadonlyMap<string, ErrorDefinition> = new Map<
   ['E_JWT_CREATION_FAILED', ErrorRegistry.JWT_CREATION_FAILED],
   ['E_JWT_PAYLOAD_CREATION_FAILED', ErrorRegistry.JWT_CREATION_FAILED],
 
-  // --- Tokens ---
   ['E_TOKEN_SAVE_FAILED', ErrorRegistry.TOKEN_SAVE_FAILED],
   ['E_TOKEN_SAVE_ERROR', ErrorRegistry.TOKEN_SAVE_FAILED],
   ['E_TOKEN_DELETE_ERROR', ErrorRegistry.TOKEN_DELETE_FAILED],
 
-  // --- Accounts ---
   ['E_ACCOUNT_NOT_FOUND', ErrorRegistry.ACCOUNT_NOT_FOUND],
   ['E_NO_ACCOUNT', ErrorRegistry.NATIVE_ACCOUNT_ID_NOT_FOUND],
   ['E_ACCOUNT_ID_NOT_FOUND', ErrorRegistry.NATIVE_ACCOUNT_ID_NOT_FOUND],
@@ -131,7 +127,6 @@ export const nativeBcscErrorMap: ReadonlyMap<string, ErrorDefinition> = new Map<
   ['E_SETUP_DEVICE_SECURITY_FAILED', ErrorRegistry.DEVICE_SECURITY_SETUP_FAILED],
   ['E_UNLOCK_DEVICE_SECURITY_ERROR', ErrorRegistry.DEVICE_SECURITY_SETUP_FAILED],
 
-  // --- Device identity ---
   ['E_UUID_NOT_FOUND', ErrorRegistry.UUID_NOT_FOUND],
 
   // --- Invalid parameters / security method / token type ---
@@ -142,13 +137,11 @@ export const nativeBcscErrorMap: ReadonlyMap<string, ErrorDefinition> = new Map<
   ['E_MISSING_INVALID_ACCOUNT_ID', ErrorRegistry.NATIVE_INVALID_PARAMETERS],
   ['E_INVALID_BASE64', ErrorRegistry.NATIVE_INVALID_PARAMETERS],
 
-  // --- OAuth request bodies ---
   ['E_DCR_ERROR', ErrorRegistry.DCR_BODY_BUILD_FAILED],
   ['E_BCSC_DCR_ERROR', ErrorRegistry.DCR_BODY_BUILD_FAILED],
   ['E_DEVICE_CODE_ERROR', ErrorRegistry.DEVICE_CODE_REQUEST_FAILED],
   ['E_BCSC_DEVICE_CODE_ERROR', ErrorRegistry.DEVICE_CODE_REQUEST_FAILED],
 
-  // --- PIN / security method ---
   ['E_SET_PIN_FAILED', ErrorRegistry.PIN_SET_FAILED],
   ['E_DELETE_PIN_FAILED', ErrorRegistry.PIN_DELETE_FAILED],
   ['E_VERIFY_PIN_ERROR', ErrorRegistry.PIN_OPERATION_ERROR],

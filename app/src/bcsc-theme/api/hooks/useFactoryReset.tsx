@@ -78,24 +78,16 @@ export const useFactoryReset = () => {
     [logger, registration]
   )
 
-  /**
-   * Removes all artifacts associated with the current BCSC account.
-   *
-   * @returns A promise that resolves when all account dependencies have been purged.
-   */
   const removeAccountArtifacts = useCallback(async () => {
     const account = await getAccount()
 
     if (account) {
-      // Delete IAS account registration
       logger.info('FactoryReset: Deleting IAS account from server...')
       await deleteRegistration(account)
 
-      // Delete secure data from native storage
       logger.info('FactoryReset: Deleting secure data from native storage...')
       await deleteSecureData()
 
-      // Remove local account file
       logger.info('FactoryReset: Removing local account file...')
       await removeAccount()
     } else {
@@ -119,8 +111,8 @@ export const useFactoryReset = () => {
   /**
    * Performs a factory reset of the BCSC account and state.
    *
-   * @param {Partial<BCSCState>} [state] - Optional partial state to preserve during the reset
-   * @returns {Promise<FactoryResetResult>} A promise that resolves to the result of the factory reset operation.
+   * @param state - Optional partial state to preserve during the reset
+   * @returns A promise that resolves to the result of the factory reset operation.
    */
   const factoryReset = useCallback(
     async (bcscState?: Partial<BCSCState>): Promise<FactoryResetResult> => {
@@ -188,7 +180,6 @@ export const useFactoryReset = () => {
         logger.info('FactoryReset: Logging out user...')
         dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [false] })
 
-        // Factory reset complete
         logger.info('FactoryReset: BCSC factory reset completed successfully')
         return { success: true }
       } catch (error) {
@@ -215,12 +206,6 @@ export const useFactoryReset = () => {
   return factoryReset
 }
 
-/**
- * Formats errors that occur during the factory reset process.
- *
- * @param {unknown} error - The error to format.
- * @returns {*} {Error} The formatted error.
- */
 function _formatFactoryResetError(error: unknown): Error {
   if (error instanceof Error) {
     error.message = `FactoryResetError: ${error.message}`

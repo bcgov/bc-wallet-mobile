@@ -13,9 +13,9 @@ type TermsOfUseUpdatedProps = StackScreenProps<BCSCMainStackParams, BCSCModals.T
  * Blocking modal displayed when the server's Terms of Use version differs from the
  * version the user last accepted. The user must accept the updated terms to continue.
  *
- * @see {TermsOfUseSystemCheck.ts} for the system check that presents this modal.
+ * @see `TermsOfUseSystemCheck.ts` for the system check that presents this modal.
  *
- * @returns {*} {React.ReactElement} The TermsOfUseUpdated component.
+ * @returns The TermsOfUseUpdated component.
  */
 export const TermsOfUseUpdated = ({ navigation }: TermsOfUseUpdatedProps): React.ReactElement => {
   const { t } = useTranslation()

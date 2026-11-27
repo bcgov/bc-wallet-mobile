@@ -144,7 +144,7 @@ const useVideoPrompts = () => {
   /**
    * Fetches a fresh prompt set for the next recording. Call this from every gateway into TakeVideo.
    *
-   * @returns {Promise<PromptsResult>} Whether a usable prompt set is now in the store. When not ready the
+   * @returns Whether a usable prompt set is now in the store. When not ready the
    * caller must not start a recording — the previous prompts are still cached and would replay a stale
    * challenge — and should report the returned error.
    */
@@ -172,7 +172,7 @@ const useVideoPrompts = () => {
    * VideoInstructions, after the photo steps, rather than on this press; `refreshPrompts` recovers
    * from both there.
    *
-   * @returns {Promise<PromptsResult>} Whether the flow can proceed, with the error to report if not.
+   * @returns Whether the flow can proceed, with the error to report if not.
    */
   const ensureVerificationRequest = useCallback(async (): Promise<PromptsResult> => {
     if (verificationRequestId) {

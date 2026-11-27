@@ -8,9 +8,6 @@ type AuthPrivacyPolicyScreenProps = {
   navigation: StackNavigationProp<BCSCAuthStackParams, BCSCScreens.AuthPrivacyPolicy>
 }
 
-/**
- * Privacy Policy screen for the Auth stack.
- */
 export const AuthPrivacyPolicyScreen = ({ navigation }: AuthPrivacyPolicyScreenProps) => {
   const { t } = useTranslation()
 

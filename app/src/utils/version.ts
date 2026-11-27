@@ -8,7 +8,7 @@ export enum AppVersion {
 }
 
 /**
- * Returns true if current app version is >= `minVersion`.
+ * Returns true if current app version is at least `minVersion`.
  * Supports wildcard segments in minVersion (ie: "4.1.x" ignores patch).
  *
  * @example

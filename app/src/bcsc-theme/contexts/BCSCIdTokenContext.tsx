@@ -18,7 +18,7 @@ export interface BCSCIdTokenContextType<T> {
 /**
  * A helper function to derive credential metadata from the IdToken returned from the token endpoint.
  *
- * @param token The token returned from the token endpoint containing BCSC related claims
+ * @param token - The token returned from the token endpoint containing BCSC related claims
  * @returns CredentialMetadata object derived from the token
  */
 export const tokenToCredentialMetadata = (token: IdToken): CredentialMetadata => {
@@ -50,7 +50,7 @@ export const tokenToCredentialMetadata = (token: IdToken): CredentialMetadata =>
  * since the match is case-sensitive. See BCSCIdTokenContext.test.ts for the
  * documented tradeoff around a literal lowercase "undefined" name part.
  *
- * @param fullName Stored or freshly-computed fullName value to normalize
+ * @param fullName - Stored or freshly-computed fullName value to normalize
  * @returns The fullName with legacy "undefined" artifacts stripped and whitespace collapsed/trimmed
  */
 const normalizeLegacyFullName = (fullName: string | undefined): string => {
@@ -76,8 +76,8 @@ const normalizeLegacyFullName = (fullName: string | undefined): string => {
  * fullName is compared after normalizing away the legacy mononym artifact (see {@link normalizeLegacyFullName})
  * so existing mononym users don't get a spurious "account updated" alert purely from the fullName bugfix.
  *
- * @param c1 Credential Metadata object to check
- * @param c2 Credential Metadata object to check
+ * @param c1 - Credential Metadata object to check
+ * @param c2 - Credential Metadata object to check
  * @returns boolean returned if both objects are the same, otherwise this returns false
  */
 export const compareCredentialMetadata = (
@@ -102,8 +102,8 @@ export const BCSCIdTokenContext = createContext<BCSCIdTokenContextType<IdToken> 
 /**
  * Provides the BCSCIdTokenContext to child components, managing the loading of ID token data.
  *
- * @param {PropsWithChildren} props - The props containing child components.
- * @returns {*} {React.ReactElement} The BCSCIdTokenProvider component wrapping its children.
+ * @param props - The props containing child components.
+ * @returns The BCSCIdTokenProvider component wrapping its children.
  */
 export const BCSCIdTokenProvider = ({ children }: PropsWithChildren) => {
   const api = useApi()
@@ -157,11 +157,6 @@ export const BCSCIdTokenProvider = ({ children }: PropsWithChildren) => {
   return <BCSCIdTokenContext.Provider value={contextValue}>{children}</BCSCIdTokenContext.Provider>
 }
 
-/**
- * Hook to access the BCSC ID token context.
- *
- * @returns {{ idToken: IdToken, isLoading: boolean, refreshIdToken: () => void }} The token data and loading state.
- */
 export const useIdToken = () => {
   const context = useContext(BCSCIdTokenContext)
 

@@ -110,17 +110,12 @@ export const useVisionCamera = ({ position, deviceFilter, photoOutput, videoOutp
           fileSize: recorderRef.current?.recordedFileSize ?? -1,
         })
 
-        // Reset the recorder reference after recording is finished
         recorderRef.current = null
       }, options.onRecordingError)
     },
     [logger, videoOutput]
   )
 
-  /**
-   * Stops the current video recording.
-   * @returns A Promise that resolves when the recording has been stopped.
-   */
   const stopRecordingVideo = useCallback(async () => {
     if (!recorderRef.current?.isRecording) {
       logger.warn('[Camera] No recording in progress')

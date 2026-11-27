@@ -429,20 +429,18 @@ const useAgentSetupViewModel = ({ enabled = true }: AgentSetupOptions = {}): Age
         return
       }
 
-      // 1. Stop background attestation polling so it doesn't interfere during teardown
+      // Stop background attestation polling so it doesn't interfere during teardown
       attestationMonitor?.stop()
 
-      // 2. deregister push notifications - failures are non-fatal
+      // deregister push notifications - failures are non-fatal
       await deactivate(currentAgent).catch((err) => logger.warn(`Push notification deactivation failed: ${err}`))
 
-      // 3. shut down the agent (closes connections, stops transports, etc.)
       await stopAgent(currentAgent)
 
-      // 4. delete the wallet store (credential data, connections, ect.)
       try {
         await deleteWalletStore(currentAgent)
       } finally {
-        // 5. Clear agent state so the setup flow re-initializes a fresh wallet
+        // Clear agent state so the setup flow re-initializes a fresh wallet
         agentRef.current = null
         setAgent(null)
         setError(null)
@@ -501,11 +499,6 @@ const useAgentSetupViewModel = ({ enabled = true }: AgentSetupOptions = {}): Age
     }
   }, [logger, attestationMonitor, credentialProvisioningMonitor, stopAgent])
 
-  /**
-   * Waits for the agent to be ready and returns it, or null if the agent is not ready or has failed to initialize.
-   *
-   * @returns A promise that resolves to the agent or null if not ready.
-   */
   const waitForAgent = useCallback(async (): Promise<Agent | null> => {
     if (agentRef.current) {
       return agentRef.current

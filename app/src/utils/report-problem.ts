@@ -41,13 +41,6 @@ const FLATTENED_APP_ERROR_CONTEXT_KEYS = new Set([
   'account_legacy_status',
 ])
 
-/**
- * Reports a problem to the Loki logging service.
- * @param lokiUrl The URL of the Loki logging service.
- * @param payload The payload to send to the Loki logging service.
- * @param logger The remote logger to use for logging.
- * @returns void
- */
 export const reportProblemLokiTransport = (
   lokiUrl: string,
   payload: ReportProblemLokiPayload,
@@ -74,12 +67,6 @@ export const reportProblemLokiTransport = (
     })
 }
 
-/**
- * Creates a Loki payload for reporting a problem.
- * @param reportId The unique identifier for the report.
- * @param problem The problem to report.
- * @returns The Loki payload for reporting the problem.
- */
 export const createReportProblemLokiPayload = (reportId: string, problem: ReportProblem) => {
   // Loki expects the timestamp to be in nanoseconds
   const lokiTimestampNanoseconds = `${Date.now()}000000`
@@ -124,7 +111,7 @@ export const createReportProblemLokiPayload = (reportId: string, problem: Report
 
 /**
  * Flattens the context of an AppError into a top-level object for easier logging.
- * @param error The AppError to flatten.
+ * @param error - The AppError to flatten.
  * @returns A flattened object containing the error's context.
  */
 const _flattenAppError = (error?: AppError) => {
@@ -157,11 +144,6 @@ const _flattenAppError = (error?: AppError) => {
   return flattened
 }
 
-/**
- * Determines the type of the reported problem
- * @param problem The reported problem
- * @returns 'user_report' if the problem is a user report, 'app_error' if the problem is an app error
- */
 const _getReportProblemType = (problem: ReportProblem) => {
   if (problem.code === 0 || problem.error?.appEvent === AppEventCode.REPORT_PROBLEM) {
     return 'user_report'

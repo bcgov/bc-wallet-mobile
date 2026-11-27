@@ -34,7 +34,6 @@ public class DecryptedFileReader {
     
     /**
      * Read and decrypt a specific file
-     * @param fileName the name of the file to read
      * @return DecryptedFileData containing both raw and decrypted content, or null if file not found
      * @throws DecryptionException if decryption fails
      */
@@ -54,7 +53,6 @@ public class DecryptedFileReader {
     /**
      * Find and decrypt files matching a pattern
      * @param pattern wildcard pattern (e.g., "token_*.dat")
-     * @return list of DecryptedFileData
      * @throws DecryptionException if any decryption fails
      */
     @NonNull
@@ -65,8 +63,6 @@ public class DecryptedFileReader {
     
     /**
      * Find and decrypt files with specific prefix
-     * @param prefix file name prefix
-     * @return list of DecryptedFileData
      * @throws DecryptionException if any decryption fails
      */
     @NonNull
@@ -77,8 +73,6 @@ public class DecryptedFileReader {
     
     /**
      * Find and decrypt files with specific suffix
-     * @param suffix file name suffix
-     * @return list of DecryptedFileData
      * @throws DecryptionException if any decryption fails
      */
     @NonNull
@@ -89,7 +83,6 @@ public class DecryptedFileReader {
     
     /**
      * List all files in the directory (without decrypting)
-     * @return list of file names
      */
     @NonNull
     public List<String> listFiles() {
@@ -98,7 +91,6 @@ public class DecryptedFileReader {
     
     /**
      * Check if a file exists
-     * @param fileName the file name to check
      * @return true if file exists
      */
     public boolean fileExists(@NonNull String fileName) {
@@ -115,17 +107,12 @@ public class DecryptedFileReader {
     
     /**
      * Get the underlying file reader for raw file operations
-     * @return the PatternFileReader instance
      */
     @NonNull
     public PatternFileReader getFileReader() {
         return fileReader;
     }
     
-    /**
-     * Get the underlying decryptor
-     * @return the FileDecryptor instance
-     */
     @NonNull
     public FileDecryptor getDecryptor() {
         return decryptor;

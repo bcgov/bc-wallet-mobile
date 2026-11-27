@@ -125,7 +125,6 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
     }
 
     if (!micPermissionGranted) {
-      // If the user denies microphone permission, we cannot proceed with the call
       setStatus('microphoneDenied')
       return
     }
@@ -139,7 +138,6 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
     }
 
     if (needsBluetoothPermission) {
-      // If the device requires Bluetooth permission, we need to show the Bluetooth disclosure screen
       setStatus('bluetoothDisclosure')
       return
     }
@@ -168,7 +166,6 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
           if (!permissionGranted) {
             return setStatus('bluetoothDenied')
           }
-          // If the user grants Bluetooth permission, we can proceed to the live call
           navigation.navigate(BCSCScreens.LiveCall)
         }}
       />

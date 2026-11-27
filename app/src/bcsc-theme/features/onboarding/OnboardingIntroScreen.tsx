@@ -24,7 +24,7 @@ interface OnboardingIntroScreenProps {
  * every already-onboarded user on launch via AuthStack's AuthIntro route (announcing the app
  * refresh). Continue records `SEEN_ONBOARDING_INTRO` so it is not shown again on later launches.
  *
- * @returns {*} {React.ReactElement} The OnboardingIntroScreen component.
+ * @returns The OnboardingIntroScreen component.
  */
 export const OnboardingIntroScreen = ({ onContinue }: OnboardingIntroScreenProps) => {
   const { t } = useTranslation()

@@ -40,14 +40,10 @@ export interface DidCommOobQRCodeStrategyOptions {
   onMediatorInvitation?: (uri: string) => void
 }
 
-/**
- * Creates a QRCodeStrategy for DIDComm out-of-band invitations. Calls onSuccess with the OOB record id.
- */
 export const useDidCommOobQRCodeStrategy = (
   /**
    * Callback invoked when a DIDComm OOB invitation is successfully processed.
-   * @param oobRecordId The ID of the out-of-band record created or reused.
-   * @returns void
+   * @param oobRecordId - The ID of the out-of-band record created or reused.
    */
   onSuccess?: (oobRecordId: string) => void,
   { invitationLabel, onMediatorInvitation }: DidCommOobQRCodeStrategyOptions = {}

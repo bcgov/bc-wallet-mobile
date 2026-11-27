@@ -191,7 +191,6 @@ export const authenticateWithServiceCard = async (
         result.type === AuthenticationResultType.Cancel &&
         typeof (result as unknown as RedirectResult).url === 'undefined'
       ) {
-        // setWorkflowInProgress(false)
         callback && callback(false)
 
         return
@@ -223,7 +222,6 @@ export const authenticateWithServiceCard = async (
         (result as unknown as RedirectResult).url.includes('cancel')
       ) {
         callback && callback(false)
-        // setWorkflowInProgress(false)
         return
       }
     } else {

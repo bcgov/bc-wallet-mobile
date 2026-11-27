@@ -29,9 +29,9 @@ const usePairingApi = (apiClient: BCSCApiClient) => {
   /**
    * Logs in a user using a pairing code and returns the client metadata.
    *
-   * @param {string} code - The pairing code to use for login.
-   * @param {ChallengeSource} challengeSource - How the login was initiated; reported to IAS in the assertion.
-   * @returns {*} {Promise<PairingCodeLoginClientMetadata>} A promise that resolves to the client metadata.
+   * @param code - The pairing code to use for login.
+   * @param challengeSource - How the login was initiated; reported to IAS in the assertion.
+   * @returns A promise that resolves to the client metadata.
    */
   const loginByPairingCode = useCallback(
     async (code: string, challengeSource: ChallengeSource) => {
@@ -86,7 +86,7 @@ const usePairingApi = (apiClient: BCSCApiClient) => {
   /**
    * Forgets all device pairings by making a DELETE request to the pairings endpoint.
    *
-   * @returns {*} {Promise<void>} A promise that resolves when the pairings are successfully removed - resolves even if there were no pairings to delete.
+   * @returns A promise that resolves when the pairings are successfully removed - resolves even if there were no pairings to delete.
    */
   const forgetAllPairings = useCallback(async () => {
     return withAccount<void>(async (account) => {

@@ -47,9 +47,8 @@ interface SectionData {
  * navigating back to this screen releases the ID(s) chosen from it so they become
  * selectable again.
  *
- * @param props - Navigation and route props.
- * @param props.navigation - Stack navigator used to push the ID photo instructions screen or swap photo filters.
- * @param props.route - Route params: `cardProcess` (the selected card process) and optional `photoFilter` ('photo' | 'nonPhoto').
+ * @param props - `navigation` pushes the ID photo instructions screen or swaps photo filters. `route` carries
+ * `cardProcess` (the selected card process) and an optional `photoFilter` ('photo' | 'nonPhoto').
  * @returns The evidence type selection screen.
  */
 const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenProps) => {
@@ -170,7 +169,6 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
     let cards: Record<string, EvidenceType[]> = {}
 
     data.processes.forEach((p) => {
-      // only show card that matches the selected process
       if (p.process === cardProcess) {
         // for each card, check if the user should be seeing them or not
         // list is filtered differently based on when the user seeing this screen
@@ -214,22 +212,15 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
     return cards
   }
 
-  /**
-   * Generates the heading and description text based on the current state of evidence selection.
-   *
-   * @returns {[string, string]} An array containing the heading and description text.
-   */
   const getEvidenceHeadingAndDescription = useCallback((): [string, string] => {
     const isFirstEvidenceComplete = isCardEvidenceComplete(store.bcscSecure.additionalEvidenceData[0])
     const isNonBCSCCard = cardProcess === BCSCCardProcess.NonBCSC
 
     if (isFirstEvidenceComplete && isNonBCSCCard) {
-      // Choose your second ID
       return [t('BCSC.EvidenceTypeList.SecondID'), t('BCSC.EvidenceTypeList.NonBCSCDescription')]
     }
 
     if (isFirstEvidenceComplete && !isNonBCSCCard) {
-      // Choose photo ID
       return [t('BCSC.EvidenceTypeList.Heading'), t('BCSC.EvidenceTypeList.Description')]
     }
 
@@ -243,7 +234,6 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
       return [t('BCSC.EvidenceTypeList.OtherIDOptionsHeading'), t('BCSC.EvidenceTypeList.OtherIDOptionsDescription')]
     }
 
-    // Choose your first ID
     return [t('BCSC.EvidenceTypeList.FirstID'), '']
   }, [cardProcess, photoFilter, store.bcscSecure.additionalEvidenceData, t])
 

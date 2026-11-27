@@ -105,16 +105,13 @@ export const useSecureActions = () => {
   const { t } = useTranslation()
   const { client: apiClient, isClientReady } = useBCSCApiClientState()
 
-  // ============================================================================
-  // PERSISTENCE LAYER - Direct native storage operations, not for external use
-  // ============================================================================
-
+  // Persistence layer: direct native storage operations, not for external use
   /**
    * Persists tokens to native secure storage. The registration access token is not one of them: it is
    * saved with its client ID (see saveRegistration).
    *
-   * @param refreshToken OAuth refresh token
-   * @param accessToken OAuth access token (not used much from storage in v3, for
+   * @param refreshToken - OAuth refresh token
+   * @param accessToken - OAuth access token (not used much from storage in v3, for
    * most use cases access token doesn't live long enough to need persistence)
    */
   const persistTokens = useCallback(
@@ -219,10 +216,6 @@ export const useSecureActions = () => {
       throwNativeBcscError(error)
     }
   }, [logger])
-
-  // ============================================================================
-  // ACTIONS - High-level operations that update store and persist to storage
-  // ============================================================================
 
   /**
    * Update the refresh and access tokens in state and persist them to native storage
@@ -744,7 +737,6 @@ export const useSecureActions = () => {
         payload: [updatedEvidence],
       })
 
-      // Persist the updated evidence data
       await persistEvidenceData(updatedEvidence)
     },
     [dispatch, persistEvidenceData, store.bcscSecure.additionalEvidenceData]
@@ -793,7 +785,7 @@ export const useSecureActions = () => {
   /**
    * Remove a specific evidence type from secure state and persist to native storage
    *
-   * @param evidenceType The evidence type to remove
+   * @param evidenceType - The evidence type to remove
    * @returns The evidence metadata left
    */
   const removeEvidenceByType = useCallback(
@@ -817,7 +809,7 @@ export const useSecureActions = () => {
   /**
    * Remove incomplete evidence entries and persist to native storage
    *
-   * @param evidence Array of evidence metadata to filter and persist
+   * @param evidence - Array of evidence metadata to filter and persist
    * @returns An updated list of evidence metadata with incomplete entries removed
    */
   const removeIncompleteEvidence = useCallback(
@@ -826,7 +818,6 @@ export const useSecureActions = () => {
         return []
       }
 
-      // Filter out incomplete evidence (those without photo metadata)
       const updatedEvidence = evidence.filter((item) => isCardEvidenceComplete(item))
 
       if (updatedEvidence.length === evidence.length) {
@@ -851,8 +842,8 @@ export const useSecureActions = () => {
    * navigates back to an evidence-type list to release the ID(s) selected from that list onward so
    * they can be picked again, while keeping the ones collected before it.
    *
-   * @param evidence Current evidence metadata array
-   * @param count Number of leading entries to keep
+   * @param evidence - Current evidence metadata array
+   * @param count - Number of leading entries to keep
    * @returns The kept evidence metadata array
    */
   const truncateEvidence = useCallback(
@@ -883,7 +874,7 @@ export const useSecureActions = () => {
    * locking the app mid-collection doesn't discard the captured photos; the user resumes
    * on EvidenceIDCollection instead of being bounced to the start of the ID flow.
    *
-   * @param evidence Array of evidence metadata to filter and persist
+   * @param evidence - Array of evidence metadata to filter and persist
    * @returns An updated list with abandoned (never-captured) entries removed
    */
   const removeAbandonedEvidence = useCallback(
@@ -931,9 +922,9 @@ export const useSecureActions = () => {
    * Updates the in-memory store immediately, then writes through to native storage
    * to maintain v3 compatibility.
    *
-   * @param clientRefId The service client_ref_id
-   * @param bookmarked Whether to bookmark (true) or unbookmark (false)
-   * @param metadata Optional additional metadata about the service (clientName, etc.)
+   * @param clientRefId - The service client_ref_id
+   * @param bookmarked - Whether to bookmark (true) or unbookmark (false)
+   * @param metadata - Optional additional metadata about the service (clientName, etc.)
    */
   const updateSavedService = useCallback(
     async (clientRefId: string, bookmarked: boolean, metadata?: Partial<NativeSavedService>) => {
@@ -951,12 +942,10 @@ export const useSecureActions = () => {
 
         let updatedServices: NativeSavedService[]
         if (existingIndex >= 0) {
-          // Update existing entry
           updatedServices = existingServices.map((s: NativeSavedService) =>
             s.clientRefId === clientRefId ? { ...s, ...metadata, bookmarked, lastUsed: Date.now() / 1000 } : s
           )
         } else if (bookmarked) {
-          // Add new entry
           updatedServices = [
             ...existingServices,
             {
@@ -980,10 +969,6 @@ export const useSecureActions = () => {
     },
     [dispatch, logger]
   )
-
-  // ============================================================================
-  // HYDRATION & CLEARING - Loading and clearing secure state
-  // ============================================================================
 
   /**
    * Loads sensitive data from native secure storage and dispatches to store.
@@ -1498,7 +1483,7 @@ export const useSecureActions = () => {
    * route, and the overlay provider keeps a shown overlay up through the commit its release lands in, so the
    * change is rendered beneath it, as a cut rather than a slide, and the stack it mounts extends the overlay
    * for its own wait.
-   * @param walletKey wallet key (PBKDF2 hash of PIN) for Askar wallet encryption
+   * @param walletKey - wallet key (PBKDF2 hash of PIN) for Askar wallet encryption
    */
   const handleSuccessfulAuth = useCallback(
     async (walletKey?: string) => {
@@ -1510,7 +1495,6 @@ export const useSecureActions = () => {
   )
 
   return {
-    // Actions
     updateTokens,
     saveRegistration,
     clearRegistration,
@@ -1538,7 +1522,6 @@ export const useSecureActions = () => {
     clearAdditionalEvidence,
     updateSavedService,
     handleSuccessfulAuth,
-    // Hydration & clearing
     hydrateSecureState,
     clearSecureState,
     logout,
@@ -1550,8 +1533,8 @@ export const useSecureActions = () => {
 
 /**
  * Hydrate the card process based on evidence data and the authorization request.
- * @param authRequest Authorization request to check for existing card process
- * @param evidenceData Array of evidence metadata to analyze
+ * @param authRequest - Authorization request to check for existing card process
+ * @param evidenceData - Array of evidence metadata to analyze
  * @returns The hydrated card process, or undefined if it cannot be determined
  */
 function hydrateCardProcess(

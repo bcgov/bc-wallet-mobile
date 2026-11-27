@@ -171,7 +171,6 @@ export interface BCSCSecureState {
   /** The user is in the verify flow this session */
   inVerifyFlow: boolean
 
-  // === from Tokens ===
   /** OAuth refresh token for API authentication */
   refreshToken?: string
   /** Registration access token for DCR updates */
@@ -179,7 +178,6 @@ export interface BCSCSecureState {
   /** Access token (largely unused from storage or state) */
   accessToken?: string
 
-  // === from AuthorizationRequest ===
   /** Device code from authorization server */
   deviceCode?: string
   /** User code for device authorization */
@@ -205,13 +203,11 @@ export interface BCSCSecureState {
   /** Available verification options from authorization request */
   verificationOptions?: DeviceVerificationOption[]
 
-  // === Non-BCSC User Metadata ===
   /** Metadata for users verifying with non-BCSC cards (name, address) */
   userMetadata?: NonBCSCUserMetadata
   /** In memory only: the address form as the user left it this session (see ResidentialAddressDraft) */
   residentialAddressDraft?: ResidentialAddressDraft
 
-  // === Account Flags (flattened) ===
   /** Whether user chose to skip email verification */
   userSkippedEmailVerification?: boolean
   /** User's email address (if entered but not yet verified) */
@@ -223,15 +219,12 @@ export interface BCSCSecureState {
   /** Timestamp of when the verification video upload process completed successfully */
   verificationVideoSubmittedAt?: Date
 
-  // === from Evidence Data ===
   /** Additional evidence data for non-BCSC verification */
   additionalEvidenceData: EvidenceMetadata[] // initialized as an empty array to prevent ?.length usage
 
-  // === Saved Services ===
   /** Array of bookmarked/saved service client_ref_id strings */
   savedServices: string[]
 
-  // === Security ===
   /** PBKDF2 hash of PIN used for Askar wallet encryption */
   walletKey?: string
   /**
@@ -298,7 +291,6 @@ enum BCSCDispatchAction {
   UPDATE_ANALYTICS_OPT_IN = 'bcsc/updateAnalyticsOptIn',
   UPDATE_CREDENTIAL_METADATA = 'bcsc/updateCredentialMetadata',
   UPDATE_ACCEPTED_TERMS_OF_USE_VERSION = 'bcsc/updateAcceptedTermsOfUseVersion',
-  // Secure state actions
   HYDRATE_SECURE_STATE = 'bcsc/hydrateSecureState',
   CLEAR_SECURE_STATE = 'bcsc/clearSecureState',
   SUCCESSFUL_AUTH = 'bcsc/successfulAuth',
@@ -413,7 +405,7 @@ interface BCSCDeprecatedFields {
 /**
  * Migrates a persisted BCSC state blob on load. Idempotent, read-side migrations:
  * - Legacy `reportUUID` (added bcsc-v4.0.2, #4060) → `installId`. Safe to remove once all installs
- *   have launched on >= v4.1.
+ *   have launched on v4.1 or later.
  * - Onboarded installs that predate `verificationSkipped`: a missing value is stamped "skipped" (`true`)
  *   so an upgrading install lands on Home rather than on the post-onboarding verify prompt. v3 upgrades
  *   have no persisted blob yet and are handled in useInitializeAccountStatus.
@@ -572,7 +564,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     }
     case ModeDispatchAction.UPDATE_MODE: {
       const mode: Mode = (action?.payload || []).pop() || Mode.BCWallet
-      // If the mode isn't actually changing, do nothing
       if (state.mode === mode) {
         return state
       }
@@ -600,7 +591,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const environment: IASEnvironment = isProductionBundle() ? IASEnvironment.PROD : (action?.payload || []).pop()
       const developer = { ...state.developer, environment }
 
-      // Persist IAS environment between app restarts
       void PersistentStorage.storeValueForKey<IASEnvironment>(BCLocalStorageKeys.Environment, developer.environment)
 
       return { ...state, developer }

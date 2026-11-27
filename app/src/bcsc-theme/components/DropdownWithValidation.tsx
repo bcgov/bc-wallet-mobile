@@ -45,8 +45,7 @@ type DropdownWithValidationProps<T> = {
  * A unified dropdown component with label, selectable options list, subtext and error display.
  * Uses a modal with a scrollable list for consistent behavior on both iOS and Android.
  *
- * @param {DropdownWithValidationProps} props - Dropdown props
- * @returns {*} {React.ReactElement}
+ * @param props - Dropdown props
  */
 export const DropdownWithValidation = <T extends string | number>({
   id,

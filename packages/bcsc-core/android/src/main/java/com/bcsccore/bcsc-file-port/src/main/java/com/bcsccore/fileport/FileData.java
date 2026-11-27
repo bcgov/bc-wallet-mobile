@@ -3,9 +3,6 @@ package com.bcsccore.fileport;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-/**
- * Data class representing a file and its contents
- */
 public class FileData {
     
     @NonNull
@@ -17,8 +14,6 @@ public class FileData {
     private final long fileSize;
     
     /**
-     * Constructor
-     * @param filename the name of the file
      * @param data the file contents (can be null if file couldn't be read)
      * @param fileSize the size of the file in bytes
      */
@@ -28,10 +23,6 @@ public class FileData {
         this.fileSize = fileSize;
     }
     
-    /**
-     * Get the filename
-     * @return filename
-     */
     @NonNull
     public String getFilename() {
         return filename;

@@ -10,9 +10,6 @@ import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback } from 'react'
 
-/**
- * useEnterBirthdateViewModel - Handles business logic for authorizing a device based on manually entered CSN + birthdate
- */
 export const useEnterBirthdateViewModel = (
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EnterBirthdate>
 ) => {
@@ -30,7 +27,6 @@ export const useEnterBirthdateViewModel = (
         BCSCScreens.EnterBirthdate
       )
 
-      // Store authorization data
       const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
       await updateUserInfo({
         email: deviceAuth.verified_email,

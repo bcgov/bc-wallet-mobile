@@ -24,8 +24,8 @@ type ActionScreenLayoutProps = PrimaryActionScreenLayoutProps | WithSecondaryAct
 /**
  * Screen layout component (SafeAreaView+ScrollView) with primary and optional secondary action buttons at the bottom.
  *
- * @param {ActionScreenLayoutProps} props - The properties for the ActionScreenLayout component.
- * @returns {*} {React.ReactElement} The ActionScreenLayout component.
+ * @param props - The properties for the ActionScreenLayout component.
+ * @returns The ActionScreenLayout component.
  */
 export const ActionScreenLayout = (props: ActionScreenLayoutProps): React.ReactElement => {
   const { Spacing } = useTheme()

@@ -37,10 +37,6 @@ export interface PINEntryResult {
 }
 
 interface PINEntryFormProps {
-  /**
-   * Called when PIN is successfully set. Receives the wallet key.
-   * The component handles PIN validation and setting internally.
-   */
   onSuccess: (result: PINEntryResult) => Promise<void>
   /**
    * Keeps the button spinning once `onSuccess` resolves, for an `onSuccess` that always takes this screen
@@ -56,23 +52,9 @@ interface PINEntryFormProps {
    * IUnderstand, MustCheckBox, PINTooShort, PINsDoNotMatch, FailedToSetPIN, ErrorSettingPIN
    */
   translationPrefix?: string
-  /**
-   * Optional prop to indicate if this form is being used for creating new PIN.
-   * Can be used to adjust labels, validation, or behavior as needed.
-   * Default is false.
-   */
   creatingNewPIN?: boolean
 }
 
-/**
- * Shared PIN entry form component that handles:
- * - Two PIN input fields (create + confirm)
- * - Validation (6 digits, matching)
- * - Checkbox acknowledgment
- * - Setting the PIN via native module
- *
- * Used by both onboarding CreatePINScreen and settings ChangePINScreen.
- */
 export const PINEntryForm: React.FC<PINEntryFormProps> = ({
   onSuccess,
   keepLoadingOnSuccess = false,
@@ -94,7 +76,6 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
 
   const { Spacing, TextTheme } = useTheme()
 
-  // Helper to get translation with prefix
   const tWithPrefix = useCallback((key: string) => t(`${translationPrefix}.${key}`), [t, translationPrefix])
 
   const validateAndContinue = useCallback(
@@ -145,14 +126,12 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
           })
         }
 
-        // Set the PIN using native module
         const { success, walletKey } = await setNativePIN(pin1)
 
         if (success) {
           // Wrong attempts at the PIN this one replaces say nothing about the new one
           await clearPinAttempts(logger)
 
-          // Call the success handler with the wallet key
           await onSuccess({ success, walletKey })
           succeeded = true
           logger.info('PIN set successfully')

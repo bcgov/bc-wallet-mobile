@@ -108,7 +108,7 @@ export const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefin
  *
  * @param opts - Agent build options including ledgers, wallet secret, mediator URL,
  *   wallet label, proxy settings, and a logger.
- * @throws {AppError} `AGENT_INITIALIZATION_ERROR` (2901) when `mediatorUrl` is empty.
+ * @throws {@link AppError} `AGENT_INITIALIZATION_ERROR` (2901) when `mediatorUrl` is empty.
  * @returns The configured (but uninitialized) `Agent` instance.
  */
 export const buildAgent = (opts: BuildAgentOptions): Agent => {

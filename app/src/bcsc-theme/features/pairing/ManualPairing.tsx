@@ -34,7 +34,6 @@ const ManualPairing: React.FC = () => {
 
   const onSubmit = useCallback(
     async (pairingCode: string, challengeSource: ChallengeSource) => {
-      // no-op if the server is unavailable
       if (!isServerAvailable) {
         return
       }
@@ -117,12 +116,10 @@ const ManualPairing: React.FC = () => {
 
   const handleChangeCode = useCallback(
     (text: string) => {
-      // strip non-alphanumeric characters and convert to uppercase
       const cleanCode = text.replaceAll(/[^a-zA-Z0-9]/g, '').toUpperCase()
       setCode(cleanCode)
       setError(null)
 
-      // Auto submit
       if (cleanCode.length === PAIRING_CODE_LENGTH) {
         void onSubmit(cleanCode, ChallengeSource.RemotePairingCode)
       }

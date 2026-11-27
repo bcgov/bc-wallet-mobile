@@ -21,9 +21,6 @@ export const RemoteConfigSchema = z.looseObject({
     // TODO (FF): Remove this test feature when feature flagging fully enabled
     'debug.testFeature': z.boolean().catch(false),
     'kill.crashlytics': z.boolean().catch(false),
-    // 'kill.featureX': z.boolean(),
-    // 'release.featureY': z.boolean(),
-    // 'experimental.featureZ': z.boolean(),
   }),
 })
 
@@ -59,7 +56,7 @@ export function getBundledRemoteConfig(): RemoteConfig {
 
 /**
  * Retrieves the cached remote config from persistent storage, if available and not expired.
- * @param logger The logger to use for logging errors and information.
+ * @param logger - The logger to use for logging errors and information.
  * @returns The cached remote config if available and valid, otherwise null.
  */
 export async function getCachedRemoteConfig(logger: RemoteLogger): Promise<RemoteConfig | null> {
@@ -94,7 +91,7 @@ export async function getCachedRemoteConfig(logger: RemoteLogger): Promise<Remot
 
 /**
  * Retrieves the remote config from the object storage
- * @param logger The logger to use for logging errors and information.
+ * @param logger - The logger to use for logging errors and information.
  * @returns The remote config if successfully fetched, otherwise null.
  */
 export async function fetchRemoteConfig(logger: RemoteLogger): Promise<RemoteConfig | null> {
@@ -119,8 +116,8 @@ export async function fetchRemoteConfig(logger: RemoteLogger): Promise<RemoteCon
 
 /**
  * Caches the remote config in persistent storage.
- * @param remoteConfig The remote config to cache.
- * @param logger The logger to use for logging errors.
+ * @param remoteConfig - The remote config to cache.
+ * @param logger - The logger to use for logging errors.
  * @returns A promise that resolves when the caching is complete.
  */
 export async function cacheRemoteConfig(remoteConfig: RemoteConfig, logger: RemoteLogger): Promise<void> {

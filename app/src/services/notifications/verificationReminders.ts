@@ -56,9 +56,9 @@ export async function cancelVerificationReminders(logger?: ReminderLogger): Prom
  * (Re)schedules the verification reminders for the given expiry. Existing reminders are cleared first,
  * so this is safe to call repeatedly — e.g. whenever the server extends the deadline.
  *
- * @param expiry The verification (device_code) expiry.
- * @param copy The reminder title/body (localized by the caller).
- * @param logger Optional logger for best-effort diagnostics.
+ * @param expiry - The verification (device_code) expiry.
+ * @param copy - The reminder title/body (localized by the caller).
+ * @param logger - Optional logger for best-effort diagnostics.
  */
 export async function scheduleVerificationReminders(
   expiry: Date,

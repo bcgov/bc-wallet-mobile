@@ -10,27 +10,19 @@ interface CardProps {
    * Title text to display at the top of the card
    *
    * @example "Card Title"
-   * @type {string}
    */
   title: string
-  /**
-   * Function to be called when the card is pressed
-   *
-   * @type {() => void}
-   */
   onPress?: () => void
   /**
    * Optional subtext to display below the title
    *
    * @example "This is a subtext"
-   * @type {string}
    */
   subtext?: string
   /**
    * MaterialIcon compatible icon name
    *
    * @example "arrow-forward", "open-in-new"
-   * @type {string}
    */
   endIcon?: string
   /**
@@ -38,34 +30,19 @@ interface CardProps {
    * it will affect the sizing of the title and subtext
    *
    * @example "fingerprint", "dialpad"
-   * @type {string}
    */
   startIcon?: string
-  /**
-   * Whether the button is disabled
-   *
-   * @type {boolean}
-   */
   disabled?: boolean
   /**
    * Whether the card is shown in a selected/highlighted state (e.g. the current selection).
    * A selected card is a non-interactive status indicator: it renders an accent border with a
    * trailing check icon (not dimmed like a disabled card), announces its title and subtext together
    * with a "selected" state to screen readers, and does not respond to presses.
-   *
-   * @type {boolean}
    */
   selected?: boolean
-  /**
-   * Test ID for the button
-   *
-   * @type {string}
-   */
   testID?: string
   /**
    * Accessibility hint for screen readers, describing what happens when the button is pressed
-   *
-   * @type {string}
    */
   accessibilityHint?: string
 }
@@ -73,8 +50,8 @@ interface CardProps {
 /**
  * A customizable card button component with title, optional subtext, and an optional end icon.
  *
- * @param {CardProps} props - Props for the CardButton component
- * @returns {*} {React.ReactElement} The rendered CardButton component
+ * @param props - Props for the CardButton component
+ * @returns The rendered CardButton component
  */
 export const CardButton = (props: CardProps): React.ReactElement => {
   const { TextTheme, Spacing, ColorPalette } = useTheme()

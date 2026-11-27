@@ -6,12 +6,6 @@ import { ErrorDefinition, ErrorRegistry, ErrorRegistryAppEventMap, ErrorRegistry
 
 // TODO (MD): Rename file to errorUtils or something similar
 
-/**
- * Extract a meaningful message from an unknown error value
- *
- * @param error - The unknown error value to extract a message from
- * @returns A string message extracted from the error, or a fallback message if extraction fails
- */
 export function extractErrorMessage(error: unknown): string {
   if (error == null) {
     return ''

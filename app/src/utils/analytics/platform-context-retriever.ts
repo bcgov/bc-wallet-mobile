@@ -16,12 +16,6 @@ import {
 } from 'react-native-device-info'
 import * as RNLocalize from 'react-native-localize'
 
-/**
- * Returns a PlatformContextRetriever for analytics
- *
- * @param {boolean} enable - Flag to enable or disable the PlatformContextRetriever
- * @returns {*} {PlatformContextRetriever} The PlatformContextRetriever instance
- */
 export const getPlatformContextRetriever = (enable: boolean): PlatformContextRetriever | undefined => {
   if (!enable) {
     return undefined
@@ -47,19 +41,14 @@ export const getPlatformContextRetriever = (enable: boolean): PlatformContextRet
     getResolution: safeAsync(_getResolution),
     getScale: safeAsync(_getScale),
     getLanguage: safeAsync(_getLanguage),
-    // getAppleIdfa?: () => Promise<string | undefined>;
-    // getAppleIdfv?: () => Promise<string | undefined>;
-    // getAndroidIdfa?: () => Promise<string | undefined>;
-    // getAppSetId: getAndroidId,
-    // getAppSetIdScope?: () => Promise<string | undefined>;
   }
 }
 
 /**
  * Returns a list of optional properties of the platform context to be tracked
  *
- * @param {boolean} enable - Flag to enable or disable the PlatformContextProperties
- * @returns {*} {PlatformContextProperty[]} The list of PlatformContextProperty to be tracked
+ * @param enable - Flag to enable or disable the PlatformContextProperties
+ * @returns The list of PlatformContextProperty to be tracked
  */
 export const getPlatformContextProperties = (enable: boolean): PlatformContextProperty[] | undefined => {
   if (!enable) {
@@ -88,8 +77,6 @@ export const getPlatformContextProperties = (enable: boolean): PlatformContextPr
     // PlatformContextProperty.AppSetIdScope,
   ]
 }
-
-// Helper functions for platform context retriever
 
 const safeAsync = <T>(fn: () => Promise<T>): (() => Promise<T | undefined>) => {
   return async () => {

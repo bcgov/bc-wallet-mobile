@@ -9,10 +9,6 @@ type VerifySettingsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VerifySettings>
 }
 
-/**
- * Settings screen for the Verify stack.
- * Wraps SettingsContent with Verify stack-specific navigation callbacks.
- */
 export const VerifySettingsScreen: React.FC<VerifySettingsScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
 

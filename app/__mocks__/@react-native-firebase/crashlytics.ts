@@ -1,5 +1,5 @@
 /**
- * Manual mock for @react-native-firebase/crashlytics (modular API).
+ * Manual mock for `@react-native-firebase/crashlytics` (modular API).
  * Like RNFB, it installs its JS crash handler on import.
  */
 const mockCrashlyticsInstance = {}

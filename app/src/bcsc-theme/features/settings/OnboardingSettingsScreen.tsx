@@ -9,10 +9,6 @@ type OnboardingSettingsScreenProps = {
   navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingSettings>
 }
 
-/**
- * Settings screen for the Onboarding stack.
- * Wraps SettingsContent with Onboarding stack-specific navigation callbacks.
- */
 export const OnboardingSettingsScreen: React.FC<OnboardingSettingsScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
 

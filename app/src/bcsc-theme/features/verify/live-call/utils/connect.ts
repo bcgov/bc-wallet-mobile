@@ -37,7 +37,6 @@ type AcquiredResources = {
   peerConnection?: RTCPeerConnection
 }
 
-// sets up the full Pexip and WebRTC connection
 export const connect = async (req: ConnectRequest, logger: BifoldLogger): Promise<ConnectResult> => {
   logger.info('Requesting user media (camera and microphone)...')
   const localStream = await mediaDevices.getUserMedia({
@@ -395,14 +394,12 @@ const releaseInfinityToken = async (request: ConnectionRequest, token: string, l
 export const buildIceServers = (tokenResult: PexipTokenResult, logger: BifoldLogger): IceServer[] => {
   const iceServers: IceServer[] = []
 
-  // Use STUN servers from Pexip token response
   if (tokenResult.stun?.length) {
     for (const entry of tokenResult.stun) {
       iceServers.push({ urls: entry.url })
     }
   }
 
-  // Use TURN servers from Pexip token response
   if (tokenResult.turn?.length) {
     for (const entry of tokenResult.turn) {
       iceServers.push({

@@ -6,11 +6,6 @@ import { View } from 'react-native'
 import CredentialNotification from '../../notifications/CredentialNotification'
 import { EmptyNotification } from '../../notifications/EmptyNotification'
 
-/**
- * NotificationsList component displays a list of notifications, including custom and credential notifications.
- *
- * @returns React.Element
- */
 export const NotificationsList = (): JSX.Element => {
   const notifications = useNotifications()
   const { customNotifications } = useCustomNotifications()

@@ -22,7 +22,6 @@ const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) =>
   const { ColorPalette } = useTheme()
   const photoOutput = useSelfiePhotoOutput()
   const handlePhotoTaken = async (path: string) => {
-    // Navigate to photo review screen with the photo data
     navigation.navigate(BCSCScreens.PhotoReview, {
       photoPath: path,
       forLiveCall: route.params.forLiveCall,

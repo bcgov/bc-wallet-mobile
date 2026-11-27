@@ -15,17 +15,6 @@ import {
 
 /**
  * Renders a settings header button that navigates to the appropriate settings screen based on the stack.
- *
- * @param {{
- *   onPress: () => void
- *   testID?: string
- *   accessibilityLabel?: string
- * }} {
- *   onPress,
- *   testID,
- *   accessibilityLabel,
- * }
- * @return {*}
  */
 const SettingsHeaderButton = ({
   onPress,
@@ -90,8 +79,6 @@ export const createAuthSettingsHeaderButton = () => {
 
 /**
  * Creates a Settings Header Button for the Onboarding Stack that navigates to OnboardingSettings.
- *
- * @return {*}
  */
 export const createOnboardingSettingsHeaderButton = () => {
   const OnboardingSettingsHeaderButton = () => {

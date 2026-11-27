@@ -35,8 +35,8 @@ export type VerifyHeaderBackButtonOptions = {
  * follows the exit policy: a first-time verifier returns to the "Verify your account" prompt (replace,
  * animated as a pop), everyone else leaves the flow for Home with progress kept.
  *
- * @param onPress Optional custom handler, called instead of the default behaviour.
- * @param options See {@link VerifyHeaderBackButtonOptions}.
+ * @param onPress - Optional custom handler, called instead of the default behaviour.
+ * @param options - See {@link VerifyHeaderBackButtonOptions}.
  * @returns A `headerLeft` component.
  */
 export const createVerifyHeaderBackButton = (

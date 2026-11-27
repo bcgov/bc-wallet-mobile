@@ -23,7 +23,7 @@ export class AccountNotFoundError extends Error {
  * Throws an `AccountNotFoundError` when there is no device account, and an `ACCOUNT_NOT_REGISTERED` AppError when
  * the account has no registration yet (no client ID), so recovery can register it.
  *
- * @param fn Function that `withAccount` will wrap, which requires a registered account to be present.
+ * @param fn - Function that `withAccount` will wrap, which requires a registered account to be present.
  * @returns The executed function with the account passed as an argument.
  */
 export const withAccount = async <T>(fn: (account: RegisteredNativeAccount) => Promise<T>): Promise<T> => {

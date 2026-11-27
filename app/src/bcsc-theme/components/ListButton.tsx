@@ -51,7 +51,8 @@ export interface ListButtonProps {
  * Accepts any React node as children (text, views, components, etc.) and a `position`
  * prop to determine the border radius of the button when used in a group.
  *
- * @example:
+ * @example
+ * ```
  * ╭──────────────╮
  * │ Item 1       │ ← first (rounded top)
  * ├──────────────┤
@@ -59,12 +60,15 @@ export interface ListButtonProps {
  * ├──────────────┤
  * │ Item 3       │ ← last (rounded bottom)
  * ╰──────────────╯
+ * ```
  *
- * @example:
+ * @example
  * Only one item in the list:
+ * ```
  * ╭──────────────╮
  * │ Item 1       │ ← only (rounded)
  * ╰──────────────╯
+ * ```
  *
  * @param props - The props for the ListButton component.
  * @returns A React element representing the ListButton component.

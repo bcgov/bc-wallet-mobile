@@ -11,11 +11,6 @@ interface OnboardingPrivacyPolicyScreenProps {
   navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingPrivacyPolicy>
 }
 
-/**
- * Privacy Policy screen component that informs users about the app's privacy practices.
- *
- * @returns {*} {React.ReactElement} The OnboardingPrivacyPolicyScreen component.
- */
 export const OnboardingPrivacyPolicyScreen = ({ navigation }: OnboardingPrivacyPolicyScreenProps) => {
   const { t } = useTranslation()
 

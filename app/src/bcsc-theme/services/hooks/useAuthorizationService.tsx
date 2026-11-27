@@ -57,7 +57,6 @@ const findByTechnicalMessage = <T,>(
 }
 
 /**
- * Service layer hook for the device authorization (device/code) api.
  * Business logic related to device authorization errors and error-screen navigation should be
  * implemented here.
  *
@@ -94,7 +93,6 @@ export const useAuthorizationService = () => {
    * Anything not matched will emit a global alert
    *
    * @param error - The error thrown by a device authorization api call.
-   * @param extraCardErrorMap - Additional VerificationCardError routing specific to the calling method.
    */
   const handleAuthorizationError = useCallback(
     (error: unknown) => {

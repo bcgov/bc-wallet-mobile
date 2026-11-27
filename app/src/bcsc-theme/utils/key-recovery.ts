@@ -25,7 +25,7 @@ const modulusFingerprint = (n: string | null): string => {
 
 /**
  * Format a caught error for logging, surfacing the native error code (e.g. E_KEY_NOT_FOUND) when
- * present. Handles plain-object rejections ({ code, message }) as well as Error instances, so the
+ * present. Handles plain-object rejections (`{ code, message }`) as well as Error instances, so the
  * code is never lost to an "[object Object]" string. Exported for reuse by the key-rotation flow (#3876).
  */
 export const describeError = (err: unknown): string => {
@@ -54,8 +54,8 @@ export interface ServerClientRegistrationView {
 }
 
 /**
- * GET /device/register/{clientId} with the registration access token (RFC 7592 read). Shared by key
- * recovery and the client ID drift check. A rejected request (e.g. a dead reg token -> 401/403) must
+ * `GET /device/register/{clientId}` with the registration access token (RFC 7592 read). Shared by key
+ * recovery and the client ID drift check. A rejected request (e.g. a dead reg token → 401/403) must
  * not trigger the client's global onError handler, which surfaces user-facing errors, so callers
  * handle the rejection themselves. The client sets no default timeout; pass `timeoutMs` to bound the call.
  */
@@ -98,7 +98,7 @@ export type KeyRecoveryResult = {
  * the wrong key AND prune the right one (see issue #4166).
  *
  * Steps:
- *  1. GET /device/register/{client_id} with the registration_access_token to read
+ *  1. `GET /device/register/{client_id}` with the registration_access_token to read
  *     jwks.keys[].n (the server's source of truth). The GET may return MULTIPLE keys (the
  *     server merges recent registration versions) — this is a MEMBERSHIP test.
  *  2. Enumerate every local key (with its public RSA components) via getAllKeysWithPublicInfo().

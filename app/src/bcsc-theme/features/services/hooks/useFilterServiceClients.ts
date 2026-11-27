@@ -21,7 +21,6 @@ export interface ServiceClientsFilter {
    *
    * @example "BC" would match "BC Services Card", "My BC Service", etc.
    * "BC Card" would not match "BC Services Card" because the words are not contiguous.
-   * @type {string}
    */
   partialNameFilter?: string
   /**
@@ -29,15 +28,12 @@ export interface ServiceClientsFilter {
    *
    * Note: Explicitly setting this to null will return no services.
    *
-   * @see card-utils.ts->getCardProcessForCardType
+   * @see `getCardProcessForCardType` in `card-utils.ts`
    * @example BCSCCardProcess.NonPhoto would filter out services that do not support non-photo cards
-   * @type {BCSCCardProcess | null}
    */
   cardProcessFilter?: BCSCCardProcess | null
   /**
    * Filter service clients that require a BC Address on file
-   *
-   * @type {boolean}
    */
   requireBCAddressFilter?: boolean
   /**
@@ -45,8 +41,7 @@ export interface ServiceClientsFilter {
    * if provided, only service clients with these IDs will be included
    * ie: saved services (bookmarks)
    *
-   * @format uuid
-   * @type {string[]}
+   * A UUID.
    */
   serviceClientIdsFilter?: string[]
   /**
@@ -55,13 +50,11 @@ export interface ServiceClientsFilter {
    * Services without a `service_listing_sort_order` are not meant to be listed, but they are
    * still shown when the user has saved them.
    *
-   * @format uuid
-   * @type {string[]}
+   * A UUID.
    */
   savedServiceClientIds?: string[]
   /**
    * If true, the hook will skip loading service clients and return an empty list.
-   * @type {boolean}
    */
   disabled?: boolean
 }
@@ -70,8 +63,8 @@ export interface ServiceClientsFilter {
  * A custom hook to filter service clients based on various criteria such as name,
  * card process, and BC address requirement. Sorted by numeric listing order and name.
  *
- * @param {ServiceClientsFilter} filter The filter criteria to apply to the service clients.
- * @returns {*} {FilterServiceClientsResult} The filtered list of service clients and loading state.
+ * @param filter - The filter criteria to apply to the service clients.
+ * @returns The filtered list of service clients and loading state.
  */
 export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterServiceClientsResult => {
   const { metadata } = useApi()
@@ -106,7 +99,6 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterSer
     load()
   }, [load])
 
-  // Alert the user if services fail to load
   if (!serviceClients && isReady) {
     Alert.alert(t('Error.Title2033'), t('Error.Message2033'), [
       {
@@ -130,25 +122,21 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterSer
       (service) => service.service_listing_sort_order != null || savedIdsSet.has(service.client_ref_id)
     )
 
-    // Filter services based on the card process
     if (filter.cardProcessFilter) {
       serviceClientsCopy = serviceClientsCopy.filter((service) =>
         service.allowed_identification_processes.includes(filter.cardProcessFilter!)
       )
     }
 
-    // Filter services that require a BC Address
     if (filter.requireBCAddressFilter) {
       serviceClientsCopy = serviceClientsCopy.filter((service) => service.bc_address === true)
     }
 
-    // Filter services based on the provided IDs
     if (filter.serviceClientIdsFilter) {
       const idsSet = new Set(filter.serviceClientIdsFilter)
       serviceClientsCopy = serviceClientsCopy.filter((service) => idsSet.has(service.client_ref_id))
     }
 
-    // Sort services by their listing order, then alphabetically by name
     return _sortServiceClients(serviceClientsCopy)
   }, [
     serviceClients,
@@ -158,7 +146,6 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterSer
     filter.savedServiceClientIds,
   ])
 
-  // Further filter services based on the partial name filter
   const queriedServiceClients = useMemo(() => {
     const newServiceClients = _queryServiceClientsByName(filteredServiceClients, filter.partialNameFilter)
 
@@ -176,14 +163,13 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterSer
 /**
  * Filters the given list of service clients by their name using a case-insensitive partial match.
  *
- * @param {ClientMetadata[]} serviceClients - The list of service clients to filter.
- * @param {string} [query] - The partial name to filter by.
- * @returns {*} {ClientMetadata[]} The filtered list of service clients whose names match the query.
+ * @param serviceClients - The list of service clients to filter.
+ * @param query - The partial name to filter by.
+ * @returns The filtered list of service clients whose names match the query.
  */
 function _queryServiceClientsByName(serviceClients: ClientMetadata[], query?: string): ClientMetadata[] {
   const caseInsensitiveQuery = query?.toLowerCase().trim()
 
-  // Return all supported services when there's no search text
   if (!caseInsensitiveQuery) {
     return serviceClients
   }
@@ -197,8 +183,8 @@ function _queryServiceClientsByName(serviceClients: ClientMetadata[], query?: st
  *
  * Services without a defined sort order are placed at the end of the list.
  *
- * @param {ClientMetadata[]} serviceClients - The list of service clients to sort.
- * @returns {*} {ClientMetadata[]} The sorted list of service clients.
+ * @param serviceClients - The list of service clients to sort.
+ * @returns The sorted list of service clients.
  */
 function _sortServiceClients(serviceClients: ClientMetadata[]): ClientMetadata[] {
   return serviceClients.sort((a, b) => {

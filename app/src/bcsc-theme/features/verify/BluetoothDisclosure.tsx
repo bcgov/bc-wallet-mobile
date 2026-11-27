@@ -18,11 +18,6 @@ type BluetoothDisclosureProps = {
   onContinue: (permissionGranted: boolean) => void
 }
 
-/**
- * Renders the Bluetooth Disclosure screen, informing users about the need for Bluetooth permissions.
- * @param onContinue - A callback function that is called when the user presses the continue button. It receives a boolean indicating whether Bluetooth permission was granted.
- * @returns The BluetoothDisclosureContent component.
- */
 export const BluetoothDisclosure = ({ onContinue }: BluetoothDisclosureProps) => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()

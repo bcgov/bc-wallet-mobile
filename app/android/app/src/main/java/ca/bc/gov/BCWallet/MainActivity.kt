@@ -41,17 +41,8 @@ class MainActivity : ReactActivity() {
         removeNotifications()
     }
 
-    /**
-     * Returns the name of the main component registered from JavaScript. This is used to schedule
-     * rendering of the component.
-     */
     override fun getMainComponentName(): String = "BCWallet"
 
-    /**
-     * Returns the instance of the [ReactActivityDelegate]. Here we use a util class
-     * [DefaultReactActivityDelegate] which allows you to easily enable Fabric and Concurrent React
-     * (aka React 18) with two boolean flags.
-     */
     override fun createReactActivityDelegate(): ReactActivityDelegate =
         DefaultReactActivityDelegate(
             this,

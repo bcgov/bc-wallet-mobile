@@ -31,7 +31,6 @@ export const useConnectionInvitationDeepLink = (): void => {
   useEffect(() => service.onInvitation(({ url }) => setInvitationUrl(url)), [service])
 
   useEffect(() => {
-    // Wait for the agent to reach 'ready' (loading === false) before accepting.
     if (!invitationUrl || !agent || loading) {
       return
     }

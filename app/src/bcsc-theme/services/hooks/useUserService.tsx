@@ -7,12 +7,6 @@ import { useAlerts } from '@/hooks/useAlerts'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback, useMemo } from 'react'
 
-/**
- * Service layer hook for user api.
- * Business logic related to user API calls and UI event handling should be implemented here.
- *
- * @returns User API service with UI event handling.
- */
 export const useUserService = () => {
   const { client } = useBCSCApiClientState()
   const userApi = useUserApi(client as BCSCApiClient)
@@ -72,7 +66,6 @@ export const useUserService = () => {
     try {
       const userMetadata = await userApi.getUserInfo()
 
-      // if picture exists, fetch it
       if (userMetadata.picture) {
         pictureUri = await userApi.getPicture(userMetadata.picture)
       }

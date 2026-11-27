@@ -7,7 +7,7 @@ import { useCallback } from 'react'
 
 /**
  * Recovery hook for evidence uploads that IAS rejects with 409 "Registration Request already approved".
- * V3 handles the same 409 this way (ias-android DocumentUploadViewModel ->
+ * V3 handles the same 409 this way (ias-android DocumentUploadViewModel →
  * CreateSessionAlreadyVerifiedError).
  */
 export const useAlreadyVerifiedRecovery = () => {

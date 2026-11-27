@@ -10,12 +10,6 @@ import { useTranslation } from 'react-i18next'
 import { BackHandler } from 'react-native'
 import { SystemModal } from './components/SystemModal'
 
-/**
- * Component displayed when the device has been invalidated.
- *
- * @returns {*} {React.ReactElement} The DeviceInvalidated component.
- */
-
 type DeviceInvalidatedProps = StackScreenProps<BCSCMainStackParams, BCSCModals.DeviceInvalidated>
 
 export const DeviceInvalidated = ({ route }: DeviceInvalidatedProps): React.ReactElement => {
@@ -33,9 +27,6 @@ export const DeviceInvalidated = ({ route }: DeviceInvalidatedProps): React.Reac
     }, [])
   )
 
-  /**
-   * Handles the factory reset operation.
-   */
   const handleFactoryReset = useCallback(async () => {
     const factoryResetParams: Partial<Record<BCSCReason, Partial<BCSCState>>> = {
       // Can add more cases here for different BCSCReason types in the future

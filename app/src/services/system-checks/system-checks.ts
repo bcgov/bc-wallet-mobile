@@ -5,54 +5,19 @@ import { TFunction } from 'i18next'
 import { Dispatch } from 'react'
 
 export type SystemCheckStrategy = {
-  /**
-   * Runs the startup check.
-   *
-   * @returns {Promise<boolean> | boolean} - A promise that resolves to true if the check passes, false otherwise.
-   */
   runCheck: () => Promise<boolean> | boolean
-  /**
-   * Handles the failure of the startup check.
-   *
-   * @returns {Promise<void> | void} - A promise that resolves when the failure handling is complete.
-   */
   onFail: () => Promise<void> | void
-  /**
-   * Handles the success of the startup check.
-   *
-   * @returns {Promise<void> | void} - A promise that resolves when the success handling is complete.
-   */
   onSuccess?: () => Promise<void> | void
 }
 
 // Common utilities used across system checks
 export interface SystemCheckUtils {
-  /**
-   * Dispatch function to send actions to the store.
-   *
-   * @type {Dispatch<ReducerAction<any>>}
-   */
   dispatch: Dispatch<ReducerAction<any>>
-  /**
-   * Translation function for internationalization.
-   *
-   * @type {TFunction}
-   */
   translation: TFunction
-  /**
-   * Logger for logging messages and errors.
-   *
-   * @type {BifoldLogger}
-   */
   logger: BifoldLogger
 }
 
 export interface SystemCheckNavigationUtils extends SystemCheckUtils {
-  /**
-   * Navigation object to handle screen transitions.
-   *
-   * @type {SystemCheckNavigation}
-   */
   navigation: SystemCheckNavigation
 }
 
@@ -107,9 +72,9 @@ async function handleCheckOutcome(
 /**
  * Runs a series of startup checks and handles failures and successes accordingly.
  *
- * @param {SystemCheckStrategy[]} checks - An array of startup checks to run.
- * @param {BifoldLogger} [logger] - Optional logger used to report isolated check failures.
- * @returns {*} {Promise<boolean[]>} - An array of boolean results indicating the success of each check.
+ * @param checks - An array of startup checks to run.
+ * @param logger - Optional logger used to report isolated check failures.
+ * @returns - An array of boolean results indicating the success of each check.
  */
 export async function runSystemChecks(checks: SystemCheckStrategy[], logger?: BifoldLogger) {
   // Run every check concurrently but isolate failures: a single check that throws

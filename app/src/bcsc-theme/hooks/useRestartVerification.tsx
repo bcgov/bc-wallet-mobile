@@ -20,7 +20,7 @@ import { useVerificationReset } from './useVerificationReset'
  * (see {@link useVerificationReset}) behind a loading screen, then the user re-enters the verify
  * flow so the RootStack remounts the VerifyStack at the first verification step.
  *
- * @returns {(onConfirm?: () => void) => void} Callback that shows the confirmation alert. The
+ * @returns Callback that shows the confirmation alert. The
  * optional `onConfirm` is invoked when the user confirms, before the reset starts (e.g. to
  * close the menu the restart was triggered from).
  */

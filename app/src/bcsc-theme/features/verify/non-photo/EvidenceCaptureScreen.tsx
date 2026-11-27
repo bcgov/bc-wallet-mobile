@@ -219,11 +219,6 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
     return false
   }
 
-  /**
-   * Handles accepting the captured photo and proceeding to the next step.
-   *
-   * @returns A promise that resolves when the process is complete.
-   */
   const handleAcceptPhoto = async () => {
     if (!currentPhotoPath || !currentSide) {
       return
@@ -242,7 +237,6 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
       void scanner.handleScanDriversLicense(licenseRef.current)
     }
 
-    // Wrap getPhotoMetadata with alert
     const getPhotoMetadataWithAlert = withAlert(getPhotoMetadata, failedToReadFromLocalStorageAlert)
     const photoMetadata = await getPhotoMetadataWithAlert(currentPhotoPath, logger)
     photoMetadata.label = currentSide.image_side_name
@@ -275,7 +269,6 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
       return
     }
 
-    // Move to next side
     setCurrentIndex((prev) => prev + 1)
     setCaptureState(CaptureState.CAPTURING)
     setCurrentPhotoPath(undefined)

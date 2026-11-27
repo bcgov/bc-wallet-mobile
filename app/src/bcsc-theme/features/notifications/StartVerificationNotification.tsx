@@ -3,11 +3,6 @@ import { useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import NotificationActionCard from './NotificationActionCard'
 
-/**
- * StartVerificationNotification is a component that displays a notification card prompting the user to start the verification process for their BCSC account.
- *
- * @returns React.Element - The rendered StartVerificationNotification component.
- */
 const StartVerificationNotification = () => {
   const { t } = useTranslation()
   const { ColorPalette } = useTheme()

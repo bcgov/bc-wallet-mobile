@@ -9,7 +9,7 @@ import useServiceNoticeViewModel from './useServiceNoticeViewModel'
  * The full IAS service notice, opened from the warning banner on Home (or account landing),
  * followed by fixed guidance on what may take longer.
  *
- * @returns {*} {React.ReactElement} The ServiceNoticeScreen component.
+ * @returns The ServiceNoticeScreen component.
  */
 export const ServiceNoticeScreen = (): React.ReactElement => {
   const {

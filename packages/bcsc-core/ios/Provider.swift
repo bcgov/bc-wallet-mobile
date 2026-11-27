@@ -7,7 +7,6 @@ class Provider: NSObject, NSSecureCoding {
   var multipleAccountsSupported: Bool = false
   var clientMetadataEndpoint: String?
   var pairDeviceWithQRCodeSupported: Bool = false
-  // var jwks: [JWK] = []
   var authorizationEndpoint: String?
   var maximumAccountsPerDevice: Int = 0
   var oidcConfiguration: [String: Any] = [:]
@@ -50,7 +49,6 @@ class Provider: NSObject, NSSecureCoding {
     coder.encode(multipleAccountsSupported, forKey: .multipleAccountsSupported)
     coder.encode(clientMetadataEndpoint, forKey: .clientMetadataEndpoint)
     coder.encode(pairDeviceWithQRCodeSupported, forKey: .pairDeviceWithQRCodeSupported)
-    // coder.encode(jwks, forKey: .jwks)
     coder.encode(authorizationEndpoint, forKey: .authorizationEndpoint)
     coder.encode(maximumAccountsPerDevice, forKey: .maximumAccountsPerDevice)
     coder.encode(oidcConfiguration, forKey: .oidcConfiguration)
@@ -75,7 +73,6 @@ private extension String {
   static let multipleAccountsSupported = "multiple_accounts_supported"
   static let clientMetadataEndpoint = "client_metadata_endpoint"
   static let pairDeviceWithQRCodeSupported = "pair_device_with_qrcode_supported"
-  // static let jwks = "jwks"
   static let authorizationEndpoint = "authorizationEndpoint"
   static let maximumAccountsPerDevice = "maximum_accounts_per_device"
   static let oidcConfiguration = "oidcConfiguration"

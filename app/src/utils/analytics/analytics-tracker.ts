@@ -24,8 +24,8 @@ const AnalyticsClient = {
  *
  * @see self hosted snowplow micro: https://docs.snowplow.io/docs/testing/snowplow-micro/basic-usage/
  *
- * @class
  * @example
+ * ```ts
  * const analyticsTracker = new AnalyticsTracker('myNamespace', 'https://endpoint.com')
  *
  * await analyticsTracker.initializeTracker()
@@ -34,6 +34,7 @@ const AnalyticsClient = {
  * analyticsTracker.trackScreenEvent('HomeScreen', 'LoginScreen')
  * analyticsTracker.trackAlertDisplayEvent(AlertEvent.SAMPLE_EVENT)
  * analyticsTracker.trackAlertActionEvent(AlertEvent.SAMPLE_EVENT, 'OK')
+ * ```
  */
 export class AnalyticsTracker {
   private readonly namespace: string
@@ -47,20 +48,10 @@ export class AnalyticsTracker {
     this.client = client
   }
 
-  /**
-   * Checks if Analytics has an initialized tracker.
-   *
-   * @returns {*} {boolean}
-   */
   hasTracker(): boolean {
     return Boolean(this.tracker)
   }
 
-  /**
-   * Stops tracking and removes the tracker instance.
-   *
-   * @returns {*} {void}
-   */
   stopTracking(): void {
     removeTracker(this.namespace)
     this.tracker = undefined
@@ -70,7 +61,6 @@ export class AnalyticsTracker {
    * Sets the application ID for the tracker if the tracker is initialized.
    *
    * @param appId - The application ID to set for the tracker.
-   * @returns void
    */
   setAppId(appId: string): void {
     if (!this.tracker) {
@@ -80,12 +70,6 @@ export class AnalyticsTracker {
     this.tracker.setAppId(appId)
   }
 
-  /**
-   * Initializes the analytics tracker with the provided options.
-   *
-   * @param {string} appId - The application ID to use for tracking.
-   * @returns {*} {Promise<void>}
-   */
   async initializeTracker(appId: string): Promise<void> {
     this.tracker = await this.client.newTracker({
       namespace: this.namespace,
@@ -113,19 +97,11 @@ export class AnalyticsTracker {
     })
   }
 
-  /**
-   * Tracks a screen view event.
-   *
-   * @param {string} screenName - The name of the current screen.
-   * @param {string} [previousScreenName] - The name of the previous screen.
-   * @returns {*} {void}
-   */
   trackScreenEvent(screenName: string, previousScreenName?: string): void {
     if (!this.tracker) {
       return
     }
 
-    // Avoid tracking if the screen name hasn't changed
     if (screenName === previousScreenName) {
       return
     }
@@ -141,8 +117,7 @@ export class AnalyticsTracker {
    *
    * Note: This uses the `idim` snowplow `mobile_error` schema.
    *
-   * @param {AnalyticsError} error - The error to track.
-   * @returns {*} {void}
+   * @param error - The error to track.
    */
   trackErrorEvent(error: AnalyticsError): void {
     if (!this.tracker) {
@@ -163,8 +138,7 @@ export class AnalyticsTracker {
    *
    * Note: This uses the `idim` snowplow `action` schema.
    *
-   * @param {AppEventCode} appEvent - The app event (alert) to track.
-   * @returns {*} {void}
+   * @param appEvent - The app event (alert) to track.
    */
   trackAlertDisplayEvent(appEvent: AppEventCode): void {
     if (!this.tracker) {
@@ -185,9 +159,8 @@ export class AnalyticsTracker {
    *
    * Note: This uses the `idim` snowplow `action` schema.
    *
-   * @param {AppEventCode} appEvent - The app event (alert) to track.
-   * @param {string} actionLabel - The action label taken on the alert (e.g., 'ok' button pressed).
-   * @returns {*} {void}
+   * @param appEvent - The app event (alert) to track.
+   * @param actionLabel - The action label taken on the alert (e.g., 'ok' button pressed).
    */
   trackAlertActionEvent(appEvent: AppEventCode, actionLabel: string): void {
     if (!this.tracker) {

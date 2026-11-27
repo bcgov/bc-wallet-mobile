@@ -19,7 +19,7 @@ type VerificationSessionExpiredProps = StackScreenProps<BCSCVerifyStackParams, B
  * route, so the modal dismisses. If the reset fails, surface the factory-reset alert so the user
  * isn't stranded on a dead screen.
  *
- * @returns {*} {React.ReactElement} The VerificationSessionExpired component.
+ * @returns The VerificationSessionExpired component.
  */
 export const VerificationSessionExpired = ({ navigation }: VerificationSessionExpiredProps): React.ReactElement => {
   const { t } = useTranslation()
@@ -27,9 +27,6 @@ export const VerificationSessionExpired = ({ navigation }: VerificationSessionEx
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { factoryResetAlert } = useAlerts(navigation)
 
-  /**
-   * Handles the factory reset operation.
-   */
   const handleFactoryReset = useCallback(async () => {
     const result = await factoryReset()
 

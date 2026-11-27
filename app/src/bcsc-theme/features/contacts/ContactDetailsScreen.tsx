@@ -50,11 +50,6 @@ const ActionButton: React.FC<ActionButtonProps> = ({ icon, label, onPress, testI
   )
 }
 
-/**
- * Detail screen for a DIDComm connection. Shows the contact's name, creation
- * timestamp, and pin state, and exposes actions to rename, view raw JSON,
- * remove, or toggle pinning.
- */
 const ContactDetailsScreen = ({ navigation, route }: ContactDetailsScreenProps) => {
   const { connectionId } = route.params
   const { t } = useTranslation()

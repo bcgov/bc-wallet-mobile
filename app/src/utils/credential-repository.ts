@@ -1,6 +1,5 @@
 /**
  * Credential definition record class that parses the credential definition ID into its components.
- * @class CredentialDefinitionRecord
  */
 export class CredentialDefinitionRecord {
   credDefId: string
@@ -36,7 +35,6 @@ export class CredentialDefinitionRecord {
 
 /**
  * This class represents a credential schema record, which parses the schema ID into its components.
- * @class CredentialSchemaRecord
  */
 export class CredentialSchemaRecord {
   schemaId: string
@@ -66,7 +64,6 @@ export class CredentialSchemaRecord {
 
 /**
  * Credential identity class that combines a credential definition record and a credential schema record.
- * @class CredentialIdentity
  */
 export class CredentialIdentity {
   credDefId: string
@@ -97,8 +94,6 @@ export class CredentialIdentity {
     this.tag = credential.tag
   }
 }
-
-// CREDENTIAL IDENTITY RECORDS
 
 // Digital Services Card Credentials (Person credentials)
 export const DigitalServicesCardCredentialIdentityDEV = new CredentialIdentity(

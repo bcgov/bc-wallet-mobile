@@ -2,6 +2,7 @@ import { fixupConfigRules } from '@eslint/compat';
 import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
 import prettier from 'eslint-plugin-prettier/recommended';
+import tsdoc from 'eslint-plugin-tsdoc';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -19,6 +20,11 @@ export default [
   },
   ...fixupConfigRules(compat.extends('@react-native')),
   prettier,
+  {
+    files: ['**/*.{ts,tsx}'],
+    plugins: { tsdoc },
+    rules: { 'tsdoc/syntax': 'error' },
+  },
   {
     rules: {
       'react/react-in-jsx-scope': 'off',

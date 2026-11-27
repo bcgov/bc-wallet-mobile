@@ -97,9 +97,6 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
     },
   })
 
-  /**
-   * Retires the recording and sends the user to the expired screen
-   */
   const onExpired = useCallback(() => {
     if (hasExpiredRef.current) {
       return
@@ -212,17 +209,15 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
    * Note: If the user navigates quickly through the flow, the UploadingScreen will just wait
    * for the video disk read to complete before proceeding.
    *
-   * @param {OnLoadData} data The data object containing video load information.
-   * @returns {*} {Promise<void>} A promise that resolves when the video metadata is processed and cached.
+   * @param data - The data object containing video load information.
+   * @returns A promise that resolves when the video metadata is processed and cached.
    */
   const onVideoLoad = async (data: OnLoadData) => {
     setVideoLoaded(false)
     try {
-      // Clear the previously cached video
       VerificationVideoCache.clearCache()
       dispatch({ type: BCDispatchAction.SAVE_VIDEO, payload: [{ videoPath: undefined, videoDuration: undefined }] })
 
-      // Wrap the file reader with alert
       const readFileInChunksWithAlert = withAlert(readFileInChunks, failedToReadFromLocalStorageAlert)
       const videoFilePromise = readFileInChunksWithAlert(videoPath, logger)
 
@@ -231,7 +226,6 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
     } catch (error) {
       logger.error('Error caching video file:', error as Error)
     } finally {
-      // Optimistically save the video path and duration
       dispatch({
         type: BCDispatchAction.SAVE_VIDEO,
         payload: [{ videoPath: videoPath, videoDuration: Math.floor(data.duration) }],

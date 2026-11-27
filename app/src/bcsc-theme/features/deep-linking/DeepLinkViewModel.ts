@@ -31,8 +31,6 @@ export class DeepLinkViewModel {
     const { path } = payload
     this.logger.info(`[DeepLinkViewModel] Received: ${path ?? 'no-path'} ${JSON.stringify(payload)}`)
 
-    // --- BUSINESS LOGIC ---
-
     if (this.handlePairing(payload)) {
       return
     }
@@ -40,8 +38,6 @@ export class DeepLinkViewModel {
     if (this.handleConnectionInvitation(payload)) {
       return
     }
-
-    // Add more routes here as needed.
   }
 
   /**
@@ -80,7 +76,6 @@ export class DeepLinkViewModel {
       return false
     }
 
-    // Delegate to PairingService
     this.pairingService.handlePairing({
       serviceTitle,
       pairingCode,

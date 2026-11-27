@@ -14,7 +14,7 @@ import { useCallback } from 'react'
  * Only a deferred verifier (or developer mode) is offered this exit; see
  * {@link useVerificationExitPolicy} for who gets which way out.
  *
- * @returns {(onLeave?: () => void) => void} Callback that leaves the flow. The optional `onLeave`
+ * @returns Callback that leaves the flow. The optional `onLeave`
  * runs first (e.g. to close the menu the action was triggered from).
  */
 export const useLeaveVerification = () => {

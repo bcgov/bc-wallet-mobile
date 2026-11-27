@@ -31,7 +31,7 @@ import { getDefaultModalOptions } from './stack-utils'
  * install the app. (The one-time welcome/intro is also shown to already-onboarded users on launch
  * via AuthStack — see its AuthIntro screen.)
  *
- * @returns {*} {React.ReactElement} The OnboardingStack component.
+ * @returns The OnboardingStack component.
  */
 const OnboardingStack = (): React.ReactElement => {
   const { t } = useTranslation()

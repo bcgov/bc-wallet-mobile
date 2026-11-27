@@ -7,8 +7,8 @@ import { SystemCheckNavigation, SystemCheckStrategy } from './system-checks'
  * The navigators on the focused path, outermost first. `getState()` is the root navigator's state,
  * and the modal is registered in the phase stack nested under it.
  *
- * @param {NavigationState | undefined} state The root navigation state.
- * @returns {*} {NavigationState[]} The focused navigator states, root first.
+ * @param state - The root navigation state.
+ * @returns The focused navigator states, root first.
  */
 const getFocusedPath = (state: NavigationState | undefined): NavigationState[] => {
   const path: NavigationState[] = []
@@ -24,14 +24,10 @@ const getFocusedPath = (state: NavigationState | undefined): NavigationState[] =
 /**
  * System check strategy to verify internet connectivity.
  *
- *
  * If the device is not connected to the internet, navigates to the InternetDisconnected modal.
  * If the device regains connectivity, navigates back to the previous screen.
  *
- * @see {InternetDisonnected.tsx} for the modal displayed when disconnected.
- *
- * @class InternetStatusSystemCheck
- * @implements {SystemCheckStrategy}
+ * @see `InternetDisconnected.tsx` for the modal displayed when disconnected.
  */
 export class InternetStatusSystemCheck implements SystemCheckStrategy {
   private readonly isConnected: boolean | null
@@ -51,13 +47,7 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
     this.logger = logger
   }
 
-  /**
-   * Checks if the InternetDisconnected modal is currently visible: it is the focused route of the
-   * innermost navigator on the focused path.
-   *
-   * @param {NavigationState | undefined} state The root navigation state to inspect.
-   * @returns {*} {boolean} True if the modal is visible, false otherwise.
-   */
+  // Visible when it is the focused route of the innermost navigator on the focused path
   private isModalVisible(state: NavigationState | undefined) {
     const path = getFocusedPath(state)
     const leaf = path.at(-1)
@@ -71,18 +61,13 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
    * False while the root navigator shows its startup Loading route, which registers no modals:
    * navigating then would log "NAVIGATE ... was not handled by any navigator".
    *
-   * @param {NavigationState | undefined} state The root navigation state to inspect.
-   * @returns {*} {boolean} True if a navigator on the focused path registers the modal route.
+   * @param state - The root navigation state to inspect.
+   * @returns True if a navigator on the focused path registers the modal route.
    */
   private canShowModal(state: NavigationState | undefined) {
     return getFocusedPath(state).some((navigator) => navigator.routeNames?.includes(BCSCModals.InternetDisconnected))
   }
 
-  /**
-   * Runs the internet connectivity check.
-   *
-   * @returns {boolean} True if the device is connected to the internet and internet is reachable or unknown, false otherwise.
-   */
   runCheck() {
     return Boolean(this.isConnected && (this.isInternetReachable === true || this.isInternetReachable === null))
   }
@@ -90,8 +75,6 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
   /**
    * Handles the failure of the internet connectivity check
    * by navigating to the InternetDisconnected modal.
-   *
-   * @returns {*} {void}
    */
   onFail() {
     this.logger.warn('InternetStatusSystemCheck: No internet connection detected')
@@ -116,11 +99,8 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
   /**
    * Handles the success of the internet connectivity check
    * by navigating back if currently on the InternetDisconnected modal.
-   *
-   * @returns {*} {void}
    */
   onSuccess() {
-    // Only navigate back if the modal is visible
     if (!this.isModalVisible(this.navigation.getState()) || !this.navigation.canGoBack()) {
       return
     }

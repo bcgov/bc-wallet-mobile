@@ -35,13 +35,7 @@ interface TermsOfUseContentProps {
   headerText?: string
 }
 
-/**
- * Reusable Terms of Use content component that fetches and presents the terms of use to the user.
- *
- * Used by the onboarding Terms of Use screen and the updated terms re-acceptance modal.
- *
- * @returns {*} {React.ReactElement} The TermsOfUseContent component.
- */
+/** Used by the onboarding Terms of Use screen and the updated terms re-acceptance modal. */
 export const TermsOfUseContent = ({ onAccept, headerText }: TermsOfUseContentProps): React.ReactElement => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette, TextTheme } = useTheme()
@@ -105,7 +99,6 @@ export const TermsOfUseContent = ({ onAccept, headerText }: TermsOfUseContentPro
   })
 
   const termsOfUseHtml = useMemo(() => {
-    // check if html is an empty string after clean up
     if (!termsOfUse || stripOuterDocumentTags(termsOfUse.html) === '') {
       return null
     }

@@ -7,8 +7,8 @@ import { BCSCScreens, BCSCStacks } from '../types/navigators'
 /**
  * Returns default screen options for modal presentations.
  *
- * @param {string} title - The title of the modal screen.
- * @returns {*} {StackNavigationOptions} The default modal screen options.
+ * @param title - The title of the modal screen.
+ * @returns The default modal screen options.
  */
 export function getDefaultModalOptions(title?: string): StackNavigationOptions {
   return {

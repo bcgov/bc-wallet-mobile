@@ -25,7 +25,6 @@ const VerificationSuccessScreen = () => {
     },
   })
 
-  // Disable hardware back button on Android
   useFocusEffect(() => {
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => true)
     return subscription.remove
