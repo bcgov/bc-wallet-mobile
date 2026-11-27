@@ -1561,6 +1561,10 @@ const translation = {
       "Title": "Invalid Login (PT-BR)",
       "Description": "Please try again later. If the problem continues, contact the BC Services Card Help Desk. (PT-BR)"
     },
+    "PairingCodeScannedDuringTransfer": {
+      "Title": "This QR code is for logging in to a website (PT-BR)",
+      "Description": "To verify your identity on this device, choose ‘{{addAccount}}’. To transfer from a nearby device, choose ‘{{transferAccount}}’. (PT-BR)"
+    },
     "LiveCallFileUploadError": {
       "Title": "Problem Calling Agent (PT-BR)",
       "Description": "Please try again later. (PT-BR)",

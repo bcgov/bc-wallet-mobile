@@ -1636,6 +1636,10 @@ const translation = {
       "Title": "Invalid Login",
       "Description": "Please try again later. If the problem continues, contact the BC Services Card Help Desk."
     },
+    "PairingCodeScannedDuringTransfer": {
+      "Title": "This QR code is for logging in to a website",
+      "Description": "To verify your identity on this device, choose ‘{{addAccount}}’. To transfer from a nearby device, choose ‘{{transferAccount}}’."
+    },
     "LoginRequestExpired": {
       "Title": "Login Request Expired",
       "Description": "This login request has expired or is no longer valid. Please start again from the service."

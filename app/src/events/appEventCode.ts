@@ -147,6 +147,7 @@ export enum AppEventCode {
   TOO_MANY_ATTEMPTS = 'too_many_attempts',
   INVALID_QR_CODE = 'invalid_qr_code',
   UNRECOGNIZED_QR_CODE = 'unrecognized_qr_code',
+  PAIRING_CODE_SCANNED_DURING_TRANSFER = 'pairing_code_scanned_during_transfer',
   ACCOUNT_TRANSFER_ERROR = 'account_transfer_error', // Non-IAS error code
   CREDENTIAL_QR_SCAN_FAILED = 'credential_qr_scan_failed', // Non-IAS error code
   NON_BCSC_ACCEPT_CONDITIONS = 'non_bcsc_accept_conditions',

@@ -442,6 +442,7 @@ export const useAlerts = (navigationProp?: NavigationProp<any>) => {
       documentExpiredAlert: _createBasicAlert(AppEventCode.ERR_209_BAD_REQUEST, 'DocumentExpired'),
       bcscCardAlreadyAddedAlert: _createBasicAlert(AppEventCode.EVIDENCE_BCSC_CARD_ALREADY_ADDED, 'BcscCardAlreadyAdded'),
       loginSameDeviceInvalidPairingCodeAlert: _createBasicErrorModal(AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE, 'InvalidPairingCodeSameDevice'),
+      pairingCodeScannedDuringTransferAlert: _createBasicErrorModal(AppEventCode.PAIRING_CODE_SCANNED_DURING_TRANSFER, 'PairingCodeScannedDuringTransfer', { addAccount: t('BCSC.AccountSetup.AddAccount'), transferAccount: t('BCSC.AccountSetup.TransferAccount') }),
       failedToWriteToLocalStorageAlert,
       failedToReadFromLocalStorageAlert: _createBasicErrorModal(AppEventCode.ERR_101_FAILED_TO_READ_LOCAL_STORAGE, 'SomethingWentWrong'),
       clientRegistrationNullAlert: _createBasicErrorModal(AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL, 'SomethingWentWrong'),
@@ -521,6 +522,7 @@ export const useAlerts = (navigationProp?: NavigationProp<any>) => {
       failedToWriteToLocalStorageAlert,
       _createProblemWithAccountErrorModal,
       deviceStorageFullAlert,
+      t,
     ]
   )
 }

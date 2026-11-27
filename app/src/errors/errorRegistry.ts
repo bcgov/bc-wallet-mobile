@@ -156,6 +156,14 @@ export const ErrorRegistry = {
     category: ErrorCategory.CAMERA,
     message: 'Scanned QR code is unrecognized — no matching handler found for the QR code type',
   },
+  PAIRING_CODE_SCANNED_DURING_TRANSFER: {
+    statusCode: 2005,
+    appEvent: AppEventCode.PAIRING_CODE_SCANNED_DURING_TRANSFER,
+    severity: ErrorSeverity.WARNING,
+    category: ErrorCategory.CAMERA,
+    message:
+      'Website login (pairing) QR code scanned in the account transfer scanner, which only accepts transfer QR codes',
+  },
 
   // ============================================
   // Network Errors (2100-2199)

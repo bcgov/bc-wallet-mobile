@@ -1,3 +1,4 @@
+import { useCardStatus } from '@/bcsc-theme/hooks/useCardStatus'
 import { BCSCQRCoreScreens, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useFocusEffect } from '@react-navigation/native'
 import { act, render } from '@testing-library/react-native'
@@ -22,12 +23,18 @@ jest.mock('@/contexts/ErrorAlertContext', () => {
   const emitErrorModal = jest.fn()
   return { useErrorAlert: () => ({ emitErrorModal, isErrorModalVisible: false }) }
 })
+// Stable across renders like the real navigation object, so callbacks only change when their other deps do
+const mockNavigation = {
+  navigate: mockNavigate,
+  getParent: () => ({ navigate: mockParentNavigate }),
+}
 jest.mock('@react-navigation/native', () => ({
   useFocusEffect: jest.fn(),
-  useNavigation: () => ({
-    navigate: mockNavigate,
-    getParent: () => ({ navigate: mockParentNavigate }),
-  }),
+  useNavigation: () => mockNavigation,
+}))
+// The real hook pulls in the navigation stack; a verified, unexpired card is the default for every test
+jest.mock('@/bcsc-theme/hooks/useCardStatus', () => ({
+  useCardStatus: jest.fn(() => ({ isVerified: true, isExpired: false })),
 }))
 jest.mock('./QRScanner', () => jest.fn(() => null))
 jest.mock('./qr-code-strategies/usePairingCodeQRCodeStrategy', () => ({ usePairingCodeQRCodeStrategy: jest.fn() }))
@@ -37,6 +44,7 @@ jest.mock('./qr-code-strategies/useAccountTransferQRCodeStrategy', () => ({
 jest.mock('./qr-code-strategies/useDidCommOobQRCodeStrategy', () => ({ useDidCommOobQRCodeStrategy: jest.fn() }))
 
 const mockQRScanner = QRScanner as unknown as jest.Mock
+const mockUseCardStatus = useCardStatus as jest.Mock
 const mockUseFocusEffect = useFocusEffect as jest.Mock
 
 const latestProps = () => mockQRScanner.mock.calls.at(-1)![0]
@@ -73,6 +81,50 @@ describe('QRScannerScreen', () => {
     render(<QRScannerScreen />)
     onPairingCodeFound('ABC123')
     expect(mockNavigate).toHaveBeenCalledWith(BCSCQRCoreScreens.PairingCode, { pairingCode: 'ABC123' })
+    expect(mockParentNavigate).not.toHaveBeenCalled()
+  })
+
+  it('sends an expired card to reverify instead of the pairing code tab', () => {
+    mockUseCardStatus.mockReturnValueOnce({ isVerified: true, isExpired: true })
+
+    render(<QRScannerScreen />)
+    onPairingCodeFound('ABC123')
+
+    expect(mockParentNavigate).toHaveBeenCalledWith(BCSCScreens.ReverifyAccount, { isExpired: true })
+    expect(mockNavigate).not.toHaveBeenCalled()
+  })
+
+  it('sends an unverified user to the verify prompt instead of the pairing code tab', () => {
+    mockUseCardStatus.mockReturnValueOnce({ isVerified: false, isExpired: false })
+
+    render(<QRScannerScreen />)
+    onPairingCodeFound('ABC123')
+
+    expect(mockParentNavigate).toHaveBeenCalledWith(BCSCScreens.MainVerifyPrompt)
+    expect(mockNavigate).not.toHaveBeenCalled()
+  })
+
+  it('sends a card that is both expired and unverified to reverify, not the verify prompt', () => {
+    mockUseCardStatus.mockReturnValueOnce({ isVerified: false, isExpired: true })
+
+    render(<QRScannerScreen />)
+    onPairingCodeFound('ABC123')
+
+    expect(mockParentNavigate).toHaveBeenCalledTimes(1)
+    expect(mockParentNavigate).toHaveBeenCalledWith(BCSCScreens.ReverifyAccount, { isExpired: true })
+    expect(mockNavigate).not.toHaveBeenCalled()
+  })
+
+  it('uses the current card status after it changes, not the status from the first render', () => {
+    mockUseCardStatus.mockReturnValueOnce({ isVerified: false, isExpired: false })
+
+    const { rerender } = render(<QRScannerScreen />)
+    // Falls back to the verified default, as when verification completes while the scanner is mounted
+    rerender(<QRScannerScreen />)
+    onPairingCodeFound('ABC123')
+
+    expect(mockNavigate).toHaveBeenCalledWith(BCSCQRCoreScreens.PairingCode, { pairingCode: 'ABC123' })
+    expect(mockParentNavigate).not.toHaveBeenCalled()
   })
 
   it('navigates the parent stack on account transfer success and already verified', () => {
