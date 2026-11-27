@@ -591,7 +591,8 @@ jump on a root slide too; that change belongs in Bifold and is tracked there.
 A function's doc comment is TSDoc: a summary, then `@param name - description` and `@returns description`.
 Leave types out of the tags; the signature already has them. Leave out a tag that would only repeat the
 parameter name or its type (`@param props`, `@returns void`), and a doc block whose summary only restates the
-function's name. Every other comment explains why, an assumption, or an invariant, never what the next line
+function's name. For an async function, say when the promise resolves or rejects if the type doesn't make it
+obvious. Every other comment explains why, an assumption, or an invariant, never what the next line
 does. No section banners and no commented-out code. `eslint-plugin-tsdoc` (`tsdoc/syntax`) checks the
 syntax: code samples go in fenced blocks under `@example`, and a literal `{`, `}` or `>` goes in backticks.
 
