@@ -4,7 +4,7 @@ import { bcsc, defineScreen } from './core/index.js'
 const { errorModal } = TestIds
 
 /**
- * The app's error modal (`BCSCErrorModal` → `ErrorInfoCard`) — an overlay any screen can raise, and
+ * The app's error modal (`BCSCAlertModal` → `ErrorInfoCard`) — an overlay any screen can raise, and
  * the reason a screen that looks stuck often is: whatever the journey was waiting for will never
  * arrive while this is up.
  *

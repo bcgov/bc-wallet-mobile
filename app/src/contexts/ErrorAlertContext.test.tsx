@@ -1,10 +1,8 @@
 import { act, renderHook } from '@testing-library/react-native'
-import i18next from 'i18next'
 import React from 'react'
 import { AppError } from '../errors/appError'
 import { ErrorCategory } from '../errors/errorRegistry'
 import { AppEventCode } from '../events/appEventCode'
-import { showAlert } from '../utils/alert'
 import { Analytics } from '../utils/analytics/analytics-singleton'
 import { appLogger } from '../utils/logger'
 import { ErrorAlertProvider, useErrorAlert } from './ErrorAlertContext'
@@ -13,9 +11,9 @@ jest.mock('@/contexts/NavigationContainerContext', () => ({
   navigationRef: { isReady: () => false, getCurrentRoute: () => undefined },
 }))
 
-const mockBCSCErrorModal = jest.fn()
-jest.mock('@/errors/components/ErrorModal', () => ({
-  BCSCErrorModal: (props: any) => mockBCSCErrorModal(props),
+const mockBCSCAlertModal = jest.fn()
+jest.mock('@/errors/components/AlertModal', () => ({
+  BCSCAlertModal: (props: any) => mockBCSCAlertModal(props),
 }))
 
 jest.mock('react-native', () => ({
@@ -81,10 +79,6 @@ jest.mock('react-i18next', () => ({
 
 jest.mock('i18next', () => ({
   t: (key: string) => key,
-}))
-
-jest.mock('../utils/alert', () => ({
-  showAlert: jest.fn(),
 }))
 
 jest.mock('../utils/analytics/analytics-singleton', () => ({
@@ -203,9 +197,10 @@ describe('ErrorAlertContext', () => {
         result.current.emitErrorModal('No Internet', 'Check your connection', appError)
       })
 
-      expect(mockBCSCErrorModal).toHaveBeenLastCalledWith(
+      expect(mockBCSCAlertModal).toHaveBeenLastCalledWith(
         expect.objectContaining({
           payload: expect.objectContaining({
+            kind: 'error',
             title: 'No Internet',
             description: 'Check your connection',
             // The whole AppError rides along so the modal can derive message/code itself
@@ -236,33 +231,96 @@ describe('ErrorAlertContext', () => {
         result.current.emitErrorModal('Title 1', 'Desc 1', appError)
       })
 
-      expect(mockBCSCErrorModal).toHaveBeenLastCalledWith(expect.objectContaining({ errorKey: 1 }))
+      expect(mockBCSCAlertModal).toHaveBeenLastCalledWith(expect.objectContaining({ errorKey: 1 }))
 
       act(() => {
         result.current.emitErrorModal('Title 2', 'Desc 2', appError)
       })
 
       // A repeated error must bump the key, otherwise the modal never re-opens.
-      expect(mockBCSCErrorModal).toHaveBeenLastCalledWith(expect.objectContaining({ errorKey: 2 }))
+      expect(mockBCSCAlertModal).toHaveBeenLastCalledWith(expect.objectContaining({ errorKey: 2 }))
     })
   })
 
   describe('emitAlert()', () => {
-    it('should show native alert', () => {
+    it('should show the alert with a default OK action and track it', () => {
       const { result } = renderHook(() => useErrorAlert(), { wrapper })
 
       act(() => {
-        result.current.emitAlert(i18next.t('Global.General'), i18next.t('Global.General'), {
-          event: AppEventCode.GENERAL,
-        })
+        result.current.emitAlert('Alert Title', 'Alert Description', { event: AppEventCode.GENERAL })
       })
 
-      expect(showAlert).toHaveBeenCalledWith(
-        i18next.t('Global.General'),
-        i18next.t('Global.General'),
-        undefined,
-        AppEventCode.GENERAL
+      expect(mockBCSCAlertModal).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          payload: {
+            kind: 'alert',
+            title: 'Alert Title',
+            description: 'Alert Description',
+            actions: [expect.objectContaining({ text: 'Global.Okay' })],
+            event: AppEventCode.GENERAL,
+          },
+        })
       )
+      expect(Analytics.trackAlertDisplayEvent).toHaveBeenCalledWith(AppEventCode.GENERAL)
+    })
+
+    it('should pass the caller actions through unchanged', () => {
+      const { result } = renderHook(() => useErrorAlert(), { wrapper })
+      const actions = [
+        { text: 'Cancel', style: 'cancel' as const },
+        { text: 'Delete', style: 'destructive' as const, onPress: jest.fn() },
+      ]
+
+      act(() => {
+        result.current.emitAlert('Alert Title', 'Alert Description', { actions })
+      })
+
+      expect(mockBCSCAlertModal).toHaveBeenLastCalledWith(
+        expect.objectContaining({ payload: expect.objectContaining({ actions }) })
+      )
+    })
+
+    it('should show the error first and the alert once the error is dismissed', () => {
+      const { result } = renderHook(() => useErrorAlert(), { wrapper })
+      const appError = new AppError(
+        'Error',
+        {
+          category: ErrorCategory.GENERAL,
+          appEvent: AppEventCode.GENERAL,
+          statusCode: 2800,
+        },
+        { track: false }
+      )
+
+      act(() => {
+        result.current.emitErrorModal('Error Title', 'Error Description', appError)
+        result.current.emitAlert('Alert Title', 'Alert Description')
+      })
+
+      expect(mockBCSCAlertModal).toHaveBeenLastCalledWith(
+        expect.objectContaining({ payload: expect.objectContaining({ kind: 'error', title: 'Error Title' }) })
+      )
+
+      act(() => {
+        mockBCSCAlertModal.mock.calls.at(-1)![0].onDismiss()
+      })
+
+      expect(mockBCSCAlertModal).toHaveBeenLastCalledWith(
+        expect.objectContaining({ payload: expect.objectContaining({ kind: 'alert', title: 'Alert Title' }) })
+      )
+    })
+
+    it('should clear the alert when it is dismissed', () => {
+      const { result } = renderHook(() => useErrorAlert(), { wrapper })
+
+      act(() => {
+        result.current.emitAlert('Alert Title', 'Alert Description')
+      })
+      act(() => {
+        mockBCSCAlertModal.mock.calls.at(-1)![0].onDismiss()
+      })
+
+      expect(mockBCSCAlertModal).toHaveBeenLastCalledWith(expect.objectContaining({ payload: null }))
     })
   })
 })

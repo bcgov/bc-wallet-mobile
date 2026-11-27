@@ -7,7 +7,7 @@ import { Analytics } from './analytics/analytics-singleton'
 export type AlertAction = AlertButton & { text: string }
 
 // Default OK action - evaluated at call time to get current translation
-const getDefaultOkAction = (): AlertAction => ({
+export const getDefaultOkAction = (): AlertAction => ({
   text: i18n.t('Global.Okay'),
   onPress: () => {},
 })

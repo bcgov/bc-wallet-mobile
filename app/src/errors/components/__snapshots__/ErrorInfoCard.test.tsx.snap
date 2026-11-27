@@ -11,6 +11,7 @@ exports[`ErrorInfoCard snapshots should match snapshot with default props 1`] = 
   }
 >
   <View
+    accessibilityViewIsModal={true}
     style={
       {
         "backgroundColor": "#FFFFFF",
@@ -40,7 +41,7 @@ exports[`ErrorInfoCard snapshots should match snapshot with default props 1`] = 
       }
     >
       <Icon
-        color="#313132"
+        color="#D8292F"
         name="error"
         size={30}
         style={
@@ -59,6 +60,7 @@ exports[`ErrorInfoCard snapshots should match snapshot with default props 1`] = 
         }
       >
         <Text
+          accessibilityRole="header"
           style={
             {
               "color": "#313132",
@@ -194,6 +196,7 @@ exports[`ErrorInfoCard snapshots should match snapshot with details expanded 1`]
   }
 >
   <View
+    accessibilityViewIsModal={true}
     style={
       {
         "backgroundColor": "#FFFFFF",
@@ -223,7 +226,7 @@ exports[`ErrorInfoCard snapshots should match snapshot with details expanded 1`]
       }
     >
       <Icon
-        color="#313132"
+        color="#D8292F"
         name="error"
         size={30}
         style={
@@ -242,6 +245,7 @@ exports[`ErrorInfoCard snapshots should match snapshot with details expanded 1`]
         }
       >
         <Text
+          accessibilityRole="header"
           style={
             {
               "color": "#313132",
