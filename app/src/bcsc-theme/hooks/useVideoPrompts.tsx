@@ -63,24 +63,7 @@ export type PromptsResult =
   | { ready: false; discarded: true }
 
 const DISCARDED: PromptsResult = { ready: false, discarded: true }
-
-/**
- * Remembers the generation a request started under. `throwIfSuperseded` lets a step bail out of the
- * request once a reset has passed; the request's own catch turns that into a `discarded` result.
- */
-const trackGeneration = () => {
-  const generation = requestGeneration
-  const superseded = () => generation !== requestGeneration
-
-  return {
-    superseded,
-    throwIfSuperseded: () => {
-      if (superseded()) {
-        throw new Error('Verification reset while the request was in flight')
-      }
-    },
-  }
-}
+const DISCARDED_LOG = '[useVideoPrompts] Verification request discarded: verification was reset while it was in flight'
 
 /**
  * Starts a refresh, or joins the one in flight. The slot is cleared only if it is still this refresh's,
@@ -151,15 +134,23 @@ const useVideoPrompts = () => {
     async (
       verificationRequest: VerificationResponseData,
       request: PromptsRequest,
-      throwIfSuperseded: () => void
+      superseded: () => boolean
     ): Promise<PromptsResult> => {
+      // Checked before the write, which dispatches the id and sha into the store
+      if (superseded()) {
+        logger.info(DISCARDED_LOG)
+        return DISCARDED
+      }
+
       const { prompts } = verificationRequest
       const usable = Array.isArray(prompts) && prompts.length > 0
 
       await updateVerificationRequest(verificationRequest.id, usable ? verificationRequest.sha256 : null)
 
       // A reset during the write above still withholds the prompts and the ready result
-      throwIfSuperseded()
+      if (superseded()) {
+        return DISCARDED
+      }
 
       if (!usable) {
         // The previous prompts stay in the store deliberately. TakeVideoScreen hard-throws on an empty
@@ -179,7 +170,8 @@ const useVideoPrompts = () => {
   const _refresh = useCallback(async (): Promise<PromptsResult> => {
     const requestId = verificationRequestIdRef.current
     let request: PromptsRequest = requestId ? 'refresh' : 'create'
-    const { superseded, throwIfSuperseded } = trackGeneration()
+    const generation = requestGeneration
+    const superseded = () => generation !== requestGeneration
 
     try {
       let verificationRequest: VerificationResponseData
@@ -188,12 +180,11 @@ const useVideoPrompts = () => {
         try {
           verificationRequest = await evidence.getVerificationRequestPrompts(requestId)
         } catch (error) {
-          throwIfSuperseded()
-
           // Only a 500 means the id is gone (TTL expired, agent cancelled) and worth replacing. A
           // timeout, a 401 or a transient 502 leaves it perfectly usable, and creating a fresh request
           // for those orphans the live one and spends rate-limit budget the server enforces.
-          if (!isAxiosAppError(error, DELETED_VERIFICATION_REQUEST_STATUS)) {
+          // A reset in between also rethrows, so no replacement request opens under the new setup.
+          if (superseded() || !isAxiosAppError(error, DELETED_VERIFICATION_REQUEST_STATUS)) {
             throw error
           }
 
@@ -206,13 +197,11 @@ const useVideoPrompts = () => {
         verificationRequest = await evidence.createVerificationRequest()
       }
 
-      throwIfSuperseded()
-
-      return await _storeVerificationRequest(verificationRequest, request, throwIfSuperseded)
+      return await _storeVerificationRequest(verificationRequest, request, superseded)
     } catch (error) {
       // A request that fails because its registration was deleted must not raise a 2412 over the new setup
       if (superseded()) {
-        logger.info('[useVideoPrompts] Verification request discarded: verification was reset while it was in flight')
+        logger.info(DISCARDED_LOG)
         return DISCARDED
       }
 

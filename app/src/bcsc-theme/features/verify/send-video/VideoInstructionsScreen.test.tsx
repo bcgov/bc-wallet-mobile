@@ -153,8 +153,9 @@ describe('VideoInstructions', () => {
     expect(tree.queryByText('Say your name')).toBeNull()
   })
 
-  it('stays quiet when verification was restarted while the set was loading', async () => {
-    // The restart tore this flow down; a late result must not raise an alert over the new setup.
+  it('stays quiet but offers a retry when verification was restarted while the set was loading', async () => {
+    // A late result must not raise an alert over the new setup. If the reset failed and this screen
+    // survived, Retry keeps the user from a stuck spinner.
     mockRefreshPrompts.mockResolvedValue({ ready: false, discarded: true })
 
     const tree = renderScreen()
@@ -162,7 +163,8 @@ describe('VideoInstructions', () => {
     await waitFor(() => expect(mockRefreshPrompts).toHaveBeenCalledTimes(1))
     await act(async () => {})
     expect(mockVideoPromptsMissingAlert).not.toHaveBeenCalled()
-    expect(tree.queryByTestId(testIdWithKey('RetryLoadPrompts'))).toBeNull()
+    await waitFor(() => expect(tree.queryByTestId(testIdWithKey('RetryLoadPrompts'))).not.toBeNull())
+    expect(tree.queryByTestId(testIdWithKey('PromptsLoading'))).toBeNull()
   })
 
   it('offers a retry instead of an endless spinner when the fetch fails', async () => {

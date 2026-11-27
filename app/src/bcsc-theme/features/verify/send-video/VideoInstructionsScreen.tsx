@@ -46,8 +46,10 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
 
     const prompts = await refreshPrompts()
 
-    // Verification was restarted mid-request; the flow this screen belonged to is gone
+    // Verification was reset mid-request, so there is nothing to alert about. If the reset then failed
+    // and this screen survived, Retry is the way out of the spinner.
     if (prompts.discarded) {
+      setPromptsStatus('failed')
       return
     }
 
